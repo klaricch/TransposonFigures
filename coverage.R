@@ -33,7 +33,8 @@ a <- a + geom_point(size=1,aes( color=ifelse(method=="reference", 'slateblue1',i
         axis.title=element_text(size=9))+
   labs(x = "Depth of Coverage", y="Number of Transposition Events")
 a
-ggsave(filename="totals_vs_coverage.tiff",dpi=300, width=7.5,height=3.5,units="in")
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(filename="Totals_vs_Coverage.tiff",dpi=300, width=7.5,height=3.5,units="in")
 
 
 ########################################################################################

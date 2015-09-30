@@ -82,7 +82,8 @@ a <- a + geom_segment(aes(x = pos/1e6, y = 1, xend = pos/1e6, yend = 25))+
   scale_y_continuous(expand = c(0,0)) 
 a
 
-ggsave(filename="aggregate_GWAS.tiff",
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(filename="Aggregate_GWAS.tiff",
        dpi=300,
        width=7.5,
        height=3,

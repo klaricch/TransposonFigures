@@ -61,7 +61,6 @@ a <- a + geom_point(size=1.5,position="jitter", aes(color=ifelse(TPFD=="TP","sla
 
 fileID
 filename <- paste(ID,"contradictory_calls.tiff", sep ="_")
-print(filename)
 ggsave(filename,
        dpi=300,
        width=7.5,
@@ -103,6 +102,6 @@ if (fileID=="tenth"){fourth<-a;m_fourth<-m}
 a_all<-plot_grid(first,second,third,fourth)
 m_all<-plot_grid(m_first,m_second,m_third,m_fourth)
 
-setwd("/Users/kristen/Documents/transposon_figure_data/contradictory_calls_RSV_sims")
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(a_all,filename="combined_contradictory_scatter.tiff",dpi=300, width=7.5,height=5,units="in")
 ggsave(m_all,filename="combined_contradictory_histogram.tiff",dpi=300, width=7.5,height=5,units="in")

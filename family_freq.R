@@ -45,8 +45,8 @@ m <- m + geom_point(size=1)+
         axis.text.x = element_text(angle = 90, hjust = 1, color="black",size=3))+
   labs(x="Transposon", y="Total Transposition Events")
 m
-
-ggsave(filename="family_freq.tiff",
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(filename="Family_Frequency.tiff",
        dpi=300,
        width=7.5,
        height=5,

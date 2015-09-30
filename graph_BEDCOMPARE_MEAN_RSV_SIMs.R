@@ -174,5 +174,6 @@ if (fileID=="RSV_SIM_tenth"){fourth<-a;m_fourth<-m}
 setwd("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/")
 a_all<-plot_grid(first,second,third,fourth)
 m_all<-plot_grid(m_first,m_second,m_third,m_fourth)
-ggsave(a_all,filename="combined_temp.tiff",dpi=300, width=7.5,height=5,units="in")
-ggsave(m_all,filename="combined_telocate.tiff",dpi=300, width=7.5,height=5,units="in")
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(a_all,filename="Combined_Temp.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(m_all,filename="Combined_Telocate.tiff",dpi=300, width=7.5,height=5,units="in")

@@ -29,4 +29,5 @@ a <- a + geom_point(size=1, position="jitter")+
   labs(x = "Number of Reference Calls", y="Number of Absence Calls")
 
 a
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="ref_abs_counts_jitter.tiff",dpi=300, width=7.5,height=3.5,units="in")

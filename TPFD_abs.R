@@ -69,9 +69,9 @@ if (fileID=="RSV_SIM_tenth"){fourth<-a}
 
 }
 
-setwd("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/")
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth)
-ggsave(a_all,filename="combined_abs_cov.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Abs_Cov.tiff",dpi=300, width=7.5,height=5,units="in")
 
 
 ########################################################################################################################
@@ -135,9 +135,9 @@ if (fileID=="RSV_SIM_tenth"){fourth<-a}
 
 }
 
-setwd("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/")
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth)
-ggsave(a_all,filename="combined_abs_R.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Abs_R.tiff",dpi=300, width=7.5,height=5,units="in")
 
 ########################################################################################################################
 ########################################################################################################################
@@ -240,6 +240,6 @@ if (fileID=="RSV_SIM_tenth"){fourth<-a}
 
 }
 
-setwd("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/")
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth)
-ggsave(a_all,filename="combined_abs_scatter.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Abs_Scatter.tiff",dpi=300, width=7.5,height=5,units="in")

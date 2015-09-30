@@ -95,7 +95,8 @@ m <- m + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions)+
   guides(fill=FALSE) +
   labs(x = "Insertion Events", y = "Absence Events")
 m
-ggsave(filename="absence_vs_insertion.tiff",
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(filename="Absence_vs_Insertion.tiff",
        dpi=300,
        width=4,
        height=4,
@@ -132,7 +133,7 @@ m + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
   guides(fill=FALSE) +
   labs(x = "Reference Events", y = "Absence Events")
 
-ggsave(filename="absence_vs_reference.tiff",
+ggsave(filename="Absence_vs_Reference.tiff",
        dpi=300,
        width=4,
        height=4,
@@ -166,7 +167,7 @@ m + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
   guides(fill=FALSE) +
   labs(x = "Reference Events", y = "Insertion Events")
 
-ggsave(filename="insertion_vs_reference.tiff",
+ggsave(filename="Insertion_vs_Reference.tiff",
        dpi=300,
        width=4,
        height=4,

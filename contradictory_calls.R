@@ -33,7 +33,8 @@ a <- a + geom_point(size=1,position="jitter")+
         legend.text=element_text(size=9))+
   labs(x="Absence Call Read Support", y="Reference Call Read Support")
 a
-ggsave(filename="contradictory_calls.tiff",
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(filename="Contradictory_Calls.tiff",
        dpi=300,
        width=7.5,
        height=3.5,

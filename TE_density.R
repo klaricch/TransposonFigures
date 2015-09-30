@@ -55,7 +55,8 @@ m <-m + geom_bar(binwidth=.25)+
         legend.text=element_text(size=8))+
   scale_fill_manual(values = c("navy", "brown3", "darkgoldenrod2"))
 m
-ggsave(filename="chromosome_distribution.tiff",
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(filename="Chromosome_Distribution.tiff",
        dpi=300,
        width=7.5,
        height=3.5,
