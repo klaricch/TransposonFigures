@@ -74,6 +74,8 @@ print(ad_r2)
 max_insertions<-max(final_merge$total_insertions)
 max_absences<-max(final_merge$total_absences)
 
+
+
 la <- paste("italic(r)^2 == ", ad_r2)
 m <- ggplot(final_merge, aes(x=total_insertions, y=total_absences))
 m <- m + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions)+

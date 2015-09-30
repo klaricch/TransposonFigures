@@ -38,6 +38,20 @@ sites_clean <- distinct(peaks, peak_id, pheno)
 # do we only want the distinct ones here?
 names(sites_clean)
 levels(sites_clean$chr)
+print(sites_clean$pheno)
+nrow(sites_clean)
+
+# add te class info to summarydata(new_TRANS_end_tes will be removed)
+classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
+classdata<-mutate(classdata, pheno=paste(method,"TRANS",id,sep="_"))
+class_subset <- classdata %>% distinct(pheno) %>% select(pheno,class)
+print(class_subset$pheno)
+sites_clean <-merge(sites_clean, class_subset, by="pheno")
+nrow(sites_clean)
+#revalue classes
+sites_clean$class <- factor(sites_clean$class,
+                            levels = c("dnatransposon", "retrotransposon","unknown"),
+                            labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
 
 ## add in phantom points
 
@@ -57,8 +71,8 @@ method_labeller <- function(variable,value){
 
 
 a <- ggplot(data = sites_clean, aes(x = pos/1e6, y=value)) #,colour=method
-a <- a + geom_segment(aes(x = pos/1e6, y = 1, xend = pos/1e6, yend = 25))+
-  facet_grid(method ~ chr,scale="free",labeller=method_labeller)+
+a <- a + geom_segment(aes(x = pos/1e6, y = 1, xend = pos/1e6, yend = 25,color=class))+
+  facet_grid(method ~ chr,scale="free",space = "free_x",labeller=method_labeller)+
   #phantom point at x=0
  geom_point(data = sites_clean,aes(x=0, y=2),alpha=0) +
   geom_point(data = subset(sites_clean, chr=="I"),aes(x=max_1/1e6, y=2),alpha=0) +
@@ -78,9 +92,14 @@ a <- a + geom_segment(aes(x = pos/1e6, y = 1, xend = pos/1e6, yend = 25))+
         axis.ticks.x =element_line(colour = "black"),
         axis.ticks.y = element_blank(),
         axis.text.x = element_text(colour = "black",size=9),
+        legend.title=element_blank(),
+        legend.background = element_rect(fill=FALSE),
+        legend.key=element_rect(fill=NA),
         legend.text=element_text(size=9))+
+  scale_color_manual(values = c("navy", "brown3", "darkgoldenrod2"))+
   scale_y_continuous(expand = c(0,0)) 
 a
+
 
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Aggregate_GWAS.tiff",

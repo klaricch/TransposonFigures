@@ -42,7 +42,7 @@ summarydata$class <- factor(summarydata$class,
 m <- ggplot(summarydata, aes(x=start/1e6,fill=class))
 m <-m + geom_bar(binwidth=.25)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
-  facet_grid(method ~ chr,scale="free",labeller=method_labeller)+
+  facet_grid(method ~ chr,scale="free",space = "free_x",labeller=method_labeller)+
   geom_point(data = subset(summarydata, method=="absent"),aes(y=top),alpha=0) +
   geom_point(data = subset(summarydata, method=="new"),aes(y=top),alpha=0) +
   geom_point(data = subset(summarydata, method=="reference"),aes(y=top),alpha=0) +
