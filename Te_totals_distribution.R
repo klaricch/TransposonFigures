@@ -180,17 +180,18 @@ insertions<-summarydata[summarydata$method=="new",]
 insertions<-(insertions[ order(insertions$total_tes), ])
 #plot(insertions$total_tes~insertions$sample)
 #pdf(file = "insertions_per_strain.pdf")
-m <- ggplot(insertions, aes(x=reorder(insertions$sample,insertions$total_tes), y=insertions$total_tes)) 
+m <- ggplot(insertions, aes(y=reorder(insertions$sample,insertions$total_tes), x=insertions$total_tes)) 
 m<- m + geom_point(size=.75) +aes(group=1)+
-   theme(axis.text.x = element_text(angle = 90, hjust = 1, color="black",size=5),
-         axis.text.y = element_text(angle = 90, hjust = 1, color="black",size=9),
-         axis.ticks =element_line(colour = "black"))+
+  theme(axis.text.x = element_text(color="black",size=8),
+        axis.text.y = element_text(color="black",size=8),
+        axis.title = element_text(color="black",size=9),
+        axis.ticks =element_line(colour = "black"))+
   labs(x="Strain", y="Number of Insertion Events")
 m
 ggsave(filename="Insertions_per_Strain.tiff",
        dpi=300,
        width=7.5,
-       height=3.5,
+       height=10,
        units="in")
 
 #ABSENCES
@@ -198,17 +199,18 @@ absences<-summarydata[summarydata$method=="absent",]
 absences<-(absences[ order(absences$total_tes), ])
 #plot(absences$total_tes~absences$sample)
 #pdf(file = "absences_per_strain.pdf")
-m <- ggplot(absences, aes(x=reorder(absences$sample,absences$total_tes), y=absences$total_tes)) 
+m <- ggplot(absences, aes(y=reorder(absences$sample,absences$total_tes), x=absences$total_tes)) 
 m<- m + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, color="black",size=5),
-        axis.text.y = element_text(angle = 90, hjust = 1, color="black",size=9),
+  theme(axis.text.x = element_text(color="black",size=8),
+        axis.text.y = element_text(color="black",size=8),
+        axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
   labs(x="Strain", y="Number of Absence Events")
 m
 ggsave(filename="Absences_per_Strain.tiff",
        dpi=300,
        width=7.5,
-       height=3.5,
+       height=10,
        units="in")
 
 #REFERENCE
@@ -216,15 +218,16 @@ references<-summarydata[summarydata$method=="reference",]
 references<-(references[ order(references$total_tes), ])
 #plot(references$total_tes~references$sample)
 #pdf(file = "references_per_strain.pdf")
-m <- ggplot(references, aes(x=reorder(references$sample,references$total_tes), y=references$total_tes)) 
+m <- ggplot(references, aes(y=reorder(references$sample,references$total_tes), x=references$total_tes)) 
 m<- m + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, color="black",size=5),
-        axis.text.y = element_text(angle = 90, hjust = 1, color="black",size=9),
+  theme(axis.text.x = element_text(color="black",size=8),
+        axis.text.y = element_text(color="black",size=8),
+        axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
   labs(x="Strain", y="Number of Reference Events")
 m
 ggsave(filename="References_per_Strain.tiff",
        dpi=300,
        width=7.5,
-       height=3.5,
+       height=10,
        units="in")
