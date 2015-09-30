@@ -33,6 +33,12 @@ summarydata$top[summarydata$method=="new"] <- 160
 summarydata$top[summarydata$method=="reference"] <- 900
 levels(summarydata$class)
 
+
+#revalue classes
+summarydata$class <- factor(summarydata$class,
+                          levels = c("dnatransposon", "retrotransposon","unknown"),
+                          labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
+
 m <- ggplot(summarydata, aes(x=start/1e6,fill=class))
 m <-m + geom_bar(binwidth=.25)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+

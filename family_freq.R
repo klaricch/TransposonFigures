@@ -6,14 +6,25 @@ library(dplyr)
 library(stringr)
 library(ggplot2)
 library(grid)
+library(stringr)
 
 setwd("/Users/kristen/Documents/transposon_figure_data")
 summarydata <- read.table("T_Full_Results.txt",header=TRUE)
-names(summarydata)
+classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+names(classdata)<-c("chr","start","end","TE","support","orientation","method","strain","class")
 
-ncol(summarydata)
-nrow(summarydata)
-#remove total coutns and coverage
+# add te class info to summarydata(new_TRANS_end_tes will be removed)
+classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
+classdata<-mutate(classdata, trait=paste(method,"TRANS",id,sep="_"))
+class_subset <- classdata %>% distinct(trait) %>% select(trait,class)
+summarydata <-merge(summarydata, class_subset, by="trait")
+
+#revalue classes
+summarydata$class <- factor(summarydata$class,
+                            levels = c("dnatransposon", "retrotransposon","unknown"),
+                            labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
+
+#remove total counts and coverage
 summarydata <- filter(summarydata, trait != "absent_TRANS_total" )
 summarydata <- filter(summarydata, trait != "new_TRANS_total" )
 summarydata <- filter(summarydata, trait != "reference_TRANS_total" )
@@ -30,9 +41,9 @@ summarydata$caller<- factor(summarydata$caller,
                           levels = c("absent", "new","reference"),
                           labels = c("Absence", "Insertion", "Reference"))
 
-m <- ggplot(summarydata,aes(x=transposon,y=TOTAL))
-m <- m + geom_point(size=1)+
-  facet_grid(caller~., scale="free_y") +
+m <- ggplot(summarydata,aes(y=transposon,x=TOTAL))
+m <- m + geom_point(size=1.25,aes(color=class))+
+  facet_grid(.~caller, scale="free") +
   theme(strip.background = element_rect(fill="white"),
         strip.text.y = element_text(size = 8, colour = "black",face="bold"),
         panel.margin = unit(.6, "lines"),
@@ -40,14 +51,21 @@ m <- m + geom_point(size=1)+
         panel.background = element_rect(fill = "white"),
         panel.grid.major = element_line(colour = "grey87"),
         panel.grid.minor = element_line(colour = "grey87"),
-        axis.title=element_text(size=8),
-        axis.text.y = element_text(colour = "black",size=8),
-        axis.text.x = element_text(angle = 90, hjust = 1, color="black",size=3))+
-  labs(x="Transposon", y="Total Transposition Events")
+        axis.ticks =element_line(colour = "black"),
+        axis.title=element_text(size=9),
+        axis.text.y = element_text(colour = "black",size=5),
+        axis.text.x = element_text(color="black",size=8),
+        legend.title=element_blank(),
+        legend.background = element_rect(fill=FALSE),
+        legend.key=element_rect(fill=NA),
+        legend.text=element_text(size=9))+
+  scale_color_manual(values = c("navy", "brown3", "darkgoldenrod2"))+
+  labs(y="Transposon", x="Total Transposition Events")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Family_Frequency.tiff",
        dpi=300,
        width=7.5,
-       height=5,
+       height=10,
        units="in")
+
