@@ -42,6 +42,8 @@ print(sites_clean$pheno)
 nrow(sites_clean)
 
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
+classdata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+names(classdata)<-c("chr","start","end","TE","support","orientation","method","strain","class")
 classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
 classdata<-mutate(classdata, pheno=paste(method,"TRANS",id,sep="_"))
 class_subset <- classdata %>% distinct(pheno) %>% select(pheno,class)

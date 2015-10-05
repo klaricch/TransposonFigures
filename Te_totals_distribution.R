@@ -64,6 +64,27 @@ cor(final_merge$total_insertions, final_merge$total_references)
 
 
 
+
+######
+# add te class info to summarydata(new_TRANS_end_tes will be removed)
+classdata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+names(classdata)<-c("chr","start","end","TE","support","orientation","method","strain","class")
+classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
+class_subset <- classdata %>% distinct(id) %>% select(id,class)
+print(class_subset)
+df<-t(class_subset)
+print(df)
+names(summarydata)
+names(df)
+colnames(df) <- df[1,]
+print(df[1,])
+names(df)
+newdf <-bind_rows(summarydata, class_subset)
+print(newdf)
+names(newdf)
+
+####
+
 #1 ABSENCE vs INSERTION
 fit <- lm(total_absences ~ total_insertions, data = final_merge)
 print(summary(fit))
