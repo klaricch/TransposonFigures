@@ -4,7 +4,7 @@
 # 2) plots coverage levels per strain
 # USE: coverage.R
 
-setwd("/Users/kristen/Documents/transposon_figure_data")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("coverage_and_te_counts.txt",header=TRUE)
 library(tidyr)
 library(ggplot2)

@@ -5,7 +5,7 @@
 library(ggplot2)
 library(grid)
 
-setwd("/Users/kristen/Documents/transposon_figure_data")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
 names(summarydata)
 names(summarydata)<-c("chr","start","end","TE","support","orientation","method","strain","class")

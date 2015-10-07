@@ -7,9 +7,10 @@ library(stringr)
 library(dplyr)
 library(grid)
 
-load("/Users/kristen/Documents/transposon_figure_data/Processed_Transposon_Mappings.Rda")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+load("Processed_Transposon_Mappings.Rda")
 names(final_processed_mappings)
-setwd("/Users/kristen/Documents/transposon_figure_data")
+
 
 names(final_processed_mappings)
 load('SignificantMappings_Results_Activity.Rda')

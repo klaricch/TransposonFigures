@@ -9,8 +9,7 @@ library(dplyr)
 library(ggplot2)
 library(gtable)
 
-##REMOVE BELOW LATER
-setwd("/Users/kristen/Documents/transposon_figure_data")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("contradictory_calls.txt")
 names(summarydata)<-c("strain","chr","start","end","TE","TELOCATE_support","orient", "TE2","TEMP_support","orient2")
 summarydata$difference<-abs(summarydata$TEMP_support-summarydata$TELOCATE_support)
@@ -59,3 +58,42 @@ m <- m + geom_bar(binwidth=2) +
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))
 m
 ggsave(filename="Histogram_Contradictory_Calls.tiff",dpi=300, width=7.5,height=3.5,units="in")
+
+
+
+
+#CER1 SCATTER
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+comparison<- read.table("cer_comparison.txt")
+names(comparison)<-c("strain","TEcaller","paper","outcome")
+cer1<-summarydata %>% filter(grepl("CER1_reference", TE))
+#add in "CORRECT/INCORRECT calls"
+combo <-merge(comparison, cer1, by="strain")
+
+a <- ggplot(data = combo, aes(x = TEMP_support,y=TELOCATE_support))
+a<- a+ geom_point(aes(col = ifelse(outcome=="CORRECT",'black', ifelse(outcome=="INCORRECT",'red','green'))))+
+  theme(strip.background = element_blank(),
+        strip.text.x = element_text(size = 9, colour = "black",face="bold"),
+        strip.text.y = element_text(size = 9, colour = "black",face="bold"),
+        panel.background = element_rect(fill = "white"),
+        axis.ticks =element_line(colour = "black"),
+        axis.text.y = element_text(colour = "black",size=9),
+        axis.text.x = element_text(colour = "black",size=9),
+        axis.line=element_line(linetype="solid"),
+        axis.title=element_text(size=9),
+        legend.position=('none'))+
+  labs(x="Absence Call Read Support", y="Reference Call Read Support")
+a
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(filename="CER1_Contradictory_Calls.tiff",
+       dpi=300,
+       width=7.5,
+       height=3.5,
+       units="in")
+
+
+
+
+
+
+

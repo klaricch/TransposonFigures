@@ -5,7 +5,7 @@
 # USE: Te_totals_distribution.R
 
 library(ggplot2)
-setwd("/Users/kristen/Documents/transposon_figure_data")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("FINAL_RESULTS.txt",header=TRUE)
 
 ##SCATTER

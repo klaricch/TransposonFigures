@@ -8,7 +8,7 @@ library(ggplot2)
 library(grid)
 library(stringr)
 
-setwd("/Users/kristen/Documents/transposon_figure_data")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("T_Full_Results.txt",header=TRUE)
 classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
 names(classdata)<-c("chr","start","end","TE","support","orientation","method","strain","class")
