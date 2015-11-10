@@ -1,0 +1,40 @@
+library(devtools)
+source("http://bioconductor.org/biocLite.R")
+biocLite("biomaRt")
+devtools::install_github("AndersenLab/cegwas")
+library(cegwas)
+
+#RUN1
+setwd("/Users/kristen/Documents/transposon_figure_data")
+df<-read.table("cer_95_set.txt",header=TRUE)
+partial_set <- cegwas_map(df)
+manplot(partial_set)
+
+#RUN2
+setwd("/Users/kristen/Documents/transposon_figure_data")
+df<-read.table("T_CER1.txt",header=TRUE)
+full_set2 <- cegwas_map(df)
+manplot(full_set2)
+ncol(df)
+
+#setwd("/Users/kristen/Documents/transposon_figure_data")
+#df<-read.table("cer_95_set.txt",header=TRUE)
+#processed_phenotypes <- process_pheno(df)
+#mapping_df <- gwas_mappings(processed_phenotypes, cores = 4)
+#processed_mapping_df <- process_mappings(mapping_df, phenotype_df = processed_phenotypes, CI_size = 50, snp_grouping = 200)
+#manplot(processed_mapping_df)
+#save(processed_mapping_df, file="GWAS_CER_95_set.Rda")
+#load("GWAS_CER_full_set.Rda")
+#load("GWAS_CER.Rda")
+#load("Processed_Transposon_Mappings.Rda")
+#unique(final_processed_mappings$pheno)
+#setwd("/Users/kristen/Documents/transposon_figure_data")
+#df<-read.table("cer_95_set.txt",header=TRUE)
+#names(df)
+#name <- cegwas_map(df)
+#processed_phenotypes <- process_pheno(name)
+#mapping_df <- gwas_mappings(processed_phenotypes, cores = 4)
+#processed_mapping_df <- process_mappings(mappings, phenotype_df = processed_phenotypes, CI_size = 50, snp_grouping = 200)
+#manplot(processed_mapping_df)
+#??process_mappings
+#process_pheno

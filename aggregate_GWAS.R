@@ -28,6 +28,17 @@ final_processed_mappings$family <- transposon
 caller <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
 final_processed_mappings$method <- caller
 
+
+g<-final_processed_mappings$method
+print(g)
+levels(g)
+levels(final_processed_mappings$pheno)
+names(final_processed_mappings)
+levels(caller)
+nlevels(final_processed_mappings$method)
+print(final_processed_mappings[final_processed_mappings$methos=="ONE_new",] )
+
+
 base_traits <-final_processed_mappings[(final_processed_mappings$method=="absent"| final_processed_mappings$method=="new" |final_processed_mappings$method=="reference"), ]
 final_processed_mappings<-base_traits
 # write out table of info on each unique peak
@@ -35,28 +46,37 @@ peaks <- final_processed_mappings[final_processed_mappings$peak_id!="NA",]
 names(peaks)
 #pull unique combinations of pheno and peak id
 sites_clean <- distinct(peaks, peak_id, pheno)
-
+print(sites_clean$pheno)
 # do we only want the distinct ones here?
 names(sites_clean)
 levels(sites_clean$chr)
 print(sites_clean$pheno)
 nrow(sites_clean)
 
-# add te class info to summarydata(new_TRANS_end_tes will be removed)
+
+
+
+sites_clean<-mutate(sites_clean, phenoT=gsub("_C$","",pheno))
+print(sites_clean# add te class info to summarydata(new_TRANS_end_tes will be removed)
 classdata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
-names(classdata)<-c("chr","start","end","TE","support","orientation","method","strain","class")
+names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
 classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
-classdata<-mutate(classdata, pheno=paste(method,"TRANS",id,sep="_"))
-class_subset <- classdata %>% distinct(pheno) %>% select(pheno,class)
-print(class_subset$pheno)
-sites_clean <-merge(sites_clean, class_subset, by="pheno")
+#remove chr and pos info from TE info
+classdata$id <- gsub("\\w+_\\d+_" ,"",classdata$id)
+print(classdata$id)
+
+
+classdata<-mutate(classdata, phenoT=paste(method,"TRANS",id,sep="_"))
+class_subset <- classdata %>% distinct(phenoT) %>% select(phenoT,class)
+print(class_subset$phenoT)
+sites_clean <-merge(sites_clean, class_subset, by="phenoT")
 nrow(sites_clean)
 #revalue classes
 sites_clean$class <- factor(sites_clean$class,
                             levels = c("dnatransposon", "retrotransposon","unknown"),
                             labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
 
-## add in phantom points
+
 
 method_names <- list(
   'absent'="Absence",
@@ -72,7 +92,10 @@ method_labeller <- function(variable,value){
   }
 }
 
-
+levels(sites_clean$method)
+print(sites_clean[sites_clean$method=="insertion",])
+names(sites_clean)
+print(sites_clean$pheno)
 a <- ggplot(data = sites_clean, aes(x = pos/1e6, y=value)) #,colour=method
 a <- a + geom_segment(aes(x = pos/1e6, y = 1, xend = pos/1e6, yend = 25,color=class))+
   facet_grid(method ~ chr,scale="free",space = "free_x",labeller=method_labeller)+
