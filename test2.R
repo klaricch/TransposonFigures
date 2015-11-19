@@ -5,12 +5,17 @@ library(grid)
 library(stringr)
 library(gridExtra)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-load('SignificantMappings_Results_Activity.Rda')
+load("Processed_Transposon_Mappings.Rda")
 
 
-Mappings$family <- stringr::str_split_fixed(Mappings$traits.i., "_TRANS_",2)[,2]
-Mappings$method <- stringr::str_split_fixed(Mappings$traits.i., "_TRANS_",2)[,1]
+#Mappings$family <- stringr::str_split_fixed(Mappings$traits.i., "_TRANS_",2)[,2]
+#Mappings$method <- stringr::str_split_fixed(Mappings$traits.i., "_TRANS_",2)[,1]
+# pull unique combos, remove strain column(don't need specific strain info at this point)
+final_processed_mappings <- distinct(select(final_processed_mappings, -strain,-allele,-value))
+final_processed_mappings<- final_processed_mappings %>% distinct(pheno,SNPs)
 
+final_processed_mappings$family <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
+final_processed_mappings$method <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
 
 method_names <- list(
   'absent'="absence",
@@ -27,6 +32,7 @@ method_labeller <- function(variable,value){
 }
 
 
+
 positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
 names(positions)<-c("chr","start","end","TE","orientation","method","strain","class")
 positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?reference"),2)[,1]
@@ -34,36 +40,51 @@ positions$family<- paste(stringr::str_split_fixed(positions$family, "_",4)[,3],s
 positions$family <- gsub("_$" ,"",positions$family)
 positions$family <- gsub("_non-reference(.*)$" ,"",positions$family)
 
-selection<-filter(Mappings, -log10(ps) > -log10(.05/8000))
+
+#select traits above BF.....this step not needed, double checking everything is above BF
+selection<-filter(final_processed_mappings, log10p > BF)
+
 base_traits <-selection[(selection$method=="absent"| selection$method=="new" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
 counts<-subset(base_traits, grepl("_C$", selection$family))
 counts$family <- gsub("_C$" ,"",counts$family)
 #pull out only position traits from mappings dataframe
 position_traits<-subset(selection,
-                        grepl('^I', selection$traits.i.) |
-                          grepl('^V', selection$traits.i.) |
-                          grepl('^X', selection$traits.i.))
+                        grepl('^I', selection$pheno) |
+                          grepl('^V', selection$pheno) |
+                          grepl('^X', selection$pheno))
+
+#create family column
+position_traits$family  <- paste(stringr::str_split_fixed(position_traits$pheno, "_",4)[,3],stringr::str_split_fixed(position_traits$pheno, "_",4)[,4],sep="_")
+position_traits$family <- gsub("_$" ,"",position_traits$family)
+position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
 
 selection<-rbind(counts,position_traits)
-selection$traits.i. <- gsub("_C$" ,"",selection$traits.i.)
+selection$pheno <- gsub("_C$" ,"",selection$pheno)
 
-selection<-selection[1:5,] #UNCOMMENT LATER
+selection<-selection[1:5,] #COMMENT LATER!!!!!!!!
 
-for (i in unique(selection$traits.i.)){
-  specific_trait<- Mappings[Mappings$traits.i == i, ]
+
+
+
+
+  
+
+for (i in unique(selection$pheno)){
+  specific_trait<- final_processed_mappings[final_processed_mappings$pheno == i, ]
   empty <-specific_trait[specific_trait$method==NA,]
-  specific_trait_mx <- max(-log10(specific_trait$ps))
+  specific_trait_mx <- max(specific_trait$log10p)
+  TE<-specific_trait$family[1]
   
   ##check for NAs
   #sapply(Mappings, function(x)all(is.na(x)))
-  A<- Mappings %>%
-    filter(traits.i. == i)%>%
+  A<- final_processed_mappings %>%
+    filter(pheno == i)%>%
     ggplot(.)+
-    aes(x=pos/1e6,y=-log10(ps))+
-    geom_point(aes( color=ifelse(-log10(ps)> -log10(.05/8000), 'red', 'black')),size=1)+
+    aes(x=pos/1e6,y=log10p)+
+    geom_point(aes( color=ifelse(log10p> BF, 'red', 'black')),size=1)+
     facet_grid(.~chr,scale="free_x",space = "free_x")+scale_color_identity()+
     ggtitle(i)+
-    geom_hline(aes(yintercept=-log10(.05/8000)),color="grey60",linetype="dashed")+
+    geom_hline(aes(yintercept=BF),color="grey60",linetype="dashed")+
     theme(strip.background = element_rect(fill = "white"),
           strip.text.x = element_text(size = 9, colour = "black",face="bold"),
           panel.background = element_rect(fill = "white"),
@@ -101,7 +122,8 @@ for (i in unique(selection$traits.i.)){
   min6<-(min(panel6$x))
   
   positions$trait<-paste(positions$method, "TRANS", positions$family, sep="_")
-  traitPositions<-positions[positions$trait==i,]
+  #traitPositions<-positions[positions$trait==i,]
+  traitPositions<-positions[positions$family==TE,]
   
   blank <- data.frame(chr=character(),
                       start=integer(),
@@ -124,8 +146,9 @@ for (i in unique(selection$traits.i.)){
   
   traitPositions<-rbind(traitPositions,blank)
   traitPositions$start<-as.integer(traitPositions$start)
-  
-  m <- ggplot(traitPositions, aes(x=start/1e6))
+  #m <- ggplot(summarydata, aes(x=start/1e6,fill=class))
+  #m <-m + geom_bar(binwidth=.25)+
+  m <- ggplot(traitPositions, aes(x=start/1e6,fill=method))
   m <-m + geom_bar(data=subset(traitPositions,strain=="fake"), fill="white", colour="white", binwidth=.25)
   m <-m + geom_bar(data=subset(traitPositions,strain!="fake"), binwidth=.25)+
     facet_grid(. ~ chr,scale="free",labeller=method_labeller,drop=FALSE)+
@@ -158,7 +181,8 @@ for (i in unique(selection$traits.i.)){
           legend.title=element_blank(),
           # legend.position="bottom",
           plot.margin=unit(c(-.25,.1,.1,.1), "cm"),
-          legend.text=element_text(size=8))
+          legend.position=('none'))+
+  scale_fill_manual(values = c("darkorange", "black","turquoise3", "slateblue1"))
   m
 
   #now can check plot for max value and set y limit to a certain percent above that max value 
@@ -179,5 +203,3 @@ for (i in unique(selection$traits.i.)){
   grid.draw(g)
   
 }
-
-
