@@ -41,12 +41,12 @@ SNP<- distinct(final_processed_mappings,chr,pos)
 
 
 #initiate list
-one <- list()
-two <- list()
-three <- list()
-four <- list()
-five <- list()
-six <- list()
+one <- vector()
+two <- vector()
+three <- vector()
+four <- vector()
+five <- vector()
+six <- vector()
 
 #create separate lists for each chromossome, with the SNP positions for that chromosome as the values
 for(i in 1:nrow(SNP)) {
@@ -75,6 +75,13 @@ for(i in 1:nrow(SNP)) {
   
 }
 
+one<-sort(one)
+two<-sort(two)
+three<-sort(three)
+four<-sort(four)
+five<-sort(five)
+six<-sort(six)
+
 #fins max length of each list
 max_one=length(one)
 max_two=length(two)
@@ -83,21 +90,18 @@ max_four=length(four)
 max_five=length(five)
 max_six=length(six)
 
-
-###SOR TTHE LISTS?????:
-
 #initiate an empty dataframe
 away<- as.data.frame(matrix(0, ncol = 27, nrow = 0))
 names(away) <-c(colnames(position_traits))
 
 
 for (phenotype in unique(distinct_sites$pheno)){
-  TE_one <- list()
-  TE_two <- list()
-  TE_three <- list()
-  TE_four <- list()
-  TE_five <- list()
-  TE_six <- list()
+  TE_one <- vector()
+  TE_two <- vector()
+  TE_three <- vector()
+  TE_four <- vector()
+  TE_five <- vector()
+  TE_six <- vector()
   transposon  <- paste(stringr::str_split_fixed(phenotype, "_",4)[,3],stringr::str_split_fixed(phenotype, "_",4)[,4],sep="_")
   transposon <- gsub("_$" ,"",transposon)
   transposon <- gsub("_non-reference(.*)$" ,"",transposon)
@@ -128,6 +132,12 @@ for (phenotype in unique(distinct_sites$pheno)){
     }
     
   }
+  TE_one<-sort(TE_one)
+  TE_two<-sort(TE_two)
+  TE_three<-sort(TE_three)
+  TE_four<-sort(TE_four)
+  TE_five<-sort(TE_five)
+  TE_six<-sort(TE_six)
   
   pheno_subset=distinct_sites[distinct_sites$pheno==phenotype,] #pull out mappings realted to that phenotype
   #need a for each row in subset here
