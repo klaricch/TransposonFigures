@@ -6,17 +6,24 @@ library(stringr)
 library(gridExtra)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
+load("away_phenos.Rda")
 
-
-#Mappings$family <- stringr::str_split_fixed(Mappings$traits.i., "_TRANS_",2)[,2]
-#Mappings$method <- stringr::str_split_fixed(Mappings$traits.i., "_TRANS_",2)[,1]
 # pull unique combos, remove strain column(don't need specific strain info at this point)
 final_processed_mappings <- distinct(select(final_processed_mappings, -strain,-allele,-value))
 final_processed_mappings<- final_processed_mappings %>% distinct(pheno,SNPs)
 
+#remove fraction and movement traits
+final_processed_mappings<-subset(final_processed_mappings,
+                                 grepl('^I', final_processed_mappings$pheno) |
+                                   grepl('^V', final_processed_mappings$pheno) |
+                                   grepl('^X', final_processed_mappings$pheno)|
+                                   grepl('_C$', final_processed_mappings$pheno))
+
+#create family and method columns
 final_processed_mappings$family <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
 final_processed_mappings$method <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
 
+#set up method labellers
 method_names <- list(
   'absent'="absence",
   'new'="insertion",
@@ -32,7 +39,7 @@ method_labeller <- function(variable,value){
 }
 
 
-
+#read in position data and create family column
 positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
 names(positions)<-c("chr","start","end","TE","orientation","method","strain","class")
 positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?reference"),2)[,1]
@@ -40,13 +47,14 @@ positions$family<- paste(stringr::str_split_fixed(positions$family, "_",4)[,3],s
 positions$family <- gsub("_$" ,"",positions$family)
 positions$family <- gsub("_non-reference(.*)$" ,"",positions$family)
 
-
 #select traits above BF.....this step not needed, double checking everything is above BF
 selection<-filter(final_processed_mappings, log10p > BF)
 
+#extract the count base traits
 base_traits <-selection[(selection$method=="absent"| selection$method=="new" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
-counts<-subset(base_traits, grepl("_C$", selection$family))
+counts<-subset(base_traits, grepl("_C$", base_traits$family))
 counts$family <- gsub("_C$" ,"",counts$family)
+
 #pull out only position traits from mappings dataframe
 position_traits<-subset(selection,
                         grepl('^I', selection$pheno) |
@@ -58,23 +66,30 @@ position_traits$family  <- paste(stringr::str_split_fixed(position_traits$pheno,
 position_traits$family <- gsub("_$" ,"",position_traits$family)
 position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
 
+#optional filter for away phenos
+position_traits<-position_traits[position_traits$pheno %in% away$pheno,] 
+
+# add position trait family info to final_processed_mappings
+final_processed_mappings<-final_processed_mappings %>%mutate(family = ifelse(final_processed_mappings$pheno %in% away$pheno, (paste(stringr::str_split_fixed(final_processed_mappings$pheno, "_",4)[,3],stringr::str_split_fixed(final_processed_mappings$pheno, "_",4)[,4],sep="_")), final_processed_mappings$family))
+
+#bind count and position tratis
 selection<-rbind(counts,position_traits)
+
+#strip count marker and remnant marks from dataframes
 selection$pheno <- gsub("_C$" ,"",selection$pheno)
+final_processed_mappings$pheno <- gsub("_C$" ,"",final_processed_mappings$pheno)
+final_processed_mappings$family <- gsub("_C$" ,"",final_processed_mappings$family)
+final_processed_mappings$family <- gsub("_$" ,"",final_processed_mappings$family)
+final_processed_mappings$family <- gsub("_non-reference(.*)$" ,"",final_processed_mappings$family)
 
-selection<-selection[1:5,] #COMMENT LATER!!!!!!!!
-
-
-
-
-
-  
-
+#iterate through the phenotypes and plot the results
 for (i in unique(selection$pheno)){
   specific_trait<- final_processed_mappings[final_processed_mappings$pheno == i, ]
   empty <-specific_trait[specific_trait$method==NA,]
-  specific_trait_mx <- max(specific_trait$log10p)
+  #specific_trait_mx <- max(specific_trait$log10p)
+  pvalues<-filter(specific_trait,log10p !="Inf") #
+  specific_trait_mx <- max(pvalues$log10p) #
   TE<-specific_trait$family[1]
-  
   ##check for NAs
   #sapply(Mappings, function(x)all(is.na(x)))
   A<- final_processed_mappings %>%
@@ -96,9 +111,9 @@ for (i in unique(selection$pheno)){
           axis.title=element_text(size=9),
           plot.margin=unit(c(.1,.1,-.25,.1), "cm"),
           legend.position=('none'))+
-    labs(x="",y="-log10(p)") +
-    
-    scale_y_continuous(expand=c(0,0),limits=c(0,specific_trait_mx+.075*specific_trait_mx),labels = function(x) format(x,width = 4))
+    labs(x="",y="-log10(p)") #+
+  
+  #scale_y_continuous(expand=c(0,0),limits=c(0,specific_trait_mx+.075*specific_trait_mx),labels = function(x) format(x,width = 4))
   
   
   # pull out  X maxs of each panel
@@ -148,7 +163,9 @@ for (i in unique(selection$pheno)){
   traitPositions$start<-as.integer(traitPositions$start)
   #m <- ggplot(summarydata, aes(x=start/1e6,fill=class))
   #m <-m + geom_bar(binwidth=.25)+
-  m <- ggplot(traitPositions, aes(x=start/1e6,fill=method))
+  
+  #ggplot(data = combo, aes(x = TEMP_support,y=TELOCATE_support,color=ifelse(method=="absent","darkorange",ifelse(method=="blank","black",ifelse(method=="insertion",""turquoise3"","slateblue1")))))+scale_color_identity()
+  m <- ggplot(traitPositions, aes(x=start/1e6,color=ifelse(method=="absent","darkorange",ifelse(method=="blank","black",ifelse(method=="new","turquoise3","slateblue1")))))+scale_color_identity()
   m <-m + geom_bar(data=subset(traitPositions,strain=="fake"), fill="white", colour="white", binwidth=.25)
   m <-m + geom_bar(data=subset(traitPositions,strain!="fake"), binwidth=.25)+
     facet_grid(. ~ chr,scale="free",labeller=method_labeller,drop=FALSE)+
@@ -181,14 +198,13 @@ for (i in unique(selection$pheno)){
           legend.title=element_blank(),
           # legend.position="bottom",
           plot.margin=unit(c(-.25,.1,.1,.1), "cm"),
-          legend.position=('none'))+
-  scale_fill_manual(values = c("darkorange", "black","turquoise3", "slateblue1"))
+          legend.position=('none'))
   m
-
+  
   #now can check plot for max value and set y limit to a certain percent above that max value 
   m <- m + scale_y_continuous(expand = c(0,0),limits=c(0,max(ggplot_build(m)$panel$ranges[[1]]$y.range)*1.075)) 
-
-
+  
+  
   library(gtable)
   g1<-ggplotGrob(A)
   g2<-ggplotGrob(m)
@@ -203,3 +219,12 @@ for (i in unique(selection$pheno)){
   grid.draw(g)
   
 }
+
+
+
+
+# filter for away traits
+
+test<-position_traits[position_traits$pheno %in% away$pheno,] 
+test2<-counts[counts$pheno==NA,]
+print(counts$pheno)

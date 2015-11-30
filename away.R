@@ -12,6 +12,10 @@ library(gridExtra)
 library(stringr)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
+load("prune_final_traits_to_this_set.Rda")
+
+final_processed_mappings <- dplyr::filter(final_processed_mappings, (pheno %in% traits))
+
 
 # read in positions of all TEs
 positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
@@ -33,10 +37,19 @@ position_traits$family <- gsub("_$" ,"",position_traits$family)
 position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
 
 #pull out unique phenotypes and peak ids
-distinct_sites <- distinct(position_traits,pheno,peak_id)
-distinct_sites <- distinct_sites[distinct_sites$peak_id!="NA",] #remove NA peaks
+#distinct_sites <- distinct(position_traits,pheno,peak_id)
+#distinct_sites <- distinct_sites[distinct_sites$peak_id!="NA",] #remove NA peaks
+#dd[with(dd, order(-z, b)), ]
 
+distinct_sites <- distinct(position_traits,pheno,chr,peak_id,pos)
+distinct_sites <- distinct_sites[order(pheno,peak_id, -ps),] #sort by ascending pheno and descending pvalue
+distinct_sites <- distinct_sites[distinct_sites$peak_id!="NA",] #remove NA peaks
+distinct_sites <- distinct(distinct_sites,pheno,peak_id)
+
+#distinct_sites <- distinct_sites[distinct_sites$peak_id!="NA",] #remove NA peaks
+#newdata <- mtcars[order(mpg),]
 #pull out all unique SNPs used for the mappings
+#WANT DESCEDING
 SNP<- distinct(final_processed_mappings,chr,pos)
 
 
@@ -48,7 +61,7 @@ four <- vector()
 five <- vector()
 six <- vector()
 
-#create separate lists for each chromossome, with the SNP positions for that chromosome as the values
+#create separate lists for each chromosome, with the SNP positions for that chromosome as the values
 for(i in 1:nrow(SNP)) {
   row <- SNP[i,]
   chr=row$chr
@@ -95,6 +108,17 @@ away<- as.data.frame(matrix(0, ncol = 27, nrow = 0))
 names(away) <-c(colnames(position_traits))
 
 
+###REMOVE LATER
+#distinct_sites<-distinct_sites[distinct_sites$pheno=="II_507265_LINE2C",]
+##
+
+
+
+
+
+
+
+#iterate through unique QTL peaks
 for (phenotype in unique(distinct_sites$pheno)){
   TE_one <- vector()
   TE_two <- vector()
@@ -147,7 +171,7 @@ for (phenotype in unique(distinct_sites$pheno)){
     chr<-row$chr
     bp<-row$pos
     
-    #check which chromosme it's in
+    #check which chromosome it's in
     if (chr=="I"){
       index <-which(one==bp)
       lower_range=index-100
@@ -282,6 +306,103 @@ for (phenotype in unique(distinct_sites$pheno)){
     }
   }
 }
+save(away, file="away_phenos.Rda")
 
+
+
+######MEDIAN Differences
+library(tidyr)
+#get medians of positions traits that are in away df:
+median_df <- position_traits[position_traits$pheno %in% away$pheno,]
+median_df <- median_df[median_df$peak_id !="NA",]
+median_df <- distinct(median_df,pheno,strain)
+#calcualte median for each phenotype allele group
+median_df <- median_df %>% group_by(pheno,allele) %>% summarise(med=median(value,na.rm=TRUE))
+median_df<-spread(median_df, allele,med)
+colnames(median_df)<-c("pheno","ref","alt")
+median_df<-filter(median_df,ref!=alt)
+save(median_df, file="median_phenos.Rda")
+##########
+#CAN REMOVE ALL OF BELOW AFTER CHECKS
 nrow(away)
+length(unique(away$pheno))
 nrow(distinct_sites)
+length(unique(distinct_sites$pheno))
+length(unique(final_processed_mappings$pheno))
+length(unique(position_traits$pheno))
+
+hmmmm<-away[away$pheno=="I_10499869_WBTransposon00000581",]
+hmmmm2<-distinct_sites[distinct_sites$pheno=="I_10499869_WBTransposon00000581",]
+
+###################
+tail(away)
+hmmmm<-away[away$pheno=="II_3406485_MARINER2_non-reference__temp_sr_10950_120.5_-_new_CB4852",]
+aaa<-positions[positions$family=="LINE2C",]
+bbb<-aaa[aaa$chr=="II",]
+
+indexcc <-which(five==3598054) 
+print(indexcc)
+print(five[410])
+print(five[412])
+print(five[310])
+print(five[510])
+print(length(one))
+print(length(two))
+print(length(three))
+print(length(four))
+print(length(five))
+print(length(six))
+print(TE_five)
+
+
+indexcc <-which(three==10823037) 
+print(indexcc)
+
+indexcc <-which(three==11499581) 
+print(indexcc)
+
+print(three[1071])
+print(three[1271])
+print(three[1069])
+print(three[0971])
+print(three[1171])
+
+
+
+
+indexcc <-which(two==12171121) 
+print(indexcc)
+
+print(two[0903])
+print(two[1103])
+print(two[1002])
+print(two[1004])
+
+
+
+
+
+print(TE_three)
+
+
+check<- final_processed_mappings[final_processed_mappings$pheno=="X_9196067_CER10-I_CE",]
+check2<-check[check$peak_id!="NA",]
+
+
+
+
+
+
+
+
+
+?median
+load("20151025_Processed_Transposon_Mappings.Rda")
+check<-filter(final_processed_mappings,pheno=="I_10263384_LINE2C",peak_id!="NA")
+check<-filter(new_mappings,pheno=="I_10263384_LINE2C",peak_id!="NA")
+unique(check$value)
+print(check$value)
+
+check2<-distinct(check,pheno,strain,value)
+print((check2$value))
+unique(check2$value)
