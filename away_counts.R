@@ -18,27 +18,78 @@ load("prune_final_traits_to_this_set.Rda")
 final_processed_mappings <- dplyr::filter(final_processed_mappings, (pheno %in% traits))
 
 
+#remove fraction and movement traits
+final_processed_mappings<-subset(final_processed_mappings,
+                                 grepl('^I', final_processed_mappings$pheno) |
+                                   grepl('^V', final_processed_mappings$pheno) |
+                                   grepl('^X', final_processed_mappings$pheno)|
+                                   grepl('_C$', final_processed_mappings$pheno))
+final_processed_mappings<-subset(final_processed_mappings,!grepl('^no_', final_processed_mappings$pheno))
+
+
+final_processed_mappings<- final_processed_mappings %>% distinct(pheno,SNPs,strain)
+#select traits above BF.....this step not needed, double checking everything is above BF
+
+
+
+final_processed_mappings$family <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
+final_processed_mappings$method <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
+selection<-filter(final_processed_mappings, log10p > BF)
+#extract the count base traits
+base_traits <-selection[(selection$method=="absent"| selection$method=="new" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
+counts<-subset(base_traits, grepl("_C$", base_traits$family))
+counts$family <- gsub("_C$" ,"",counts$family)
+
+
+count_df <- counts[counts$peak_id !="NA",]
+count_df <- distinct(count_df,pheno,strain)
+#calcualte median, min, max for each phenotype allele group
+count_df_temp1 <- count_df %>% group_by(pheno) %>% summarise(minimum=min(value,na.rm=TRUE),maximum=max(value,na.rm=TRUE))
+count_df_temp2 <- count_df %>% group_by(pheno,allele) %>% summarise(med=median(value,na.rm=TRUE))
+library(tidyr)
+count_df_temp2<-spread(count_df_temp2, allele,med)
+#merge min/max and median dataframes
+count_df<-merge(count_df_temp1, count_df_temp2,by="pheno")
+colnames(count_df)<-c("pheno","minimum", "maximum","ref","alt")
+
+count_df_pa<-filter(count_df,minimum=="0",maximum=="1")
+
+
+#get count pa traits where the medians are the same between the ref and alt allele, then remove these from the count_df
+#count_df_pa<-filter(count_df_pa,ref==alt)
+#count_df<-filter(count_df,!(pheno %in% count_df_pa$pheno))
+all_counts<-counts
+counts<-filter(counts,(pheno %in% count_df_pa$pheno))
+
+
+counts$pheno <- gsub("_C$" ,"",counts$pheno)
+
+
+
 # read in positions of all TEs
 positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
 names(positions)<-c("chr","start","end","TE","orientation","method","strain","class")
 #create TE family column
+
 positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?reference"),2)[,1]
 positions$family<- paste(stringr::str_split_fixed(positions$family, "_",4)[,3],stringr::str_split_fixed(positions$family, "_",4)[,4],sep="_")
 positions$family <- gsub("_$" ,"",positions$family)
 positions$family <- gsub("_non-reference(.*)$" ,"",positions$family)
 
 #pull out only position traits from mappings dataframe
-position_traits<-subset(final_processed_mappings,
-                        grepl('^I', final_processed_mappings$pheno) |
-                          grepl('^V', final_processed_mappings$pheno) |
-                          grepl('^X', final_processed_mappings$pheno))
+#position_traits<-subset(final_processed_mappings,
+ #                       grepl('^I', final_processed_mappings$pheno) |
+ #                         grepl('^V', final_processed_mappings$pheno) |
+  #                        grepl('^X', final_processed_mappings$pheno))
 #create family column
-position_traits$family  <- paste(stringr::str_split_fixed(position_traits$pheno, "_",4)[,3],stringr::str_split_fixed(position_traits$pheno, "_",4)[,4],sep="_")
-position_traits$family <- gsub("_$" ,"",position_traits$family)
-position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
+
+
+#position_traits$family  <- paste(stringr::str_split_fixed(position_traits$pheno, "_",4)[,3],stringr::str_split_fixed(position_traits$pheno, "_",4)[,4],sep="_")
+#position_traits$family <- gsub("_$" ,"",position_traits$family)
+#position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
 
 #pull out unique phenotypes and peak ids,chr,pos
-distinct_sites <- distinct(position_traits,pheno,chr,peak_id,pos)
+distinct_sites <- distinct(counts,pheno,chr,peak_id,pos)
 distinct_sites <- distinct_sites[order(pheno,peak_id, -ps),] #sort by ascending pheno and descending pvalue
 distinct_sites <- distinct_sites[distinct_sites$peak_id!="NA",] #remove NA peaks
 distinct_sites <- distinct(distinct_sites,pheno,peak_id)
@@ -98,11 +149,13 @@ max_five=length(five)
 max_six=length(six)
 
 #initiate an empty dataframe
-away<- as.data.frame(matrix(0, ncol = 27, nrow = 0))
-names(away) <-c(colnames(position_traits))
+away<- as.data.frame(matrix(0, ncol = 28, nrow = 0))
+names(away) <-c(colnames(counts))
 
-not_away<- as.data.frame(matrix(0, ncol = 27, nrow = 0))
-names(not_away) <-c(colnames(position_traits))
+not_away<- as.data.frame(matrix(0, ncol = 28, nrow = 0))
+names(not_away) <-c(colnames(counts))
+
+ncol(counts)
 
 #iterate through unique QTL peaks
 for (phenotype in unique(distinct_sites$pheno)){
@@ -112,16 +165,21 @@ for (phenotype in unique(distinct_sites$pheno)){
   TE_four <- vector()
   TE_five <- vector()
   TE_six <- vector()
-  transposon  <- paste(stringr::str_split_fixed(phenotype, "_",4)[,3],stringr::str_split_fixed(phenotype, "_",4)[,4],sep="_")
-  transposon <- gsub("_$" ,"",transposon)
-  transposon <- gsub("_non-reference(.*)$" ,"",transposon)
+  transposon  <- stringr::str_split_fixed(phenotype, "_TRANS_",2)[,2]
+  transposon <- gsub("_C$" ,"",transposon)
+  print(phenotype)
+  print(transposon)
+
   locations<-filter(positions, family==transposon)
+  #locations<-filter(positions, family=="Vingi-1E")
   locations<-distinct(locations,chr,start,end,family)
+
+
   for(i in 1:nrow(locations)) { #add all positions of a TE to a chromosome list
     row <- locations[i,]
     TE_chr=row$chr
     TE_pos=row$start
-
+    
     if (TE_chr=="I"){
       TE_one<-c(TE_one,TE_pos)
     }
@@ -168,13 +226,13 @@ for (phenotype in unique(distinct_sites$pheno)){
       if (upper_range>max_one){upper_range<-max_one}
       lower=one[lower_range]
       upper=one[upper_range]
-
+      
       for(ind in TE_one){ # for given position where that TE is found
         if(ind>lower & ind<upper){
           trig<-TRUE
           not_away<-rbind(not_away,row)
           break
-          }
+        }
         #if not----> rbind
       }
     }
@@ -191,13 +249,13 @@ for (phenotype in unique(distinct_sites$pheno)){
       if (upper_range>max_two){upper_range<-max_two}
       lower=two[lower_range]
       upper=two[upper_range]
-
+      
       for(ind in TE_two){ # for given position where that TE is found
         if(ind>lower & ind<upper){
           trig<-TRUE
           not_away<-rbind(not_away,row)
           break
-          }
+        }
         #if not----> rbind
       }
     } 
@@ -205,7 +263,7 @@ for (phenotype in unique(distinct_sites$pheno)){
     #THREE
     if (chr=="III"){
       index <-which(three==bp)
-
+      
       lower_range=index-100
       upper_range=index+100
       
@@ -214,13 +272,13 @@ for (phenotype in unique(distinct_sites$pheno)){
       if (upper_range>max_three){upper_range<-max_three}
       lower=three[lower_range]
       upper=three[upper_range]
-
+      
       for(ind in TE_three){ # for given position where that TE is found
         if(ind>lower & ind<upper){
           trig<-TRUE
           not_away<-rbind(not_away,row)
           break
-          }
+        }
         #if not----> rbind
       }
     } 
@@ -228,7 +286,7 @@ for (phenotype in unique(distinct_sites$pheno)){
     ##FOUR
     if (chr=="IV"){
       index <-which(four==bp)
-
+      
       lower_range=index-100
       upper_range=index+100
       
@@ -237,13 +295,13 @@ for (phenotype in unique(distinct_sites$pheno)){
       if (upper_range>max_four){upper_range<-max_four}
       lower=four[lower_range]
       upper=four[upper_range]
-
+      
       for(ind in TE_four){ # for given position where that TE is found
         if(ind>lower & ind<upper){
           trig<-TRUE
           not_away<-rbind(not_away,row)
           break
-          }
+        }
         #if not----> rbind
       }
     } 
@@ -251,7 +309,7 @@ for (phenotype in unique(distinct_sites$pheno)){
     #FIVE
     if (chr=="V"){
       index <-which(five==bp)
-
+      
       lower_range=index-100
       upper_range=index+100
       
@@ -260,13 +318,13 @@ for (phenotype in unique(distinct_sites$pheno)){
       if (upper_range>max_five){upper_range<-max_five}
       lower=five[lower_range]
       upper=five[upper_range]
-
+      
       for(ind in TE_five){ # for given position where that TE is found
         if(ind>lower & ind<upper){
           trig<-TRUE
           not_away<-rbind(not_away,row)
           break
-          }
+        }
         #if not----> rbind
       }
     } 
@@ -274,7 +332,7 @@ for (phenotype in unique(distinct_sites$pheno)){
     #SIX
     if (chr=="X"){
       index <-which(six==bp)
-
+      
       lower_range=index-100
       upper_range=index+100
       
@@ -283,13 +341,13 @@ for (phenotype in unique(distinct_sites$pheno)){
       if (upper_range>max_six){upper_range<-max_six}
       lower=six[lower_range]
       upper=six[upper_range]
-
+      
       for(ind in TE_six){ # for given position where that TE is found
         if(ind>lower & ind<upper){
           trig<-TRUE
           not_away<-rbind(not_away,row)
           break
-          }
+        }
         #if not----> rbind
       }
     } 
@@ -298,7 +356,8 @@ for (phenotype in unique(distinct_sites$pheno)){
     }
   }
 }
-save(away, file="away_phenos.Rda")
+away_counts<-away
+save(away_counts, file="away_counts_phenos.Rda")
 
 
 
@@ -307,7 +366,7 @@ save(away, file="away_phenos.Rda")
 ##########################################################################################
 
 #get medians of positions traits that are in away df:
-median_df <- position_traits[position_traits$pheno %in% away$pheno,]
+median_df <- counts[counts$pheno %in% away$pheno,]
 median_df <- median_df[median_df$peak_id !="NA",]
 median_df <- distinct(median_df,pheno,strain)
 #calculate median for each phenotype allele group
@@ -316,261 +375,111 @@ median_df<-spread(median_df, allele,med)
 colnames(median_df)<-c("pheno","ref","alt")
 #pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
 median_df<-filter(median_df,ref!=alt)
-save(median_df, file="median_phenos.Rda")
+length(unique(away$pheno))
+length(unique(median_df$pheno))
+median_df_counts<-median_df
+save(median_df_counts, file="median_phenos_counts.Rda")
+
+
+
+
+##########################################################################################
+#                               Merge
+##########################################################################################
+
+good_traits<-filter(counts,  (pheno %in% away_counts$pheno)) 
+good_traits<-filter(good_traits,  (pheno %in% median_df_counts$pheno)) 
+#good_traits<-filter(good_traits,  (pheno %in% low_ld_counts$pheno)) 
+
+bad_traits<-filter(counts,  !(pheno %in% good_traits$pheno)) 
+
+all_counts$pheno <- gsub("_C$" ,"",all_counts$pheno)
+counts_to_remove<-filter(all_counts, (pheno %in% bad_traits$pheno))
+save(counts_to_remove, file="counts_to_remove.Rda")
+
+
+
+
+##########################################################################################
+#                               MEDIAN Differences ALLL 
+##########################################################################################
+
+#get medians of positions traits that are in away df:
+#Amedian_df <- all_counts[all_counts$pheno %in% away$pheno,]
+Amedian_df <- all_counts[all_counts$peak_id !="NA",]
+Amedian_df <- distinct(Amedian_df,pheno,strain)
+#calculate median for each phenotype allele group
+Amedian_df <- Amedian_df %>% group_by(pheno,allele) %>% summarise(med=median(value,na.rm=TRUE))
+Amedian_df<-spread(Amedian_df, allele,med)
+colnames(Amedian_df)<-c("pheno","ref","alt")
+#pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
+Amedian_df<-mutate(Amedian_df,median_diff=abs(ref-alt))
+Amedian_df<-mutate(Amedian_df,diff=ifelse(ref==alt,"SAME","DIFFERENT"))
+Amedian_df$pheno <- gsub("_C$" ,"",Amedian_df$pheno)
+save(Amedian_df, file="Amedian.Rda")
 
 
 ##########################################################################################
 #                               LD check
 ##########################################################################################
-library(cegwas)
-
-GWAS_LD <- function(df){
-  library('corrplot') #package corrplot
-  sn <- paste(df$chr,df$pos,sep="_")
-  tg <- data.frame(snps)%>%
-    mutate(snp = paste(CHROM,POS,sep="_"))%>%
-    filter(snp %in% sn)%>%
-    select(-CHROM,-POS)%>%
-    gather(strain,geno,-snp)%>%
-    spread(snp,geno)
-  
-  c <- cor(tg[,2:ncol(tg)],method="spearman")
-  corrplot(c, method = "circle") #plot matrix 
-  return(c)
-}
-
-#initiate an empty dataframe that will cotain the rho value between "away" and "non-away" peaks for a given phenotype
-final_LD<- as.data.frame(matrix(0, ncol = 4, nrow = 0))
-
-for (i in unique(away$pheno)) { # go though away (not median!) dataframe
-  t1 <- dplyr::filter(data.frame(distinct_sites), pheno == i )
-  sns <- dplyr::filter(t1, aboveBF == 1 )
-  if (nrow(sns)>1){ #if only one QTL and already in away df, nothing to compare for LD
-    crs <- GWAS_LD(sns)
-    crs_df<-as.data.frame(crs,row.names=rownames(crs))
-    crs_df$first_QTL<-rownames(crs_df)
-    ld<-gather(crs_df,"second_QTL","LD",1:(ncol(crs_df)-1))
-    compareN<- filter(not_away, pheno==i) # the QTL with TEs within 100 SNPs
-    compareA<- filter(away, pheno==i) # the QTL with TEs at least 100 SNPs away
-    ld$pheno<-i
-    in_ld<-filter(ld, second_QTL  %in% compareN$SNPs, first_QTL %in% compareA$SNPs, i %in% away$pheno)
-    if (nrow(in_ld) >0) {  #this condition may not be met if all snps are in the "away category"
-      final_LD<-rbind(final_LD,in_ld)
-    }
-  }
-}
-
-final_LD <- mutate(final_LD,abs_rho=abs(LD)) # take the absolute value of Spearman's rho
-final_LD <- mutate(final_LD,ID=paste(pheno,first_QTL,sep="_")) #creat ID: pheno+SNP
-high_ld<-filter(final_LD,abs_rho>.5)
-away_df<-away
-away_df <- mutate(away_df,ID=paste(pheno,SNPs,sep="_"))
-low_ld<-filter(away_df, !(ID %in% high_ld$ID)) #remove QTLs that were in high with a "position QTL"
-
-save(low_ld, file="low_ld.Rda")
-
-#plot histogram of LD correlation values  
-m <- ggplot(final_LD,aes(x=abs_rho))
-m <- m + geom_histogram(bin=.01) +
-  theme_bw()+
-  scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
-m
-
-setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="LD_Histogram.tiff",
-       dpi=300,
-       width=7,
-       height=2.5,
-       units="in")
-
-
-
-
-
-
-
-
-
-
-
-##########
-#CAN REMOVE ALL OF BELOW AFTER CHECKS
-
-
-nrow(away_df)
-nrow(low_ld)
-length(unique(away$pheno))
-length(unique(median_df$pheno))
-length(unique(not_in_ld$pheno))
-i="II_13646471_Vingi-1_CE"
-t1 <- dplyr::filter(data.frame(distinct_sites), pheno == i )
-sns <- dplyr::filter(t1, aboveBF == 1 )
-
-  crs <- GWAS_LD(sns)
-  crs_df<-as.data.frame(crs,row.names=rownames(crs))
-  crs_df$first_QTL<-rownames(crs_df)
-  ld<-gather(crs_df,"second_QTL","LD",1:(ncol(crs_df)-1))
-  compareN<- filter(not_away, pheno==i)
-  compareA<- filter(away, pheno==i)
-
-
-
-
-
-
-GWAS_LD <- function(df){
-  library('corrplot') #package corrplot
-  
-  
-  sn <- paste(df$chr,df$pos,sep="_")
-  
-  tg <- data.frame(snps)%>%
-    mutate(snp = paste(CHROM,POS,sep="_"))%>%
-    filter(snp %in% sn)%>%
-    select(-CHROM,-POS)%>%
-    gather(strain,geno,-snp)%>%
-    spread(snp,geno)
-  
-  
-  c <- cor(tg[,2:ncol(tg)],method="spearman")
-  corrplot(c, method = "circle") #plot matrix
-  
-  return(c)
-}
-print(c)
-
-
-
-  scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
-  geom_point(aes(y=45), alpha=0)+
-  theme(strip.background = element_blank(),
-        strip.text = element_text(size = 11, colour = "black", face = "bold"),
-        panel.margin = unit(.6, "lines"),
-        panel.border = element_rect(fill=NA, colour="black"),
-        panel.background = element_blank(),
-        axis.title = element_text(size=11,face="bold"),
-        axis.text.y = element_text(colour="black", size=11,face="bold"),
-        axis.text.x = element_text(colour="black", size=11,face="bold"),
-        axis.ticks = element_line(colour="black"),
-        legend.position=('none'))+
-  labs(x="Chromosome Position (Mb)", y= "Count")+
-  scale_fill_manual(values = c("deepskyblue4", "orange2"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#unique(final_processed_mappings$pheno)[5]
-
-#"absent_TRANS_CER4-I_CE"
-
-print(i)
-names(d)[3] <- "three"
-names(a)[0]
-names(a)
-names(a)
-print(crs$row.names)
-rownames(crs)
-names(crs)
-names(distinct_sites)
-ncol(crs)
-
-
-
-nrow(away)
-length(unique(away$pheno))
-nrow(distinct_sites)
-length(unique(distinct_sites$pheno))
-length(unique(final_processed_mappings$pheno))
-length(unique(position_traits$pheno))
-
-hmmmm<-away[away$pheno=="I_10499869_WBTransposon00000581",]
-hmmmm2<-distinct_sites[distinct_sites$pheno=="I_10499869_WBTransposon00000581",]
-
-###################
-tail(away)
-hmmmm<-away[away$pheno=="II_3406485_MARINER2_non-reference__temp_sr_10950_120.5_-_new_CB4852",]
-aaa<-positions[positions$family=="LINE2C",]
-bbb<-aaa[aaa$chr=="II",]
-
-indexcc <-which(five==3598054) 
-print(indexcc)
-print(five[410])
-print(five[412])
-print(five[310])
-print(five[510])
-print(length(one))
-print(length(two))
-print(length(three))
-print(length(four))
-print(length(five))
-print(length(six))
-print(TE_five)
-
-
-indexcc <-which(three==10823037) 
-print(indexcc)
-
-indexcc <-which(three==11499581) 
-print(indexcc)
-
-print(three[1071])
-print(three[1271])
-print(three[1069])
-print(three[0971])
-print(three[1171])
-
-
-
-
-indexcc <-which(two==12171121) 
-print(indexcc)
-
-print(two[0903])
-print(two[1103])
-print(two[1002])
-print(two[1004])
-
-
-
-
-
-print(TE_three)
-
-
-check<- final_processed_mappings[final_processed_mappings$pheno=="X_9196067_CER10-I_CE",]
-check2<-check[check$peak_id!="NA",]
-
-
-
-
-
-
-
-
-
-?median
-load("20151025_Processed_Transposon_Mappings.Rda")
-check<-filter(final_processed_mappings,pheno=="I_10263384_LINE2C",peak_id!="NA")
-check<-filter(new_mappings,pheno=="I_10263384_LINE2C",peak_id!="NA")
-unique(check$value)
-print(check$value)
-
-check2<-distinct(check,pheno,strain,value)
-print((check2$value))
-unique(check2$value)
+# library(cegwas)
+# 
+# GWAS_LD <- function(df){
+#   library('corrplot') #package corrplot
+#   sn <- paste(df$chr,df$pos,sep="_")
+#   tg <- data.frame(snps)%>%
+#     mutate(snp = paste(CHROM,POS,sep="_"))%>%
+#     filter(snp %in% sn)%>%
+#     select(-CHROM,-POS)%>%
+#     gather(strain,geno,-snp)%>%
+#     spread(snp,geno)
+#   
+#   c <- cor(tg[,2:ncol(tg)],method="spearman")
+#   corrplot(c, method = "circle") #plot matrix 
+#   return(c)
+# }
+# 
+# #initiate an empty dataframe that will cotain the rho value between "away" and "non-away" peaks for a given phenotype
+# final_LD<- as.data.frame(matrix(0, ncol = 4, nrow = 0))
+# 
+# for (i in unique(away$pheno)) { # go though away (not median!) dataframe
+#   t1 <- dplyr::filter(data.frame(distinct_sites), pheno == i )
+#   sns <- dplyr::filter(t1, aboveBF == 1 )
+#   if (nrow(sns)>1){ #if only one QTL and already in away df, nothing to compare for LD
+#     crs <- GWAS_LD(sns)
+#     crs_df<-as.data.frame(crs,row.names=rownames(crs))
+#     crs_df$first_QTL<-rownames(crs_df)
+#     ld<-gather(crs_df,"second_QTL","LD",1:(ncol(crs_df)-1))
+#     compareN<- filter(not_away, pheno==i) # the QTL with TEs within 100 SNPs
+#     compareA<- filter(away, pheno==i) # the QTL with TEs at least 100 SNPs away
+#     ld$pheno<-i
+#     in_ld<-filter(ld, second_QTL  %in% compareN$SNPs, first_QTL %in% compareA$SNPs, i %in% away$pheno)
+#     if (nrow(in_ld) >0) {  #this condition may not be met if all snps are in the "away category"
+#       final_LD<-rbind(final_LD,in_ld)
+#     }
+#   }
+# }
+# 
+# final_LD <- mutate(final_LD,abs_rho=abs(LD)) # take the absolute value of Spearman's rho
+# final_LD <- mutate(final_LD,ID=paste(pheno,first_QTL,sep="_")) #creat ID: pheno+SNP
+# high_ld<-filter(final_LD,abs_rho>.5)
+# away_df<-away
+# away_df <- mutate(away_df,ID=paste(pheno,SNPs,sep="_"))
+# low_ld<-filter(away_df, !(ID %in% high_ld$ID)) #remove QTLs that were in high with a "position QTL"
+# 
+# low_ld_counts<-low_ld
+# save(low_ld_counts, file="low_ld_counts.Rda")
+# 
+# #plot histogram of LD correlation values  
+# m <- ggplot(final_LD,aes(x=abs_rho))
+# m <- m + geom_histogram(bin=.01) +
+#   theme_bw()+
+#   scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
+# m
+# 
+# setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+# ggsave(filename="LD_Counts_Histogram.tiff",
+#        dpi=300,
+#        width=7,
+#        height=2.5,
+#        units="in")
