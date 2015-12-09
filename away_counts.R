@@ -382,22 +382,17 @@ save(median_df_counts, file="median_phenos_counts.Rda")
 
 
 
-
 ##########################################################################################
-#                               Merge
+#                               FEW CHRO
 ##########################################################################################
-
-good_traits<-filter(counts,  (pheno %in% away_counts$pheno)) 
-good_traits<-filter(good_traits,  (pheno %in% median_df_counts$pheno)) 
-#good_traits<-filter(good_traits,  (pheno %in% low_ld_counts$pheno)) 
-
-bad_traits<-filter(counts,  !(pheno %in% good_traits$pheno)) 
-
-all_counts$pheno <- gsub("_C$" ,"",all_counts$pheno)
-counts_to_remove<-filter(all_counts, (pheno %in% bad_traits$pheno))
-save(counts_to_remove, file="counts_to_remove.Rda")
-
-
+# 
+# #get medians of positions traits that are in away df:
+# chr_df <- all_counts[all_counts$peak_id !="NA",]
+# chr_df <- distinct(chr_df,chr,pheno)
+# 
+# chr_df<- chr_df%>% group_by(pheno) %>% summarise(no_chr=length(unique(chr)))
+# few_chr<-filter(chr_df,no_chr<=2)
+# high_chr<-filter(chr_df,no_chr>2)
 
 
 ##########################################################################################
@@ -415,13 +410,42 @@ colnames(Amedian_df)<-c("pheno","ref","alt")
 #pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
 Amedian_df<-mutate(Amedian_df,median_diff=abs(ref-alt))
 Amedian_df<-mutate(Amedian_df,diff=ifelse(ref==alt,"SAME","DIFFERENT"))
+ABmedian_df<-Amedian_df
 Amedian_df$pheno <- gsub("_C$" ,"",Amedian_df$pheno)
 save(Amedian_df, file="Amedian.Rda")
 
+different<-filter(ABmedian_df, diff == "DIFFERENT")
 
 ##########################################################################################
-#                               LD check
+#                               Merge
 ##########################################################################################
+
+good_traits<-filter(counts,  (pheno %in% away_counts$pheno)) #100 SNPs away filter
+good_traits<-filter(good_traits,  (pheno %in% median_df_counts$pheno))  #median filter
+
+#good_traits<-filter(good_traits,  (pheno %in% low_ld_counts$pheno)) 
+
+bad_traits<-filter(counts,  !(pheno %in% good_traits$pheno)) 
+#bad_traits2<-filter(all_counts,  !(pheno %in% few_chr$pheno)) #chr filter
+bad_traits3<-filter(all_counts,  !(pheno %in% different$pheno)) #chr filter
+#bad_traits2$pheno <- gsub("_C$" ,"",bad_traits2$pheno)
+bad_traits3$pheno <- gsub("_C$" ,"",bad_traits3$pheno)
+#length(unique(bad_traits2$pheno))
+
+#merged <- rbind(bad_traits, bad_traits2)
+merged <- rbind(bad_traits, bad_traits3)
+
+all_counts$pheno <- gsub("_C$" ,"",all_counts$pheno)
+#counts_to_remove<-filter(all_counts, (pheno %in% bad_traits$pheno))
+counts_to_remove<-filter(all_counts, (pheno %in% merged$pheno))
+length(unique(counts_to_remove$pheno))
+save(counts_to_remove, file="counts_to_remove.Rda")
+
+
+
+##########################################################################################
+# #                               LD check
+# ##########################################################################################
 # library(cegwas)
 # 
 # GWAS_LD <- function(df){
