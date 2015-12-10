@@ -4,9 +4,8 @@ library(ggplot2)
 library(grid)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-data <- read.table("TE_gene_interrupt_output.txt")
-colnames(data) <- c("chromosome","startTE","start2","method","gene_start","gene_end", "TE", "orient","RS","gene_name","gene_class","part", "overall")
-# add header in python?
+data <- read.table("essentiality_nonredundant_GO.txt",sep="\t",header=TRUE)
+head(data)
 
 method_names <- list(
   'absent'="Absence",
@@ -22,9 +21,9 @@ method_labeller <- function(variable,value){
   }
 }
 
-m <- ggplot(data,aes(x=startTE/1e6,fill=overall))
+m <- ggplot(data,aes(x=TE_start/1e6,fill=Region))
 m <- m + geom_histogram(bin=.25)+
-  facet_grid(.~chromosome, scale="free", space="free_x",labeller=method_labeller)+
+  facet_grid(.~Chromosome, scale="free", space="free_x",labeller=method_labeller)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
   geom_point(aes(y=45), alpha=0)+
   theme(strip.background = element_blank(),
@@ -35,18 +34,16 @@ m <- m + geom_histogram(bin=.25)+
         axis.title = element_text(size=11,face="bold"),
         axis.text.y = element_text(colour="black", size=11,face="bold"),
         axis.text.x = element_text(colour="black", size=11,face="bold"),
-        axis.ticks = element_line(colour="black"),
-        legend.position=('none'))+
+        axis.ticks = element_line(colour="black"))+
+        #,
+       # legend.position=('none'))+
   labs(x="Chromosome Position (Mb)", y= "Count")+
-  scale_fill_manual(values = c("deepskyblue4", "orange2"))
+  scale_fill_manual(values = c('exon' = "darkturquoise", "five_prime_UTR"="brown1","three_prime_UTR"="coral",'intron' = "plum2", 'promoter' = "steelblue4","gene"="lightgoldenrod2","intergenic"="indianred4"))
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Genic_Intergenic.pdf",
+ggsave(filename="Genic_Features.tiff",
        dpi=300,
        width=7,
        height=2.5,
        units="in")
 
-nrow(data)
-#cyan4
-#darkgoldenrod2
