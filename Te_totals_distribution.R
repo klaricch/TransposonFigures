@@ -6,26 +6,48 @@
 
 library(ggplot2)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-summarydata <- read.table("FINAL_RESULTS.txt",header=TRUE)
+summarydata <- read.table("T_kin_C_matrix_full.txt",header=TRUE)
+#remove ZERO_new traits
+summarydata<-subset(summarydata,!grepl('^ZERO_new', summarydata$trait))
+summarydata<-subset(summarydata,!grepl('^coverage', summarydata$trait))
+#clean trait names
+summarydata$trait <- gsub("_C$" ,"",summarydata$trait)
+summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
 
-##SCATTER
-nrow(summarydata)
-names(summarydata)
+#new column that specifies what caller was used
+summarydata$method<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1]
+#new column that specifies TE family
+summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
+#print(unique(summarydata$trait))
+summarydata<-filter(summarydata,transposon=="total")
+
+#names(summarydata)
+summarydata<-gather(summarydata, "sample","value",2:(ncol(summarydata)-2))
+summarydata<-rename(summarydata,total_tes=value)
 
 #reformat the data
-total_absence<-summarydata[summarydata$method=="absent",2:5]
-total_reference<-summarydata[summarydata$method=="reference",2:5]
-total_insertion=summarydata[summarydata$method=="new",2:5]
-total_absence
-total_reference
-total_insertion
-names(total_insertion)
+total_absence<-filter(summarydata,method=="absent")
+total_reference<-filter(summarydata,method=="reference")
+total_insertion<-filter(summarydata,method=="new")
+
+
+
+
+#
+#
+#
+#
+#remove coverage, etc, traits
+#
+#
+#
+#
+
+#SCATTER
 initial_merge <- merge(total_absence,total_reference, by="sample")
 final_merge <- merge(initial_merge,total_insertion, by="sample")
-names(final_merge)
-final_merge
 
-names(final_merge)<- c("sample", "method.x", "end_tes.x", "total_absences", "method.y", "end_tes.y", "total_references", "method", "end_tes", "total_insertions")
+names(final_merge)<-c("sample", "trait.x",	"method.x",	"transposon.x",	"total_absences",	"trait.y",	"method.y",	"transposon.y",	"total_references",	"trait",	"method",	"transposon",	"total_insertions")
 
 method_names <- list(
   'absent'="Absence",
@@ -67,9 +89,15 @@ cor(final_merge$total_insertions, final_merge$total_references)
 
 ######
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
-classdata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
-names(classdata)<-c("chr","start","end","TE","support","orientation","method","strain","class")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
 classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
+classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
+classdata$id<- paste(stringr::str_split_fixed(classdata$id, "_",4)[,3],stringr::str_split_fixed(classdata$id, "_",4)[,4],sep="_")
+classdata$id <- gsub("_$" ,"",classdata$id)
+classdata$id <- gsub("_non-reference(.*)$" ,"",classdata$id)
+classdata<-mutate(classdata, trait=paste(method,"TRANS",id,sep="_"))
 class_subset <- classdata %>% distinct(id) %>% select(id,class)
 print(class_subset)
 df<-t(class_subset)
@@ -94,7 +122,6 @@ print(ad_r2)
 
 max_insertions<-max(final_merge$total_insertions)
 max_absences<-max(final_merge$total_absences)
-
 
 
 la <- paste("italic(r)^2 == ", ad_r2)

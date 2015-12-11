@@ -1,5 +1,5 @@
 #!/usr/bin/R
-# this script plots the aggregate GWAS results (ie: represents each genomic lcoation of a significant mapping with a bar)
+# this script plots the aggregate GWAS results (ie: represents each genomic location of a significant mapping with a bar)
 # USE: aggregate_GWAS.R
 
 library(ggplot2)

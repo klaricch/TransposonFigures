@@ -1,4 +1,6 @@
 #!/usr/bin/R
+# this script plots a histogram showing the genomic features in which TEs are located
+# USE: gene_interrupt.R
 
 library(ggplot2)
 library(grid)

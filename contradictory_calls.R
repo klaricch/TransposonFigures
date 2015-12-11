@@ -155,11 +155,3 @@ ggsave(filename="Contradictory_Calls_Removals.tiff",
        width=7.5,
        height=3.5,
        units="in")
-
-JU1580 <- filter(summarydata, strain=="JU1580")
-JU847 <- filter(summarydata, strain=="JU847")
-AB1<- filter(summarydata, strain=="AB1")
-PB306 <- filter(summarydata, strain=="PB306")
-
-
-arrange(combo,rel)

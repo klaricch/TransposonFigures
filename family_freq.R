@@ -9,13 +9,21 @@ library(grid)
 library(stringr)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-summarydata <- read.table("T_Full_Results.txt",header=TRUE)
+summarydata <- read.table("T_kin_C_matrix_full.txt",header=TRUE)
+#remove ZERO_new traits
+summarydata<-subset(summarydata,!grepl('^ZERO_new', summarydata$trait))
+#clean trait names
+summarydata$trait <- gsub("_C$" ,"",summarydata$trait)
+summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
 classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
-names(classdata)<-c("chr","start","end","TE","support","orientation","method","strain","class")
+names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
 
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
-classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
-classdata<-mutate(classdata, trait=paste(method,"TRANS",id,sep="_"))
+classdata$family<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
+classdata$family<- paste(stringr::str_split_fixed(classdata$family, "_",4)[,3],stringr::str_split_fixed(classdata$family, "_",4)[,4],sep="_")
+classdata$family <- gsub("_$" ,"",classdata$family)
+classdata$family <- gsub("_non-reference(.*)$" ,"",classdata$family)
+classdata<-mutate(classdata, trait=paste(method,"TRANS",family,sep="_"))
 class_subset <- classdata %>% distinct(trait) %>% select(trait,class)
 summarydata <-merge(summarydata, class_subset, by="trait")
 
@@ -29,7 +37,9 @@ summarydata <- filter(summarydata, trait != "absent_TRANS_total" )
 summarydata <- filter(summarydata, trait != "new_TRANS_total" )
 summarydata <- filter(summarydata, trait != "reference_TRANS_total" )
 summarydata <- filter(summarydata, trait != "coverage" )
-summarydata<-mutate(summarydata, TOTAL=rowSums(summarydata[2:125]))
+no_cols<-ncol(summarydata)-1
+print(summarydata[,no_cols])
+summarydata<-mutate(summarydata, TOTAL=rowSums(summarydata[2:no_cols],na.rm = TRUE))
 
 #new column that specifies what caller was used
 summarydata$caller<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1]

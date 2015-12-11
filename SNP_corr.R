@@ -50,10 +50,6 @@ hm<-final_processed_mappings
 hm<-distinct(final_processed_mappings, pheno,strain)
 
 #need to remove the activity traits
-ggplot(mtcars, aes(factor(cyl), mpg, fill = factor(vs))) + 
-  geom_boxplot() +
-  scale_fill_manual(name = "This is my title", values = c("pink", "green")
-                    , labels = c("0" = "Foo", "1" = "Bar"))
 
 
 gwasPxG <- function(trt){

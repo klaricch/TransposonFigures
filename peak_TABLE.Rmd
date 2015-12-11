@@ -1,0 +1,55 @@
+---
+output: pdf_document
+geometry: margin=.5in
+mainfont: "Helvetica"
+---
+
+
+
+
+```{r,warning=F, message=F, echo=F, comment=NA}
+
+#print a table of:
+#1) peaks, 
+#2) their positions, 
+#3) the variance explained for that QTL, 
+#4) and the left and right confidence intervals
+
+
+library(dplyr)
+library(data.table)
+library(reshape2)
+library(stringr)
+library(ggplot2)
+library(tidyr)
+library(stargazer)
+
+load("/Users/kristen/Documents/transposon_figure_data/CleanedTransposons.Rda") #phenotypes
+load("/Users/kristen/Documents/transposon_figure_data/SignificantMappings_Results_Activity.Rda") # Mappings
+load("/Users/kristen/Documents/transposon_figure_data/Processed_Transposon_Mappings.Rda") #processed mappings
+
+```
+
+
+
+```{r,warning=F, message=F, echo=F, comment=NA}
+#remove "TRANS" from transposon names
+transposon <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
+caller <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
+final_processed_mappings$pheno <-paste(caller,transposon,sep="_")
+```
+
+
+```{r,warning=F, message=F, echo=F, comment=NA}
+#print table
+# write out table of info on each unique peak
+peaks <- final_processed_mappings[final_processed_mappings$peak_id!="NA",]
+#pull unique combinations of pheno and peak id
+sites_clean <- distinct(peaks, peak_id, pheno)
+table_info<-select(sites_clean, pheno,peak_id,chr,pos,var.exp,startPOS,endPOS)   
+colnames(table_info) <- c("Trait", "PeakID","Chromosome","BasePosition", "VarianceExplained(%)", "LeftCI", "RightCI")
+table_info<-format(table_info, digits = 3)
+stargazer(table_info,type='text',font.size="tiny")
+```
+
+

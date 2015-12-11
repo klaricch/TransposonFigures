@@ -1,3 +1,10 @@
+#!/usr/bin/R
+# this script:
+# calculates the Spearman rank correlations between raw counts traits and the corresponding fraction traits 
+# calculates the mean and SD of the min p values for count and fraction traits
+# calcuates the average rho and SD between all combinations of counts and activity traits 
+# USE: correlations.R
+
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
 library(ggplot2)

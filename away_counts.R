@@ -1,7 +1,12 @@
 #!/usr/bin/R
-# this script checks which QTL are located more than 100 SNPs away from the physical location of
-# the TE family that was mapped and outputs such QTL to a new dataframe
-# USE: away.R
+# this script checks:
+#1) which QTL are located more than 100 SNPs away from the physical location of
+#   the TE family that was mapped 
+#2) which QTL have medians that are not equal (for both 0/1 and multi count traits)
+#   and outputs QTL that do not meet the above requirements to a new dataframe
+# can uncomment lines to check for QTL in LD and QTL found on more than 2 chromosomes
+# NOTE: processes raw_count traits
+# USE: away_counts.R
 
 library(dplyr)
 library(ggplot2)

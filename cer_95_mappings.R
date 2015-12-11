@@ -1,7 +1,7 @@
 library(devtools)
 source("http://bioconductor.org/biocLite.R")
 biocLite("biomaRt")
-devtools::install_github("AndersenLab/cegwas")
+#devtools::install_github("AndersenLab/cegwas")
 library(cegwas)
 
 #RUN1
