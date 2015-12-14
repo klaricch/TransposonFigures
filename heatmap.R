@@ -6,6 +6,7 @@
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
 load("SignificantMappings_Results_Activity.Rda")
+library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(data.table)

@@ -3,19 +3,6 @@
 # USE: generate_figures.sh  (in R_scripts dir)
 
 
-############## GWAS Mappings ##############
-echo "Generating GWAS Plots..."
-# plot genomic locations of QTL:
-Rscript aggregate_GWAS.R
-# for count triats, output new dataframe for QTL that don't meet following requirements: for QTL 100 SNPs away from TE positions and with phenotypes with non-equal medians
-Rscript away_counts.R
-# for position traits, output new dataframes for QTL 100 SNPs away from TE positions and with phenotypes with non-equal medians
-Rscript away.R
-# calculate correlations betweeen count, fraction, and activity traits
-Rscript correlations.R
-# plot heatmap of correlation between counts and activity traits
-Rscript heatmap.R
-
 ############## TE Information ##############
 echo "Generating TE Plots..."
 # plot contradictory calls and histograms of their differences in read support
@@ -29,7 +16,23 @@ Rscript gene_interrupt.R
 # plot histogram  of the genomic distrubition of transposons (totals across all samples)--change to not totals
 Rscript TE_density.R
 # plots no. transposon events vs each other for each possible pairing and plot total transposons vs strain per insertions, references, and absences
-Rscript TE_totals_distribution.R
+Rscript Te_totals_distribution.R
+
+
+############## GWAS Mappings ##############
+echo "Generating GWAS Plots..."
+# plot genomic locations of QTL:
+Rscript aggregate_GWAS.R
+# for count triats, output new dataframe for QTL that don't meet following requirements: for QTL 100 SNPs away from TE positions and with phenotypes with non-equal medians
+Rscript away_counts.R
+# for position traits, output new dataframes for QTL 100 SNPs away from TE positions and with phenotypes with non-equal medians
+Rscript away.R
+# calculate correlations betweeen count, fraction, and activity traits
+Rscript correlations.R
+# plot heatmap of correlation between counts and activity traits
+Rscript heatmap.R
+
+
 
 ############## CER1 ##############
 #echo "Generating CER1 Plot..."
@@ -37,7 +40,7 @@ Rscript TE_totals_distribution.R
 
 ############## Simulation Figures ##############
 #echo "Generating Simulation Plots..."
-# for simulatuon data, plot contradictory calls and hisotgrams of their differences in read support
+# for simulatuon data, plot contradictory calls and histograms of their differences in read support
 #Rscript contradictory_calls_sims.R
 # plot the TPR and FDR vs the distance cutoff, read support threshold, and popFreq support threshold
 #Rscript graph_BEDCOMPARE_MEAN_rounds20-23.R

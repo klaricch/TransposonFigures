@@ -5,6 +5,9 @@
 # USE: Te_totals_distribution.R
 
 library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("T_kin_C_matrix_full.txt",header=TRUE)
 #remove ZERO_new traits
@@ -18,7 +21,6 @@ summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
 summarydata$method<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1]
 #new column that specifies TE family
 summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
-#print(unique(summarydata$trait))
 summarydata<-filter(summarydata,transposon=="total")
 
 #names(summarydata)
@@ -114,17 +116,15 @@ names(newdf)
 ####
 
 #1 ABSENCE vs INSERTION
-fit <- lm(total_absences ~ total_insertions, data = final_merge)
-print(summary(fit))
-nums<-summary(fit)
-ad_r2<-round(nums$adj.r.squared,digits=3) #adjusted R2
-print(ad_r2)
+#spearman correlation
+correlation<-cor.test(final_merge$total_absences, final_merge$total_insertions,method="spearman",exact=FALSE)
+rho<-round(correlation$estimate,3)
 
 max_insertions<-max(final_merge$total_insertions)
 max_absences<-max(final_merge$total_absences)
 
 
-la <- paste("italic(r)^2 == ", ad_r2)
+la <- paste("italic(rho) == ", rho)
 m <- ggplot(final_merge, aes(x=total_insertions, y=total_absences))
 m <- m + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions)+
   geom_smooth(method="lm",se=FALSE,col="red")+
@@ -153,16 +153,14 @@ ggsave(filename="Absence_vs_Insertion.tiff",
        units="in")
 
 #2 ABSENCE vs REFERENCE
-fit <- lm(total_absences ~ total_references, data = final_merge)
-print(lm(total_absences ~ total_references, data = final_merge))
-print(summary(fit))
-print(fit)
-nums<-summary(fit)
-ad_r2<-round(nums$adj.r.squared,digits=3) #adjusted R2
-print(ad_r2)
+#spearman correlation
+correlation<-cor.test(final_merge$total_absences, final_merge$total_references,method="spearman",exact=FALSE)
+rho<-round(correlation$estimate,3)
 
 max_references<-max(final_merge$total_references)
-la <- paste("italic(r)^2 == ", ad_r2)
+max_absences<-max(final_merge$total_absences)
+
+la <- paste("italic(rho) == ", rho)
 m <- ggplot(final_merge, aes(x=total_references, y=total_absences))
 m + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
   geom_smooth(method="lm",se=FALSE,col="red")+
@@ -190,12 +188,14 @@ ggsave(filename="Absence_vs_Reference.tiff",
        units="in")
 
 #3 INSERTION vs REFERENCE
-fit <- lm(total_insertions ~ total_references, data = final_merge)
-nums<-summary(fit)
-ad_r2<-round(nums$adj.r.squared,digits=3) #adjusted R2
-print(ad_r2)
+#spearman correlation
+correlation<-cor.test(final_merge$total_insertions, final_merge$total_references,method="spearman",exact=FALSE)
+rho<-round(correlation$estimate,3)
 
-la <- paste("italic(r)^2 == ", ad_r2)
+max_references<-max(final_merge$total_references)
+max_insertions<-max(final_merge$total_insertions)
+la <- paste("italic(rho) == ", rho)
+
 max_references<-max(final_merge$total_references)
 m <- ggplot(final_merge, aes(x=total_references, y=total_insertions))
 m + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+

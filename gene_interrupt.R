@@ -4,9 +4,11 @@
 
 library(ggplot2)
 library(grid)
+library(dplyr)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 data <- read.table("essentiality_nonredundant_GO.txt",sep="\t",header=TRUE)
+data<-filter(data, Method=="new")
 head(data)
 
 method_names <- list(
