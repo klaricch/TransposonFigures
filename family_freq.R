@@ -68,9 +68,10 @@ m <- m + geom_point(size=1.25,aes(color=class))+
         legend.title=element_blank(),
         legend.background = element_rect(fill=FALSE),
         legend.key=element_rect(fill=NA),
+        legend.position="none",
         legend.text=element_text(size=9))+
   scale_color_manual(values = c("navy", "brown3", "darkgoldenrod2"))+
-  labs(y="Transposon", x="Total Transposition Events")
+  labs(y="", x="Total Transposition Events")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Family_Frequency.tiff",
@@ -78,4 +79,17 @@ ggsave(filename="Family_Frequency.tiff",
        width=7.5,
        height=10,
        units="in")
+
+
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+
+total_means<-summarydata %>% group_by(caller,class) %>% summarise(mean=mean(TOTAL,na.rm=TRUE),SD=sd(TOTAL, na.rm=TRUE))
+total_means<- mutate(total_means, id = paste(class,caller,sep="_"))
+summarydata<- mutate(summarydata, id = paste(class,caller,sep="_"))
+
+
+merged<-merge(summarydata, total_means, by="id")
+merged<-mutate(merged, outL=ifelse(abs(TOTAL-mean)>SD, "OUTLIER", "n"))
+outliers<-filter(merged,outL=="OUTLIER")
+save(outliers,file="outlier_total_events_per_family.Rda")
 

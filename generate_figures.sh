@@ -17,6 +17,10 @@ Rscript gene_interrupt.R
 Rscript TE_density.R
 # plots no. transposon events vs each other for each possible pairing and plot total transposons vs strain per insertions, references, and absences
 Rscript Te_totals_distribution.R
+# generate site frequency spectrum
+Rscript allele_freq.R
+#  plots total transposons vs strain per insertions, references, and absences per class and plot histogram of transposons per strain
+Rscript TE_vs_DR.R
 
 
 ############## GWAS Mappings ##############
@@ -55,5 +59,6 @@ Rscript heatmap.R
 #echo "Running Markdown Scripts..."
 #GWAS2.Rmd
 #peak_TABLE.Rmd
+#cer1_mappings.Rmd
 
 echo "Done"

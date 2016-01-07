@@ -44,11 +44,13 @@ a <- a + geom_bar(binwidth=5)+
   labs(x="Coverage (Number of Reads)", y="Count", title=ID)+
   theme(strip.background = element_blank(),
         strip.text.x = element_text(size = 8, colour = "black",face="bold"),
+        strip.text.y = element_text(size = 8, colour = "black",face="bold",angle=90),
         panel.margin = unit(.6, "lines"),
         panel.border = element_rect(fill=NA,colour = "black"),
         panel.background = element_rect(fill = "white"),
         panel.grid.major = element_line(colour = "grey97"),
         axis.title=element_text(size=8),
+        axis.title.y=element_text(vjust=1.75),
         axis.text.y = element_text(colour = "black",size=8),
         axis.text.x = element_text(colour = "black",size=8),
         plot.title = element_text(colour = "black",size=8),
@@ -58,6 +60,12 @@ a <- a + geom_bar(binwidth=5)+
   scale_x_continuous(expand = c(0,0),limits=c(0, max(summarydata$coverage)))+
   scale_fill_manual(values = c("purple3", "turquoise3", "darkorange"))
 a
+
+a <- ggplotGrob(a)
+a$layout[a$layout$name == "strip-right",c("l", "r")] <- 2
+plot(a)
+grid.draw(a)
+
 filename <- paste("depth_TPFD_abs_cov",fileID, sep ="_")
 filename <- paste(filename,"tiff", sep =".")
 ggsave(filename,dpi=300, width=7.5,height=3.5,units="in")
@@ -109,11 +117,13 @@ a <- a + geom_bar(binwidth=5)+
   labs(x="Read Support", y="Count", title=ID)+
   theme(strip.background = element_blank(),
         strip.text.x = element_text(size = 8, colour = "black",face="bold"),
+        strip.text.y = element_text(size = 8, colour = "black",face="bold",angle=90),
         panel.margin = unit(.6, "lines"),
         panel.border = element_rect(fill=NA,colour = "black"),
         panel.background = element_rect(fill = "white"),
         panel.grid.major = element_line(colour = "grey97"),
         axis.title=element_text(size=8),
+        axis.title.y=element_text(vjust=1.75),
         axis.text.y = element_text(colour = "black",size=8),
         axis.text.x = element_text(colour = "black",size=8),
         plot.title = element_text(colour = "black",size=8),
@@ -123,6 +133,11 @@ a <- a + geom_bar(binwidth=5)+
   scale_x_continuous(expand = c(0,0),limits=c(0, max(summarydata$N)))+
   scale_fill_manual(values = c("purple3", "darkorange"))
 a
+
+a <- ggplotGrob(a)
+a$layout[a$layout$name == "strip-right",c("l", "r")] <- 2
+plot(a)
+grid.draw(a)
 
 filename <- paste("depth_TPFD_abs_RS",fileID, sep ="_")
 filename <- paste(filename,"tiff", sep =".")

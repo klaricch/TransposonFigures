@@ -88,11 +88,19 @@ a <- a + geom_line(color="black")+ xlim(0,51)+
         axis.text.x = element_text(colour = "black",size=8),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
+        axis.title.y=element_text(vjust=1.75),
         plot.title = element_text(size=9),
         legend.position=('none'))+
-  labs(x = "Distance Cutoff", y="",title=ID)+
+  labs(x = "Distance Cutoff (No.of Reads)", y="",title=ID)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0),limits=c(0,50.5))
 a
+
+a <- ggplotGrob(a)
+a$layout[a$layout$name == "strip-right",c("l", "r")] <- 2
+plot(a)
+grid.draw(a)
+
+
 filename <- paste("ds",fileID, sep ="_")
 filename <- paste(filename,"tiff", sep =".")
 ggsave(filename,dpi=300, width=7.5,height=3.5,units="in")
@@ -149,11 +157,17 @@ b <- b + geom_line(color="black")+ xlim(0,51)+
         axis.text.x = element_text(colour = "black",size=8),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
+        axis.title.y=element_text(vjust=1.75),
         plot.title = element_text(size=9),
         legend.position=('none'))+
   labs(x = "Minimum Read Support Threshold", y="",title=ID)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0),limits=c(0,31))
 b
+
+b <- ggplotGrob(b)
+b$layout[b$layout$name == "strip-right",c("l", "r")] <- 2
+plot(b)
+grid.draw(b)
 
 filename <- paste("rs",fileID, sep ="_")
 filename <- paste(filename,"tiff", sep =".")
@@ -212,11 +226,18 @@ c <- c + geom_line(color="black")+ xlim(0,51)+
         axis.text.x = element_text(colour = "black",size=8),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
+        axis.title.y=element_text(vjust=1.75),
         plot.title = element_text(size=9),
         legend.position=('none'))+
   labs(x = "Minimum PopFreq Support Threshold", y="")+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0),limits=c(0,1.1))
 c
+
+c <- ggplotGrob(c)
+c$layout[c$layout$name == "strip-right",c("l", "r")] <- 2
+plot(c)
+grid.draw(c)
+
 filename <- paste("vs",fileID, sep ="_")
 filename <- paste(filename,"tiff", sep =".")
 ggsave(filename,dpi=300, width=7.5,height=3.5,units="in",title=ID)

@@ -1,0 +1,218 @@
+---
+output: pdf_document
+geometry: margin=1in
+---
+
+
+
+```{r,fig.width=7.5, fig.height=2.5,warning=F, message=F, echo=F,comment=NA,results="asis"}
+#!/usr/bin/R
+# this script
+# 1) plots no. transposon events vs each other for each possible pairing
+# 2) plots total transposons vs strain per insertions, references, and absences
+# USE: Te_totals_distribution.R
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(grid)
+library(cowplot)
+
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+summarydata <- read.table("T_kin_C_matrix_full.txt",header=TRUE)
+#remove ZERO_new traits
+summarydata<-subset(summarydata,!grepl('^ZERO_new', summarydata$trait))
+summarydata<-subset(summarydata,!grepl('^coverage', summarydata$trait))
+#clean trait names
+summarydata$trait <- gsub("_C$" ,"",summarydata$trait)
+summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
+
+classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
+
+# add te class info to summarydata(new_TRANS_end_tes will be removed)
+classdata$family<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
+classdata$family<- paste(stringr::str_split_fixed(classdata$family, "_",4)[,3],stringr::str_split_fixed(classdata$family, "_",4)[,4],sep="_")
+classdata$family <- gsub("_$" ,"",classdata$family)
+classdata$family <- gsub("_non-reference(.*)$" ,"",classdata$family)
+classdata<-mutate(classdata, trait=paste(method,"TRANS",family,sep="_"))
+class_subset <- classdata %>% distinct(trait) %>% select(trait,class)
+summarydata <-merge(summarydata, class_subset, by="trait")
+
+#names(summarydata)
+summarydata<-gather(summarydata, "sample","value",2:(ncol(summarydata)-1))
+#new column that specifies what caller was used
+summarydata$method<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1]
+#new column that specifies TE family
+summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
+#reformat the data
+summarydata <- summarydata %>% group_by(sample,class, method,transposon) %>% summarise(XX=sum(value,na.rm=TRUE))
+
+
+#iterate through families
+fam<-summarydata
+
+for (family in unique(summarydata$transposon)){
+  summarydata<-fam
+  summarydata<-filter(summarydata,transposon==family)
+  
+  class_label<-unique(summarydata$class)
+  print(paste(family,class_label,sep="_"))
+  cat("\n")
+
+  total_absence<-filter(summarydata,method=="absent")
+  total_reference<-filter(summarydata,method=="reference")
+  total_insertion<-filter(summarydata,method=="new")
+  
+  
+  
+  
+  #
+  #
+  #
+  #
+  #remove coverage, etc, traits
+  #
+  #
+  #
+  #
+  #SCATTER
+  #check over below line
+  final_merge<- Reduce(function(x, y) merge(x, y, all=TRUE,by="sample"), list(total_absence, total_reference, total_insertion))
+  #initial_merge <- merge(total_absence,total_reference, by="sample")
+  #final_merge <- merge(initial_merge,total_insertion, by="sample")
+  
+  names(final_merge)<-c("sample", "trait.x",  "method.x",  "transposon.x",	"total_absences",	"trait.y",	"method.y",	"transposon.y",	"total_references",	"trait",	"method",	"transposon",	"total_insertions")
+  
+  method_names <- list(
+    'absent'="Absence",
+    'new'="Insertion",
+    'reference'="Reference"
+  )
+  
+  method_labeller <- function(variable,value){
+    return(method_names[value])
+  }
+  
+  
+  
+  ####
+  
+  #length(unique(final_merge$total_absences))
+  #if (length(unique(final_merge$total_absences))>1){
+  #  print("YES")
+  #}
+  #1 ABSENCE vs INSERTION
+  #spearman correlation
+  if (nrow(total_absence)>1 && nrow(total_insertion)>1){
+  correlation<-cor.test(final_merge$total_absences, final_merge$total_insertions,method="spearman",exact=FALSE)
+  rho<-round(correlation$estimate,3)
+  
+  max_insertions<-max(final_merge$total_insertions)
+  max_absences<-max(final_merge$total_absences)
+  
+  
+  la <- paste("italic(rho) == ", rho)
+  m1 <- ggplot(final_merge, aes(x=total_insertions, y=total_absences))
+  m1 <- m1 + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions)+
+    geom_smooth(method="lm",se=FALSE,col="red")+
+    geom_abline(slope=1,linetype="dashed",colour="gray52")+
+    annotate("text", x=.2*max_insertions, y=.9*max_insertions,label=la,parse=TRUE, colour="red",size=2.5)+
+    theme(strip.text.x = element_text(size = 9, colour = "black"),
+          strip.background = element_blank(),
+          legend.position=c(.90,0.75),
+          legend.background = element_rect(fill=FALSE),
+          legend.text=element_text(size=9),
+          panel.background = element_rect(fill = "white"),
+          axis.ticks =element_line(colour = "black"),
+          axis.text.y = element_text(colour = "black",size=9),
+          axis.text.x = element_text(colour = "black",size=9),
+          axis.line=element_line(linetype="solid"),
+          axis.title=element_text(size=9))+
+    scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
+    guides(fill=FALSE) +
+    labs(x = "Insertion Events", y = "Absence Events")
+  m1
+
+
+  } else{m1<-NULL}
+  
+  #2 ABSENCE vs REFERENCE
+  #spearman correlation
+  if (nrow(total_absence)>1 && nrow(total_reference)>1){
+  correlation<-cor.test(final_merge$total_absences, final_merge$total_references,method="spearman",exact=FALSE)
+  rho<-round(correlation$estimate,3)
+  
+  max_references<-max(final_merge$total_references)
+  max_absences<-max(final_merge$total_absences)
+  
+  la <- paste("italic(rho) == ", rho)
+  m2 <- ggplot(final_merge, aes(x=total_references, y=total_absences))
+  m2 <- m2 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
+    geom_smooth(method="lm",se=FALSE,col="red")+
+    geom_abline(slope=1,linetype="dashed",colour="gray52")+
+    annotate("text", x=.2*max_references, y=.9*max_references,label=la,parse=TRUE, colour="red",size=2.5)+
+    theme(strip.text.x = element_text(size = 9, colour = "black"),
+          strip.background = element_blank(),
+          legend.position=c(.90,0.75),
+          legend.background = element_rect(fill=FALSE),
+          legend.text=element_text(size=9),
+          panel.background = element_rect(fill = "white"),
+          axis.ticks =element_line(colour = "black"),
+          axis.text.y = element_text(colour = "black",size=9),
+          axis.text.x = element_text(colour = "black",size=9),
+          axis.line=element_line(linetype="solid"),
+          axis.title=element_text(size=9))+
+    scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
+    guides(fill=FALSE) +
+    labs(x = "Reference Events", y = "Absence Events")
+  
+  } else{m2<-NULL}
+  
+  
+  
+  #3 INSERTION vs REFERENCE
+  #spearman correlation
+  if (nrow(total_reference)>1 && nrow(total_insertion)>1){
+  correlation<-cor.test(final_merge$total_insertions, final_merge$total_references,method="spearman",exact=FALSE)
+  rho<-round(correlation$estimate,3)
+  
+  max_references<-max(final_merge$total_references)
+  max_insertions<-max(final_merge$total_insertions)
+  la <- paste("italic(rho) == ", rho)
+  
+  max_references<-max(final_merge$total_references)
+  m3 <- ggplot(final_merge, aes(x=total_references, y=total_insertions))
+  m3 <- m3 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
+    geom_smooth(method="lm",se=FALSE,col="red")+
+    geom_abline(slope=1,linetype="dashed",colour="gray52")+
+    annotate("text", x=.2*max_references, y=.9*max_references,label=la,parse=TRUE, colour="red",size=2.5)+
+    theme(strip.text.x = element_text(size = 9, colour = "black"),
+          strip.background = element_blank(),
+          legend.position=c(.90,0.75),
+          legend.background = element_rect(fill=FALSE),
+          legend.text=element_text(size=9),
+          panel.background = element_rect(fill = "white"),
+          axis.ticks =element_line(colour = "black"),
+          axis.text.y = element_text(colour = "black",size=9),
+          axis.text.x = element_text(colour = "black",size=9),
+          axis.line=element_line(linetype="solid"),
+          axis.title=element_text(size=9))+
+    scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
+    guides(fill=FALSE) +
+    labs(x = "Reference Events", y = "Insertion Events")
+  
+  } else{m3<-NULL}
+  
+  
+  all<-plot_grid(m1, m2, m3,ncol=3,labels=c('A', 'B','C'))
+  plot(all)
+  cat("\n\n")
+  
+}
+
+
+
+```
+

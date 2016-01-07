@@ -32,12 +32,13 @@ m <- m + geom_histogram(bin=.25)+
   geom_point(aes(y=45), alpha=0)+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 11, colour = "black", face = "bold"),
-        panel.margin = unit(.6, "lines"),
+        panel.margin = unit(.25, "lines"),
         panel.border = element_rect(fill=NA, colour="black"),
         panel.background = element_blank(),
         axis.title = element_text(size=11,face="bold"),
         axis.text.y = element_text(colour="black", size=11,face="bold"),
-        axis.text.x = element_text(colour="black", size=11,face="bold"),
+        axis.text.x = element_blank(),
+        #axis.text.x = element_text(colour="black", size=11,face="bold"),
         axis.ticks = element_line(colour="black"))+
         #,
        # legend.position=('none'))+

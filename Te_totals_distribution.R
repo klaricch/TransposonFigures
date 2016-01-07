@@ -8,6 +8,8 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(stringr)
+library(cowplot)
+library(grid)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("T_kin_C_matrix_full.txt",header=TRUE)
 #remove ZERO_new traits
@@ -21,6 +23,7 @@ summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
 summarydata$method<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1]
 #new column that specifies TE family
 summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
+families<-summarydata
 summarydata<-filter(summarydata,transposon=="total")
 
 #names(summarydata)
@@ -61,34 +64,6 @@ method_labeller <- function(variable,value){
   return(method_names[value])
 }
 
-
-
-
-
-
-#TESTS
-cor.test(final_merge$total_absences, final_merge$total_insertions,method="spearman",exact=FALSE)
-cor.test(final_merge$total_absences, final_merge$total_references,method="spearman",exact=FALSE)
-cor.test(final_merge$total_insertions, final_merge$total_references,method="spearman",exact=FALSE)
-
-cor.test(final_merge$total_absences, final_merge$total_insertions,method="pearson",exact=FALSE)
-cor.test(final_merge$total_absences, final_merge$total_references,method="pearson",exact=FALSE)
-cor.test(final_merge$total_insertions, final_merge$total_references,method="pearson",exact=FALSE)
-
-fit <- lm(total_absences ~ total_insertions, data = final_merge)
-print(summary(fit))
-fit <- lm(total_absences ~ total_references, data = final_merge)
-print(summary(fit))
-fit <- lm(total_insertions ~ total_references, data = final_merge)
-print(summary(fit))
-
-cor(final_merge$total_absences, final_merge$total_insertions)
-cor(final_merge$total_absences, final_merge$total_references)
-cor(final_merge$total_insertions, final_merge$total_references)
-
-
-
-
 ######
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
@@ -125,11 +100,11 @@ max_absences<-max(final_merge$total_absences)
 
 
 la <- paste("italic(rho) == ", rho)
-m <- ggplot(final_merge, aes(x=total_insertions, y=total_absences))
-m <- m + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions)+
+m1 <- ggplot(final_merge, aes(x=total_insertions, y=total_absences))
+m1 <- m1 + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions)+
   geom_smooth(method="lm",se=FALSE,col="red")+
   geom_abline(slope=1,linetype="dashed",colour="gray52")+
-  annotate("text", x=.1*max_insertions, y=.9*max_insertions,label=la,parse=TRUE, colour="red",size=2.5)+
+  annotate("text", x=.2*max_insertions, y=.9*max_insertions,label=la,parse=TRUE, colour="red",size=2.5)+
   theme(strip.text.x = element_text(size = 9, colour = "black"),
         strip.background = element_blank(),
         legend.position=c(.90,0.75),
@@ -144,7 +119,7 @@ m <- m + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions)+
   scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
   guides(fill=FALSE) +
   labs(x = "Insertion Events", y = "Absence Events")
-m
+m1
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Absence_vs_Insertion.tiff",
        dpi=300,
@@ -161,11 +136,11 @@ max_references<-max(final_merge$total_references)
 max_absences<-max(final_merge$total_absences)
 
 la <- paste("italic(rho) == ", rho)
-m <- ggplot(final_merge, aes(x=total_references, y=total_absences))
-m + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
+m2 <- ggplot(final_merge, aes(x=total_references, y=total_absences))
+m2 <- m2 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
   geom_smooth(method="lm",se=FALSE,col="red")+
   geom_abline(slope=1,linetype="dashed",colour="gray52")+
-  annotate("text", x=.1*max_references, y=.9*max_references,label=la,parse=TRUE, colour="red",size=2.5)+
+  annotate("text", x=.2*max_references, y=.9*max_references,label=la,parse=TRUE, colour="red",size=2.5)+
   theme(strip.text.x = element_text(size = 9, colour = "black"),
         strip.background = element_blank(),
         legend.position=c(.90,0.75),
@@ -187,6 +162,8 @@ ggsave(filename="Absence_vs_Reference.tiff",
        height=4,
        units="in")
 
+
+
 #3 INSERTION vs REFERENCE
 #spearman correlation
 correlation<-cor.test(final_merge$total_insertions, final_merge$total_references,method="spearman",exact=FALSE)
@@ -197,11 +174,11 @@ max_insertions<-max(final_merge$total_insertions)
 la <- paste("italic(rho) == ", rho)
 
 max_references<-max(final_merge$total_references)
-m <- ggplot(final_merge, aes(x=total_references, y=total_insertions))
-m + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
+m3 <- ggplot(final_merge, aes(x=total_references, y=total_insertions))
+m3 <- m3 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references)+
   geom_smooth(method="lm",se=FALSE,col="red")+
   geom_abline(slope=1,linetype="dashed",colour="gray52")+
-  annotate("text", x=.1*max_references, y=.9*max_references,label=la,parse=TRUE, colour="red",size=2.5)+
+  annotate("text", x=.2*max_references, y=.9*max_references,label=la,parse=TRUE, colour="red",size=2.5)+
   theme(strip.text.x = element_text(size = 9, colour = "black"),
         strip.background = element_blank(),
         legend.position=c(.90,0.75),
@@ -223,6 +200,19 @@ ggsave(filename="Insertion_vs_Reference.tiff",
        height=4,
        units="in")
 
+plot_grid(m1, m2, m3,ncol=3,labels=c('A', 'B','C'))
+ggsave(filename="All_vs_All.tiff",
+       dpi=300,
+       width=7.5,
+       height=2.25,
+       units="in")
+
+
+
+
+
+#
+
 #TRANSPOSONS vs STRAINS
 names(summarydata)
 #INSERTIONS
@@ -230,14 +220,14 @@ insertions<-summarydata[summarydata$method=="new",]
 insertions<-(insertions[ order(insertions$total_tes), ])
 #plot(insertions$total_tes~insertions$sample)
 #pdf(file = "insertions_per_strain.pdf")
-m <- ggplot(insertions, aes(y=reorder(insertions$sample,insertions$total_tes), x=insertions$total_tes)) 
-m<- m + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(color="black",size=8),
+m1 <- ggplot(insertions, aes(x=reorder(insertions$sample,insertions$total_tes), y=insertions$total_tes)) 
+m1<- m1 + geom_point(size=.75) +aes(group=1)+
+  theme(axis.text.x = element_text(color="black",size=8,angle=90),
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
-  labs(x="Strain", y="Number of Insertion Events")
-m
+  labs(x="", y="Number of Insertion Events")
+m1
 ggsave(filename="Insertions_per_Strain.tiff",
        dpi=300,
        width=7.5,
@@ -249,14 +239,14 @@ absences<-summarydata[summarydata$method=="absent",]
 absences<-(absences[ order(absences$total_tes), ])
 #plot(absences$total_tes~absences$sample)
 #pdf(file = "absences_per_strain.pdf")
-m <- ggplot(absences, aes(y=reorder(absences$sample,absences$total_tes), x=absences$total_tes)) 
-m<- m + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(color="black",size=8),
+m2 <- ggplot(absences, aes(x=reorder(absences$sample,absences$total_tes), y=absences$total_tes)) 
+m2<- m2 + geom_point(size=.75) +aes(group=1)+
+  theme(axis.text.x = element_text(color="black",size=8,angle=90),
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
-  labs(x="Strain", y="Number of Absence Events")
-m
+  labs(x="", y="Number of Absence Events")
+m2
 ggsave(filename="Absences_per_Strain.tiff",
        dpi=300,
        width=7.5,
@@ -268,16 +258,39 @@ references<-summarydata[summarydata$method=="reference",]
 references<-(references[ order(references$total_tes), ])
 #plot(references$total_tes~references$sample)
 #pdf(file = "references_per_strain.pdf")
-m <- ggplot(references, aes(y=reorder(references$sample,references$total_tes), x=references$total_tes)) 
-m<- m + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(color="black",size=8),
+m3 <- ggplot(references, aes(x=reorder(references$sample,references$total_tes), y=references$total_tes)) 
+m3<- m3 + geom_point(size=.75) +aes(group=1)+
+  theme(axis.text.x = element_text(color="black",size=8,angle=90),
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
-  labs(x="Strain", y="Number of Reference Events")
-m
+  labs(x="", y="Number of Reference Events")
+m3
 ggsave(filename="References_per_Strain.tiff",
        dpi=300,
        width=7.5,
        height=10,
        units="in")
+
+
+
+plot_grid(m1, m2, m3,ncol=1,labels=c('A', 'B','C'))
+ggsave(filename="All_per_Strain.tiff",
+       dpi=300,
+       width=7.5,
+       height=10,
+       units="in")
+
+
+
+min(absences$total_tes)
+max(absences$total_tes)
+mean(absences$total_tes)
+
+min(insertions$total_tes)
+max(insertions$total_tes)
+mean(insertions$total_tes)
+
+min(references$total_tes)
+max(references$total_tes)
+mean(references$total_tes)

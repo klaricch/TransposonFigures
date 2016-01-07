@@ -65,7 +65,7 @@ ggsave(filename="Histogram_Contradictory_Calls.tiff",dpi=300, width=7.5,height=3
 
 #CER1 SCATTER
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-comparison<- read.table("cer_comparison.txt")
+comparison<- read.table("cer_comparison.txt",na.strings="NAA")
 names(comparison)<-c("strain","TEcaller","paper","outcome")
 cer1<-summarydata %>% filter(grepl("CER1_reference", TE))
 #add in "CORRECT/INCORRECT calls"
@@ -101,8 +101,9 @@ ggsave(filename="CER1_Contradictory_Calls_Filtered.tiff",
 
 
 #nonfiltered
+combo<-arrange(combo,desc(outcome))
 a <- ggplot(data = combo, aes(x = TEMP_support,y=TELOCATE_support))
-a<- a+ geom_point(aes(col = ifelse(outcome=="CORRECT",'black', ifelse(outcome=="INCORRECT",'red','green'))))+
+a<- a+ geom_point(aes(colour = outcome))+
   theme(strip.background = element_blank(),
         strip.text.x = element_text(size = 9, colour = "black",face="bold"),
         strip.text.y = element_text(size = 9, colour = "black",face="bold"),
@@ -113,7 +114,8 @@ a<- a+ geom_point(aes(col = ifelse(outcome=="CORRECT",'black', ifelse(outcome=="
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
         legend.position=('none'))+
-  labs(x="Absence Call Read Support", y="Reference Call Read Support")
+  labs(x="Absence Call Read Support", y="Reference Call Read Support")+
+  scale_colour_manual(values = c("NA"="grey85","INCORRECT"="darkorange", "CORRECT"="purple3"))
 a
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="CER1_Contradictory_Calls.tiff",
@@ -121,6 +123,7 @@ ggsave(filename="CER1_Contradictory_Calls.tiff",
        width=7.5,
        height=3.5,
        units="in")
+#ifelse(outcome=="CORRECT",'black', ifelse(outcome=="INCORRECT",'pink','green')))
 
 #SCATTER REMOVALS
 hun<-round((nrow(filter(summarydata, rel>100))/nrow(summarydata))*100,digits=2)
