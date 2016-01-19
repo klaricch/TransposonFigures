@@ -17,34 +17,33 @@ setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
 load("away_phenos.Rda")
 load("median_phenos.Rda")
-load("low_ld.Rda")
+#load("low_ld.Rda")
 load("counts_to_remove.Rda")
-load("prune_final_traits_to_this_set.Rda")
 load("Amedian.Rda")
 
-###REMOVE LATER!!!!!
-final_processed_mappings <- dplyr::filter(final_processed_mappings, (pheno %in% traits))
+
+
 
 
 #remove fraction and movement traits
-final_processed_mappings<-subset(final_processed_mappings,
-                                 grepl('^I', final_processed_mappings$pheno) |
-                                   grepl('^V', final_processed_mappings$pheno) |
-                                   grepl('^X', final_processed_mappings$pheno)|
-                                   grepl('_C$', final_processed_mappings$pheno))
-final_processed_mappings<-subset(final_processed_mappings,!grepl('^no_', final_processed_mappings$pheno))
+processed_mapping_df<-subset(processed_mapping_df,
+                                 grepl('^I', processed_mapping_df$trait) |
+                                   grepl('^V', processed_mapping_df$trait) |
+                                   grepl('^X', processed_mapping_df$trait)|
+                                   grepl('_C$', processed_mapping_df$trait))
+processed_mapping_df<-subset(processed_mapping_df,!grepl('^no_', processed_mapping_df$trait))
 
 
 # make cure C and frac are not getting confused
 #PxG function
-hm<-final_processed_mappings
-hm<-distinct(final_processed_mappings, pheno,strain)
+hm<-processed_mapping_df
+hm<-distinct(processed_mapping_df, trait,strain)
 
 gwasPxG <- function(trt){
   #load("~/Dropbox/AndersenLab/RCode/Stefan/good_gwasMappingsINlinkage_phenotypes.Rda")
   
   hm %>%
-    filter(pheno==trt)%>%
+    filter(trait==trt)%>%
     ggplot(.)+
     aes(x=allele,y = value,fill=as.factor(allele))+
     geom_boxplot(outlier.shape=NA,size =1)+
@@ -67,13 +66,13 @@ gwasPxG <- function(trt){
 }
 
 # pull unique combos, remove strain column(don't need specific strain info at this point)
-#final_processed_mappings <- distinct(select(final_processed_mappings, -strain,-allele,-value))
-final_processed_mappings<- final_processed_mappings %>% distinct(pheno,SNPs,strain)
+#processed_mapping_df <- distinct(select(processed_mapping_df, -strain,-allele,-value))
+processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker,strain)
 
 
 #create family and method columns
-final_processed_mappings$family <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
-final_processed_mappings$method <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
+processed_mapping_df$family <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
+processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
 
 #set up method labellers
 method_names <- list(
@@ -93,14 +92,14 @@ method_labeller <- function(variable,value){
 
 #read in position data and create family column
 positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
-names(positions)<-c("chr","start","end","TE","orientation","method","strain","class")
+names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?reference"),2)[,1]
 positions$family<- paste(stringr::str_split_fixed(positions$family, "_",4)[,3],stringr::str_split_fixed(positions$family, "_",4)[,4],sep="_")
 positions$family <- gsub("_$" ,"",positions$family)
 positions$family <- gsub("_non-reference(.*)$" ,"",positions$family)
 
 #select traits above BF.....this step not needed, double checking everything is above BF
-selection<-filter(final_processed_mappings, log10p > BF)
+selection<-filter(processed_mapping_df, log10p > BF)
 
 #extract the count base traits
 base_traits <-selection[(selection$method=="absent"| selection$method=="new" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
@@ -115,31 +114,31 @@ counts$family <- gsub("_C$" ,"",counts$family)
 
 #
 #
-final_processed_mappings <- distinct(select(final_processed_mappings, -strain,-allele,-value))
-final_processed_mappings<- final_processed_mappings %>% distinct(pheno,SNPs)
+processed_mapping_df <- distinct(select(processed_mapping_df, -strain,-allele,-value))
+processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker)
 
 
 
 #pull out only position traits from mappings dataframe
 position_traits<-subset(selection,
-                        grepl('^I', selection$pheno) |
-                          grepl('^V', selection$pheno) |
-                          grepl('^X', selection$pheno))
+                        grepl('^I', selection$trait) |
+                          grepl('^V', selection$trait) |
+                          grepl('^X', selection$trait))
 
 #create family column
-position_traits$family  <- paste(stringr::str_split_fixed(position_traits$pheno, "_",4)[,3],stringr::str_split_fixed(position_traits$pheno, "_",4)[,4],sep="_")
+position_traits$family  <- paste(stringr::str_split_fixed(position_traits$trait, "_",4)[,3],stringr::str_split_fixed(position_traits$trait, "_",4)[,4],sep="_")
 position_traits$family <- gsub("_$" ,"",position_traits$family)
 position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
 
 #optional filter for away phenos
-position_traits<-position_traits[position_traits$pheno %in% away$pheno,] 
+position_traits<-position_traits[position_traits$trait %in% away$trait,] 
 #optional filter for different median phenos 
-position_traits<-position_traits[position_traits$pheno %in% median_df$pheno,] 
+position_traits<-position_traits[position_traits$trait %in% median_df$trait,] 
 #optional filter for low ld phenos
-position_traits<-position_traits[position_traits$pheno %in% low_ld$pheno,] 
+#position_traits<-position_traits[position_traits$trait %in% low_ld$trait,] 
 
-# add position trait family info to final_processed_mappings
-final_processed_mappings<-final_processed_mappings %>%mutate(family = ifelse(final_processed_mappings$pheno %in% away$pheno, (paste(stringr::str_split_fixed(final_processed_mappings$pheno, "_",4)[,3],stringr::str_split_fixed(final_processed_mappings$pheno, "_",4)[,4],sep="_")), final_processed_mappings$family))
+# add position TRAIT_col family info to processed_mapping_df
+processed_mapping_df<-processed_mapping_df %>%mutate(family = ifelse(processed_mapping_df$trait %in% away$trait, (paste(stringr::str_split_fixed(processed_mapping_df$trait, "_",4)[,3],stringr::str_split_fixed(processed_mapping_df$trait, "_",4)[,4],sep="_")), processed_mapping_df$family))
 
 #bind count and position traits option...choose oen of below two
 #selection<-rbind(counts,position_traits)
@@ -147,24 +146,24 @@ selection<-counts
 
 #COMMENT OUT BELOW!!!!!!
 
-#selection<-selection[selection$pheno=="ONE_new_TRANS_Tc1A_C"|selection$pheno=="absent_TRANS_MIRAGE1_C",]
+#selection<-selection[selection$trait=="ONE_new_TRANS_Tc1A_C"|selection$trait=="absent_TRANS_MIRAGE1_C",]
 
 
-#selection<-selection[selection$pheno=="I_13455974_Tc3"|selection$pheno=="V_739436_WBTransposon00000074",]
-#selection<-selection[selection$pheno=="II_507265_LINE2C",]
+#selection<-selection[selection$trait=="I_13455974_Tc3"|selection$trait=="V_739436_WBTransposon00000074",]
+#selection<-selection[selection$trait=="II_507265_LINE2C",]
 
 
 #
 
 #strip count marker and remnant marks from dataframes
-selection$pheno <- gsub("_C$" ,"",selection$pheno)
-hm$pheno <- gsub("_C$" ,"",hm$pheno)
-final_processed_mappings$pheno <- gsub("_C$" ,"",final_processed_mappings$pheno)
-final_processed_mappings$family <- gsub("_C$" ,"",final_processed_mappings$family)
-final_processed_mappings$family <- gsub("_$" ,"",final_processed_mappings$family)
-final_processed_mappings$family <- gsub("_non-reference(.*)$" ,"",final_processed_mappings$family)
+selection$trait <- gsub("_C$" ,"",selection$trait)
+hm$trait <- gsub("_C$" ,"",hm$trait)
+processed_mapping_df$trait <- gsub("_C$" ,"",processed_mapping_df$trait)
+processed_mapping_df$family <- gsub("_C$" ,"",processed_mapping_df$family)
+processed_mapping_df$family <- gsub("_$" ,"",processed_mapping_df$family)
+processed_mapping_df$family <- gsub("_non-reference(.*)$" ,"",processed_mapping_df$family)
 
-selection <- filter(selection, !(pheno %in% counts_to_remove$pheno))
+selection <- filter(selection, !(trait %in% counts_to_remove$trait))
 #
 #
 #
@@ -175,10 +174,10 @@ selection <- filter(selection, !(pheno %in% counts_to_remove$pheno))
 #
 #
 
-
+processed_mapping_df<-filter(processed_mapping_df,CHROM != "MtDNA")
 #iterate through the phenotypes and plot the results
-for (i in unique(selection$pheno)){
-  specific_trait<- final_processed_mappings[final_processed_mappings$pheno == i, ]
+for (i in unique(selection$trait)){
+  specific_trait<- processed_mapping_df[processed_mapping_df$trait == i, ]
   empty <-specific_trait[specific_trait$method==NA,]
   #specific_trait_mx <- max(specific_trait$log10p)
   pvalues<-filter(specific_trait,log10p !="Inf") #
@@ -186,12 +185,12 @@ for (i in unique(selection$pheno)){
   TE<-specific_trait$family[1]
   ##check for NAs
   #sapply(Mappings, function(x)all(is.na(x)))
-  A<- final_processed_mappings %>%
-    filter(pheno == i)%>%
+  A<- processed_mapping_df %>%
+    filter(trait == i)%>%
     ggplot(.)+
-    aes(x=pos/1e6,y=log10p)+
+    aes(x=POS/1e6,y=log10p)+
     geom_point(aes( color=ifelse(log10p> BF, 'red', 'black')),size=1)+
-    facet_grid(.~chr,scale="free_x",space = "free_x")+scale_color_identity()+
+    facet_grid(.~CHROM,scale="free_x",space = "free_x")+scale_color_identity()+
     ggtitle(i)+
     geom_hline(aes(yintercept=BF),color="grey60",linetype="dashed")+
     theme(strip.background = element_rect(fill = "white"),
@@ -230,11 +229,11 @@ for (i in unique(selection$pheno)){
   max6<-(max(panel6$x))
   min6<-(min(panel6$x))
   
-  positions$trait<-paste(positions$method, "TRANS", positions$family, sep="_")
-  #traitPositions<-positions[positions$trait==i,]
+  positions$TRAIT_col<-paste(positions$method, "TRANS", positions$family, sep="_")
+  #traitPositions<-positions[positions$TRAIT_col==i,]
   traitPositions<-positions[positions$family==TE,]
   
-  blank <- data.frame(chr=character(),
+  blank <- data.frame(CHROM=character(),
                       start=integer(),
                       end=integer(),
                       TE=character(),
@@ -243,7 +242,7 @@ for (i in unique(selection$pheno)){
                       strain=character(),
                       class=character(),
                       family=character(),
-                      trait=character(),
+                      TRAIT_col=character(),
                       stringsAsFactors=FALSE)
   
   blank[1,]<- c( "I", as.integer(10000000),as.integer(10000000),"blank","+","blank","fake","blank","blank","blank")
@@ -256,28 +255,28 @@ for (i in unique(selection$pheno)){
   traitPositions<-rbind(traitPositions,blank)
   traitPositions$start<-as.integer(traitPositions$start)
   #m <- ggplot(summarydata, aes(x=start/1e6,fill=class))
-  #m <-m + geom_bar(binwidth=.25)+
+  #m <-m + geom_histogram(binwidth=.25)+
   
   #ggplot(data = combo, aes(x = TEMP_support,y=TELOCATE_support,color=ifelse(method=="absent","darkorange",ifelse(method=="blank","black",ifelse(method=="insertion",""turquoise3"","slateblue1")))))+scale_color_identity()
 #    m <- ggplot(traitPositions, aes(x=start/1e6,color=ifelse(method=="absent","darkorange",ifelse(method=="blank","black",ifelse(method=="new","turquoise3","slateblue1")))))+scale_color_identity()
   m <- ggplot(traitPositions, aes(x=start/1e6,fill=method))+scale_fill_manual(values = c('new' = "turquoise3", 'reference' = "slateblue1", 'absent' = "darkorange","blank"="black"))
-  m <-m + geom_bar(data=subset(traitPositions,strain=="fake"), fill="white", colour="white", binwidth=.25)
-  m <-m + geom_bar(data=subset(traitPositions,strain!="fake"), binwidth=.25)+
-    facet_grid(. ~ chr,scale="free",drop=FALSE)+
+  m <-m + geom_histogram(data=subset(traitPositions,strain=="fake"), fill="white", colour="white", binwidth=.25)
+  m <-m + geom_histogram(data=subset(traitPositions,strain!="fake"), binwidth=.25)+
+    facet_grid(. ~ CHROM,scale="free",drop=FALSE)+
     ggtitle("")+
-    geom_point(data = subset(traitPositions, chr=="I"),aes(x=max1,y=0),alpha=0)+
-    geom_point(data = subset(traitPositions, chr=="II"),aes(x=max2,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="III"),aes(x=max3,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="IV"),aes(x=max4,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="V"),aes(x=max5,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="X"),aes(x=max6,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="I"),aes(x=max1,y=0),alpha=0)+
+    geom_point(data = subset(traitPositions, CHROM=="II"),aes(x=max2,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="III"),aes(x=max3,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="IV"),aes(x=max4,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="V"),aes(x=max5,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="X"),aes(x=max6,y=0),alpha=0) +
     
-    geom_point(data = subset(traitPositions, chr=="I"),aes(x=min1,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="II"),aes(x=min2,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="III"),aes(x=min3,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="IV"),aes(x=min4,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="V"),aes(x=min5,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, chr=="X"),aes(x=min6,y=0),alpha=0)+
+    geom_point(data = subset(traitPositions, CHROM=="I"),aes(x=min1,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="II"),aes(x=min2,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="III"),aes(x=min3,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="IV"),aes(x=min4,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="V"),aes(x=min5,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, CHROM=="X"),aes(x=min6,y=0),alpha=0)+
     
     labs(x = "Chromosome Position (Mb)", y="Number of Transposition Events")+
     theme(strip.background = element_blank(),
@@ -306,10 +305,10 @@ for (i in unique(selection$pheno)){
   #Bind the tables
   g<-gtable:::rbind_gtable(g1, g2, "first")
   #Remove a row between the plots
-  #g <- gtable_add_rows(g, unit(-1,"cm"), pos=nrow(g1))
+  #g <- gtable_add_rows(g, unit(-1,"cm"), POS=nrow(g1))
   #draw
   panels <- g$layout$t[grep("panel", g$layout$name)]
-  g$heights[panels] <- lapply(c(40,40), unit, "null")
+  g$heights[panels] <- lapply(c(10,10), unit, "null")
   grid.newpage()
   grid.draw(g)
   
@@ -329,7 +328,7 @@ for (i in unique(selection$pheno)){
   grid.draw(g)
   
 
-  medians<-filter(Amedian_df,pheno==i)
+  medians<-filter(Amedian_df,trait==i)
   median_diff<-medians$median_diff
   diff<-medians$diff
   print(median_diff)

@@ -32,15 +32,10 @@ Rscript away_counts.R
 # for position traits, output new dataframes for QTL 100 SNPs away from TE positions and with phenotypes with non-equal medians
 Rscript away.R
 # calculate correlations betweeen count, fraction, and activity traits
-Rscript correlations.R
+#Rscript correlations.R
 # plot heatmap of correlation between counts and activity traits
-Rscript heatmap.R
+#Rscript heatmap.R
 
-
-
-############## CER1 ##############
-#echo "Generating CER1 Plot..."
-#Rscript cer_95_mappings.R
 
 ############## Simulation Figures ##############
 #echo "Generating Simulation Plots..."

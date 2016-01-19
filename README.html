@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title></title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<pre><code class="r,fig.width=7.5, fig.height=5,warning=F, message=F, echo=F,results=&#39;asis&#39;">
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(grid)
+library(stringr)
+library(gridExtra)
+library(knitr)
+library(tidyr)
+setwd(&quot;/Users/kristen/Documents/transposon_figure_data/data&quot;)
+load(&quot;Processed_Transposon_Mappings.Rda&quot;)
+load(&quot;away_phenos.Rda&quot;)
+load(&quot;median_phenos.Rda&quot;)
+load(&quot;low_ld.Rda&quot;)
+load(&quot;counts_to_remove.Rda&quot;)
+load(&quot;prune_final_traits_to_this_set.Rda&quot;)
+load(&quot;Amedian.Rda&quot;)
+
+###REMOVE LATER!!!!!
+final_processed_mappings &lt;- dplyr::filter(final_processed_mappings, (pheno %in% traits))
+
+
+#remove fraction and movement traits
+final_processed_mappings&lt;-subset(final_processed_mappings,
+                                 grepl(&#39;^I&#39;, final_processed_mappings$pheno) |
+                                   grepl(&#39;^V&#39;, final_processed_mappings$pheno) |
+                                   grepl(&#39;^X&#39;, final_processed_mappings$pheno)|
+                                   grepl(&#39;_C$&#39;, final_processed_mappings$pheno))
+final_processed_mappings&lt;-subset(final_processed_mappings,!grepl(&#39;^no_&#39;, final_processed_mappings$pheno))
+
+
+# make cure C and frac are not getting confused
+#PxG function
+hm&lt;-final_processed_mappings
+hm&lt;-distinct(final_processed_mappings, pheno,strain)
+
+gwasPxG &lt;- function(trt){
+  #load(&quot;~/Dropbox/AndersenLab/RCode/Stefan/good_gwasMappingsINlinkage_phenotypes.Rda&quot;)
+
+  hm %&gt;%
+    filter(pheno==trt)%&gt;%
+    ggplot(.)+
+    aes(x=allele,y = value,fill=as.factor(allele))+
+    geom_boxplot(outlier.shape=NA,size =1)+
+    #scale_fill_brewer(palette = &quot;Set2&quot;)+
+    geom_point(size = 3, alpha = .8,position=position_jitter(w=.4,  h=.025),na.rm=TRUE)+
+    # geom_jitter(size = 3, alpha = .8,postion=position_jitter(0,  0))  +
+    theme_bw()+
+    theme(axis.text.x = element_text(size=9, , color=&quot;black&quot;),
+          axis.text.y = element_text(size=9,  color=&quot;black&quot;),
+          axis.title.x = element_text(size=9,  color=&quot;black&quot;),
+          axis.title.y = element_text(size=9,  color=&quot;black&quot;,vjust=1),
+          strip.text.x = element_text(size=9,  color=&quot;black&quot;),
+          strip.text.y = element_text(size=9,  color=&quot;black&quot;),
+          plot.title = element_text(size=9,  vjust=1),
+          legend.title = element_text(size=9),
+          panel.border = element_rect(size=1, colour = &quot;black&quot;),
+          legend.position = &quot;none&quot;)+
+    labs( x = &quot;Genotype&quot;,y=&quot;Value&quot;)+
+    scale_fill_manual( values = c(&quot;steelblue3&quot;, &quot;indianred1&quot;, &quot;darkolivegreen&quot;,&quot;black&quot;))
+}
+
+# pull unique combos, remove strain column(don&#39;t need specific strain info at this point)
+#final_processed_mappings &lt;- distinct(select(final_processed_mappings, -strain,-allele,-value))
+final_processed_mappings&lt;- final_processed_mappings %&gt;% distinct(pheno,SNPs,strain)
+
+
+#create family and method columns
+final_processed_mappings$family &lt;- stringr::str_split_fixed(final_processed_mappings$pheno, &quot;_TRANS_&quot;,2)[,2]
+final_processed_mappings$method &lt;- stringr::str_split_fixed(final_processed_mappings$pheno, &quot;_TRANS_&quot;,2)[,1]
+
+final_processed_mappings&lt;-filter(final_processed_mappings, family==&quot;CER1_C&quot;)
+
+
+#set up method labellers
+method_names &lt;- list(
+  &#39;absent&#39;=&quot;absence&quot;,
+  &#39;new&#39;=&quot;insertion&quot;,
+  &#39;reference&#39;=&quot;reference&quot;
+)
+
+method_labeller &lt;- function(variable,value){
+  if (variable==&#39;method&#39;) {
+    return(method_names[value])
+  }else {
+    return(as.character(value))
+  }
+}
+
+
+#read in position data and create family column
+positions &lt;- read.table(&quot;CtCp_all_nonredundant.txt&quot;,header=TRUE)
+names(positions)&lt;-c(&quot;chr&quot;,&quot;start&quot;,&quot;end&quot;,&quot;TE&quot;,&quot;orientation&quot;,&quot;method&quot;,&quot;strain&quot;,&quot;class&quot;)
+positions$family&lt;- stringr::str_split_fixed(positions$TE, regex(&quot;_(non-)?reference&quot;),2)[,1]
+positions$family&lt;- paste(stringr::str_split_fixed(positions$family, &quot;_&quot;,4)[,3],stringr::str_split_fixed(positions$family, &quot;_&quot;,4)[,4],sep=&quot;_&quot;)
+positions$family &lt;- gsub(&quot;_$&quot; ,&quot;&quot;,positions$family)
+positions$family &lt;- gsub(&quot;_non-reference(.*)$&quot; ,&quot;&quot;,positions$family)
+
+#select traits above BF.....this step not needed, double checking everything is above BF
+selection&lt;-filter(final_processed_mappings, log10p &gt; BF)
+
+#extract the count base traits
+base_traits &lt;-selection[(selection$method==&quot;absent&quot;| selection$method==&quot;new&quot; |selection$method==&quot;reference&quot;|selection$method==&quot;ZERO_new&quot;|selection$method==&quot;ONE_new&quot;), ]
+counts&lt;-subset(base_traits, grepl(&quot;_C$&quot;, base_traits$family))
+counts$family &lt;- gsub(&quot;_C$&quot; ,&quot;&quot;,counts$family)
+#
+final_processed_mappings &lt;- distinct(select(final_processed_mappings, -strain,-allele,-value))
+final_processed_mappings&lt;- final_processed_mappings %&gt;% distinct(pheno,SNPs)
+
+
+
+#pull out only position traits from mappings dataframe
+position_traits&lt;-subset(selection,
+                        grepl(&#39;^I&#39;, selection$pheno) |
+                          grepl(&#39;^V&#39;, selection$pheno) |
+                          grepl(&#39;^X&#39;, selection$pheno))
+
+#create family column
+position_traits$family  &lt;- paste(stringr::str_split_fixed(position_traits$pheno, &quot;_&quot;,4)[,3],stringr::str_split_fixed(position_traits$pheno, &quot;_&quot;,4)[,4],sep=&quot;_&quot;)
+position_traits$family &lt;- gsub(&quot;_$&quot; ,&quot;&quot;,position_traits$family)
+position_traits$family &lt;- gsub(&quot;_non-reference(.*)$&quot; ,&quot;&quot;,position_traits$family)
+
+#optional filter for away phenos
+#position_traits&lt;-position_traits[position_traits$pheno %in% away$pheno,] 
+#optional filter for different median phenos 
+#position_traits&lt;-position_traits[position_traits$pheno %in% median_df$pheno,] 
+#optional filter for low ld phenos
+#position_traits&lt;-position_traits[position_traits$pheno %in% low_ld$pheno,] 
+
+# add position trait family info to final_processed_mappings
+final_processed_mappings&lt;-final_processed_mappings %&gt;%mutate(family = ifelse(final_processed_mappings$pheno %in% away$pheno, (paste(stringr::str_split_fixed(final_processed_mappings$pheno, &quot;_&quot;,4)[,3],stringr::str_split_fixed(final_processed_mappings$pheno, &quot;_&quot;,4)[,4],sep=&quot;_&quot;)), final_processed_mappings$family))
+
+#bind count and position traits option...choose oen of below two
+#selection&lt;-rbind(counts,position_traits)
+selection&lt;-counts
+
+#COMMENT OUT BELOW!!!!!!
+
+#selection&lt;-selection[selection$pheno==&quot;ONE_new_TRANS_Tc1A_C&quot;|selection$pheno==&quot;absent_TRANS_MIRAGE1_C&quot;,]
+
+
+#selection&lt;-selection[selection$pheno==&quot;I_13455974_Tc3&quot;|selection$pheno==&quot;V_739436_WBTransposon00000074&quot;,]
+#selection&lt;-selection[selection$pheno==&quot;II_507265_LINE2C&quot;,]
+
+
+#
+
+#strip count marker and remnant marks from dataframes
+selection$pheno &lt;- gsub(&quot;_C$&quot; ,&quot;&quot;,selection$pheno)
+hm$pheno &lt;- gsub(&quot;_C$&quot; ,&quot;&quot;,hm$pheno)
+final_processed_mappings$pheno &lt;- gsub(&quot;_C$&quot; ,&quot;&quot;,final_processed_mappings$pheno)
+final_processed_mappings$family &lt;- gsub(&quot;_C$&quot; ,&quot;&quot;,final_processed_mappings$family)
+final_processed_mappings$family &lt;- gsub(&quot;_$&quot; ,&quot;&quot;,final_processed_mappings$family)
+final_processed_mappings$family &lt;- gsub(&quot;_non-reference(.*)$&quot; ,&quot;&quot;,final_processed_mappings$family)
+
+selection &lt;- filter(selection, !(pheno %in% counts_to_remove$pheno))
+#
+#
+#
+
+
+
+#
+#
+#
+
+
+#iterate through the phenotypes and plot the results
+for (i in unique(selection$pheno)){
+  specific_trait&lt;- final_processed_mappings[final_processed_mappings$pheno == i, ]
+  empty &lt;-specific_trait[specific_trait$method==NA,]
+  #specific_trait_mx &lt;- max(specific_trait$log10p)
+  pvalues&lt;-filter(specific_trait,log10p !=&quot;Inf&quot;) #
+  specific_trait_mx &lt;- max(pvalues$log10p) #
+  TE&lt;-specific_trait$family[1]
+  ##check for NAs
+  #sapply(Mappings, function(x)all(is.na(x)))
+  A&lt;- final_processed_mappings %&gt;%
+    filter(pheno == i)%&gt;%
+    ggplot(.)+
+    aes(x=pos/1e6,y=log10p)+
+    geom_point(aes( color=ifelse(log10p&gt; BF, &#39;red&#39;, &#39;black&#39;)),size=1)+
+    facet_grid(.~chr,scale=&quot;free_x&quot;,space = &quot;free_x&quot;)+scale_color_identity()+
+    ggtitle(i)+
+    geom_hline(aes(yintercept=BF),color=&quot;grey60&quot;,linetype=&quot;dashed&quot;)+
+    theme(strip.background = element_rect(fill = &quot;white&quot;),
+          strip.text.x = element_text(size = 9, colour = &quot;black&quot;,face=&quot;bold&quot;),
+          panel.background = element_rect(fill = &quot;white&quot;),
+          panel.border = element_rect(color=&quot;black&quot;, size=0.5, linetype=&quot;solid&quot;, fill=NA),
+          panel.margin = unit(.6, &quot;lines&quot;),
+          axis.ticks =element_line(colour = &quot;black&quot;),
+          axis.text.y = element_text(colour = &quot;black&quot;),
+          axis.text.x = element_text(colour = &quot;black&quot;),
+          axis.title=element_text(size=9),
+          plot.margin=unit(c(.1,.1,-.25,.1), &quot;cm&quot;),
+          legend.position=(&#39;none&#39;))+
+    labs(x=&quot;&quot;,y=&quot;-log10(p)&quot;) #+
+
+  #scale_y_continuous(expand=c(0,0),limits=c(0,specific_trait_mx+.075*specific_trait_mx),labels = function(x) format(x,width = 4))
+
+
+  # pull out  X maxs of each panel
+  panel1&lt;-(ggplot_build(A)$data[[1]])[ggplot_build(A)$data[[1]]$PANEL==1,]
+  max1&lt;-(max(panel1$x))
+  min1&lt;-(min(panel1$x))
+  panel2&lt;-(ggplot_build(A)$data[[1]])[ggplot_build(A)$data[[1]]$PANEL==2,]
+  max2&lt;-(max(panel2$x))
+  min2&lt;-(min(panel2$x))
+  panel3&lt;-(ggplot_build(A)$data[[1]])[ggplot_build(A)$data[[1]]$PANEL==3,]
+  max3&lt;-(max(panel3$x))
+  min3&lt;-(min(panel3$x))
+  panel4&lt;-(ggplot_build(A)$data[[1]])[ggplot_build(A)$data[[1]]$PANEL==4,]
+  max4&lt;-(max(panel4$x))
+  min4&lt;-(min(panel4$x))
+  panel5&lt;-(ggplot_build(A)$data[[1]])[ggplot_build(A)$data[[1]]$PANEL==5,]
+  max5&lt;-(max(panel5$x))
+  min5&lt;-(min(panel5$x))
+  panel6&lt;-(ggplot_build(A)$data[[1]])[ggplot_build(A)$data[[1]]$PANEL==6,]
+  max6&lt;-(max(panel6$x))
+  min6&lt;-(min(panel6$x))
+
+  positions$trait&lt;-paste(positions$method, &quot;TRANS&quot;, positions$family, sep=&quot;_&quot;)
+  #traitPositions&lt;-positions[positions$trait==i,]
+  traitPositions&lt;-positions[positions$family==TE,]
+
+  blank &lt;- data.frame(chr=character(),
+                      start=integer(),
+                      end=integer(),
+                      TE=character(),
+                      orientation=character(),
+                      method=character(),
+                      strain=character(),
+                      class=character(),
+                      family=character(),
+                      trait=character(),
+                      stringsAsFactors=FALSE)
+
+  blank[1,]&lt;- c( &quot;I&quot;, as.integer(10000000),as.integer(10000000),&quot;blank&quot;,&quot;+&quot;,&quot;blank&quot;,&quot;fake&quot;,&quot;blank&quot;,&quot;blank&quot;,&quot;blank&quot;)
+  blank[2,]&lt;- c( &quot;II&quot;, as.integer(10000000),as.integer(10000000),&quot;blank&quot;,&quot;+&quot;,&quot;blank&quot;,&quot;fake&quot;,&quot;blank&quot;,&quot;blank&quot;,&quot;blank&quot;)
+  blank[3,]&lt;- c( &quot;III&quot;, as.integer(10000000),as.integer(10000000),&quot;blank&quot;,&quot;+&quot;,&quot;blank&quot;,&quot;fake&quot;,&quot;blank&quot;,&quot;blank&quot;,&quot;blank&quot;)
+  blank[4,]&lt;- c( &quot;IV&quot;, as.integer(10000000),as.integer(10000000),&quot;blank&quot;,&quot;+&quot;,&quot;blank&quot;,&quot;fake&quot;,&quot;blank&quot;,&quot;blank&quot;,&quot;blank&quot;)
+  blank[5,]&lt;- c( &quot;V&quot;, as.integer(10000000),as.integer(10000000),&quot;blank&quot;,&quot;+&quot;,&quot;blank&quot;,&quot;fake&quot;,&quot;blank&quot;,&quot;blank&quot;,&quot;blank&quot;)
+  blank[6,]&lt;- c( &quot;X&quot;, as.integer(10000000),as.integer(10000000),&quot;blank&quot;,&quot;+&quot;,&quot;blank&quot;,&quot;fake&quot;,&quot;blank&quot;,&quot;blank&quot;,&quot;blank&quot;)
+
+  traitPositions&lt;-rbind(traitPositions,blank)
+  traitPositions$start&lt;-as.integer(traitPositions$start)
+  #m &lt;- ggplot(summarydata, aes(x=start/1e6,fill=class))
+  #m &lt;-m + geom_bar(binwidth=.25)+
+
+  #ggplot(data = combo, aes(x = TEMP_support,y=TELOCATE_support,color=ifelse(method==&quot;absent&quot;,&quot;darkorange&quot;,ifelse(method==&quot;blank&quot;,&quot;black&quot;,ifelse(method==&quot;insertion&quot;,&quot;&quot;turquoise3&quot;&quot;,&quot;slateblue1&quot;)))))+scale_color_identity()
+  #    m &lt;- ggplot(traitPositions, aes(x=start/1e6,color=ifelse(method==&quot;absent&quot;,&quot;darkorange&quot;,ifelse(method==&quot;blank&quot;,&quot;black&quot;,ifelse(method==&quot;new&quot;,&quot;turquoise3&quot;,&quot;slateblue1&quot;)))))+scale_color_identity()
+  m &lt;- ggplot(traitPositions, aes(x=start/1e6,fill=method))+scale_fill_manual(values = c(&#39;new&#39; = &quot;turquoise3&quot;, &#39;reference&#39; = &quot;slateblue1&quot;, &#39;absent&#39; = &quot;darkorange&quot;,&quot;blank&quot;=&quot;black&quot;))
+  m &lt;-m + geom_bar(data=subset(traitPositions,strain==&quot;fake&quot;), fill=&quot;white&quot;, colour=&quot;white&quot;, binwidth=.25)
+  m &lt;-m + geom_bar(data=subset(traitPositions,strain!=&quot;fake&quot;), binwidth=.25)+
+    facet_grid(. ~ chr,scale=&quot;free&quot;,drop=FALSE)+
+    ggtitle(&quot;&quot;)+
+    geom_point(data = subset(traitPositions, chr==&quot;I&quot;),aes(x=max1,y=0),alpha=0)+
+    geom_point(data = subset(traitPositions, chr==&quot;II&quot;),aes(x=max2,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;III&quot;),aes(x=max3,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;IV&quot;),aes(x=max4,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;V&quot;),aes(x=max5,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;X&quot;),aes(x=max6,y=0),alpha=0) +
+
+    geom_point(data = subset(traitPositions, chr==&quot;I&quot;),aes(x=min1,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;II&quot;),aes(x=min2,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;III&quot;),aes(x=min3,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;IV&quot;),aes(x=min4,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;V&quot;),aes(x=min5,y=0),alpha=0) +
+    geom_point(data = subset(traitPositions, chr==&quot;X&quot;),aes(x=min6,y=0),alpha=0)+
+
+    labs(x = &quot;Chromosome Position (Mb)&quot;, y=&quot;Number of Transposition Events&quot;)+
+    theme(strip.background = element_blank(),
+          strip.text.x = element_blank(),
+          #strip.text = element_text(size = 9, colour = &quot;black&quot;,face=&quot;bold&quot;),
+          panel.margin = unit(.6, &quot;lines&quot;),
+          panel.border = element_rect(fill=NA,colour = &quot;black&quot;),
+          panel.background = element_rect(fill = &quot;white&quot;),
+          axis.ticks =element_line(colour = &quot;black&quot;),
+          axis.title=element_text(size=9),
+          axis.text.y = element_text(colour = &quot;black&quot;,size=9),
+          axis.text.x = element_text(colour = &quot;black&quot;,size=9),
+          legend.title=element_blank(),
+          # legend.position=&quot;bottom&quot;,
+          plot.margin=unit(c(-.25,.1,.1,.1), &quot;cm&quot;),
+          legend.position=(&#39;none&#39;))
+  m
+
+  #now can check plot for max value and set y limit to a certain percent above that max value 
+  m &lt;- m + scale_y_continuous(expand = c(0,0),limits=c(0,max(ggplot_build(m)$panel$ranges[[1]]$y.range)*1.075)) 
+
+
+  library(gtable)
+  g1&lt;-ggplotGrob(A)
+  g2&lt;-ggplotGrob(m)
+  #Bind the tables
+  g&lt;-gtable:::rbind_gtable(g1, g2, &quot;first&quot;)
+  #Remove a row between the plots
+  #g &lt;- gtable_add_rows(g, unit(-1,&quot;cm&quot;), pos=nrow(g1))
+  #draw
+  panels &lt;- g$layout$t[grep(&quot;panel&quot;, g$layout$name)]
+  g$heights[panels] &lt;- lapply(c(40,40), unit, &quot;null&quot;)
+  grid.newpage()
+  grid.draw(g)
+
+
+  box&lt;-gwasPxG(i)
+  #bid=nd with blank plot to get appropriate height
+  df &lt;- data.frame(1,2)
+  blank_plot&lt;-ggplot(df,aes(x=1,y=1)) + geom_point(color=&quot;white&quot;) +
+    theme(axis.text =element_blank(),axis.ticks =element_blank(),axis.title =element_blank(),
+          panel.background = element_blank(),panel.grid = element_blank())
+  blank_plot
+  g3&lt;-ggplotGrob(box)
+  g4&lt;-ggplotGrob(blank_plot)
+  #Bind the tables
+  g&lt;-gtable:::rbind_gtable(g3, g4, &quot;first&quot;)
+  grid.newpage()
+  grid.draw(g)
+
+
+  medians&lt;-filter(Amedian_df,pheno==i)
+  median_diff&lt;-medians$median_diff
+  diff&lt;-medians$diff
+
+
+  cat(&quot;\n\n\\pagebreak\n&quot;)
+}
+
+
+
+
+
+</code></pre>
+
+</body>
+
+</html>

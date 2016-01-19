@@ -221,25 +221,27 @@ ggsave(filename="Insertion_vs_Reference_DR.tiff",
 
 
 #CHEXK T HIS  OVER
-
+# NO LONGER NEED THE REST OF THE BELOW
 #FAMILY
-thing<-select(families, -trait)
-thing<-spread(thing,method,value)
+sl<-select(families, -trait)
+sl<-spread(sl,method,value)
 
-AR<-filter(thing, absent!="NA" & reference !="NA")
-AI<-filter(thing, absent!="NA" & new !="NA")
-RI<-filter(thing, reference!="NA" & new !="NA")
+sl<-rename(sl, New = new) #Rename the column "new"
+AR<-filter(sl, absent!="NA" & reference !="NA")
+AI<-filter(sl, absent!="NA" & New !="NA")
+RI<-filter(sl, reference!="NA" & New !="NA")
+?cor.test
 
 #calculate rho values
 AR_corr<-AR %>% group_by(class,transposon) %>% summarise(cor=round((cor.test(absent,reference,method="spearman",exact=FALSE))$estimate,3))
-AI_corr<-AI %>% group_by(class,transposon) %>% summarise(cor=round((cor.test(absent,new,method="spearman",exact=FALSE))$estimate,3))
-RI_corr<-RI %>% group_by(class,transposon) %>% summarise(cor=round((cor.test(reference,new,method="spearman",exact=FALSE))$estimate,3))
+AI_corr<-AI %>% group_by(class,transposon) %>% summarise(cor=round((cor.test(absent,New,method="spearman",exact=FALSE))$estimate,3))
+RI_corr<-RI %>% group_by(class,transposon) %>% summarise(cor=round((cor.test(reference,New,method="spearman",exact=FALSE))$estimate,3))
 
 #calculate mean and sd of the correlation rho values
 AR_mean<-AR_corr %>% group_by(class) %>% summarise(mean=mean(cor,na.rm=TRUE),SD=sd(cor,na.rm=TRUE))
 AI_mean<-AI_corr %>% group_by(class) %>% summarise(mean=mean(cor,na.rm=TRUE),SD=sd(cor,na.rm=TRUE))
 RI_mean<-RI_corr %>% group_by(class) %>% summarise(mean=mean(cor,na.rm=TRUE),SD=sd(cor,na.rm=TRUE))
-
+?sd
 #
 merged_AR<-merge(AR_corr, AR_mean, by="class")
 merged_AI<-merge(AI_corr, AI_mean, by="class")
@@ -251,7 +253,7 @@ merged_RI$comparison<-"RI"
 
 all<-rbind(merged_AR,merged_AI,merged_RI)
 
-all<-mutate(all, outL=ifelse(abs(cor-mean)>SD, "OUTLIER", "n"))
+all<-mutate(all, outL=ifelse(abs(cor-mean)>(2*SD), "OUTLIER", "n"))
 outliers<-filter(all,outL=="OUTLIER")
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 save(outliers,file="outlier_slopes.Rda")
@@ -281,7 +283,7 @@ hist_data$method <- factor(hist_data$method,
 
 
 m <- ggplot(hist_data, aes(x=XX,fill=class))
-m <-m + geom_bar(binwidth=5)+
+m <-m + geom_histogram(binwidth=5)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
   facet_wrap(~method,scale="free_y")+
   theme(strip.background = element_blank(),
@@ -305,8 +307,4 @@ ggsave(filename="Histogram_TE_per_Strain.tiff",
        width=7.5,
        height=3.5,
        units="in")
-
-
-
-
 

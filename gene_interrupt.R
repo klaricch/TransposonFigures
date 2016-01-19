@@ -25,8 +25,10 @@ method_labeller <- function(variable,value){
   }
 }
 
+?labellers
+labeller
 m <- ggplot(data,aes(x=TE_start/1e6,fill=Region))
-m <- m + geom_histogram(bin=.25)+
+m <- m + geom_histogram(binwidth=.25)+
   facet_grid(.~Chromosome, scale="free", space="free_x",labeller=method_labeller)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
   geom_point(aes(y=45), alpha=0)+

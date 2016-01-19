@@ -32,11 +32,12 @@ summarydata$class <- factor(summarydata$class,
                             levels = c("dnatransposon", "retrotransposon","unknown"),
                             labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
 
-#remove total counts and coverage
+#double check,remove total counts and coverage, could also check total dna and retro
 summarydata <- filter(summarydata, trait != "absent_TRANS_total" )
 summarydata <- filter(summarydata, trait != "new_TRANS_total" )
 summarydata <- filter(summarydata, trait != "reference_TRANS_total" )
 summarydata <- filter(summarydata, trait != "coverage" )
+names(summarydata)
 no_cols<-ncol(summarydata)-1
 print(summarydata[,no_cols])
 summarydata<-mutate(summarydata, TOTAL=rowSums(summarydata[2:no_cols],na.rm = TRUE))

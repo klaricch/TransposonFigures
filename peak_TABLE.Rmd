@@ -24,32 +24,43 @@ library(ggplot2)
 library(tidyr)
 library(stargazer)
 
-load("/Users/kristen/Documents/transposon_figure_data/CleanedTransposons.Rda") #phenotypes
-load("/Users/kristen/Documents/transposon_figure_data/SignificantMappings_Results_Activity.Rda") # Mappings
-load("/Users/kristen/Documents/transposon_figure_data/Processed_Transposon_Mappings.Rda") #processed mappings
+load("/Users/kristen/Documents/transposon_figure_data/data/Processed_Transposon_Mappings.Rda") #processed mappings
 
 ```
 
 
 
 ```{r,warning=F, message=F, echo=F, comment=NA}
+
+#remove fraction and movement traits
+processed_mapping_df<-subset(processed_mapping_df,
+                                 grepl('^I', processed_mapping_df$trait) |
+                                   grepl('^V', processed_mapping_df$trait) |
+                                   grepl('^X', processed_mapping_df$trait)|
+                                   grepl('_C$', processed_mapping_df$trait))
+processed_mapping_df<-subset(processed_mapping_df,!grepl('^no_', processed_mapping_df$trait))
+
 #remove "TRANS" from transposon names
-transposon <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
-caller <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
-final_processed_mappings$pheno <-paste(caller,transposon,sep="_")
+processed_mapping_df$trait <- gsub("_TRANS_" ,"_",processed_mapping_df$trait)
+
+#transposon <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
+#caller <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
+#processed_mapping_df$trait <-paste(caller,transposon,sep="_")
 ```
 
 
 ```{r,warning=F, message=F, echo=F, comment=NA}
 #print table
 # write out table of info on each unique peak
-peaks <- final_processed_mappings[final_processed_mappings$peak_id!="NA",]
-#pull unique combinations of pheno and peak id
-sites_clean <- distinct(peaks, peak_id, pheno)
-table_info<-select(sites_clean, pheno,peak_id,chr,pos,var.exp,startPOS,endPOS)   
+peaks <- filter(processed_mapping_df, !is.na(peak_id))
+peaks <- filter(peaks, !is.na(allele))
+#pull unique combinations of trait and peak id
+sites_clean <- distinct(peaks, peak_id, trait)
+table_info<-select(sites_clean, trait,peak_id,CHROM,POS,var.exp,startPOS,endPOS)   
 colnames(table_info) <- c("Trait", "PeakID","Chromosome","BasePosition", "VarianceExplained(%)", "LeftCI", "RightCI")
 table_info<-format(table_info, digits = 3)
-stargazer(table_info,type='text',font.size="tiny")
+stargazer(table_info,type='text',font.size="tiny",summary=FALSE)
+?stargazer
 ```
 
 

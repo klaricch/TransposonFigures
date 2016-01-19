@@ -9,61 +9,64 @@ library(grid)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
-load('SignificantMappings_Results_Activity.Rda')
 
 #pull max position on each chromosome for the phantom points
-max_1<-max(Mappings[(Mappings$chr=="I"), ]$pos)
-max_2<-max(Mappings[(Mappings$chr=="II"), ]$pos)
-max_3<-max(Mappings[(Mappings$chr=="III"), ]$pos)
-max_4<-max(Mappings[(Mappings$chr=="IV"), ]$pos)
-max_5<-max(Mappings[(Mappings$chr=="V"), ]$pos)
-max_6<-max(Mappings[(Mappings$chr=="X"), ]$pos)
+max_1<-max(processed_mapping_df[(processed_mapping_df$CHROM=="I"), ]$POS)
+max_2<-max(processed_mapping_df[(processed_mapping_df$CHROM=="II"), ]$POS)
+max_3<-max(processed_mapping_df[(processed_mapping_df$CHROM=="III"), ]$POS)
+max_4<-max(processed_mapping_df[(processed_mapping_df$CHROM=="IV"), ]$POS)
+max_5<-max(processed_mapping_df[(processed_mapping_df$CHROM=="V"), ]$POS)
+max_6<-max(processed_mapping_df[(processed_mapping_df$CHROM=="X"), ]$POS)
 
-final_processed_mappings$pheno<- gsub("^ONE_new" ,"new",final_processed_mappings$pheno)
+processed_mapping_df$trait<- gsub("^ONE_new" ,"new",processed_mapping_df$trait)
 
-transposon <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
-final_processed_mappings$family <- transposon
-caller <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
-final_processed_mappings$method <- caller
+transposon <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
+processed_mapping_df$family <- transposon
+caller <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
+processed_mapping_df$method <- caller
 
 
-unique(final_processed_mappings$method)
+unique(processed_mapping_df$method)
 
-#g<-final_processed_mappings$method
+#g<-processed_mapping_df$method
 #remove fraction and movement traits
-base_traits<-subset(final_processed_mappings, grepl('_C$', final_processed_mappings$pheno))
-base_traits<-subset(base_traits,!grepl('^no_', base_traits$pheno))
-base_traits<-subset(base_traits,!grepl('^ZERO_new', base_traits$pheno))
-#base_traits <-final_processed_mappings[(final_processed_mappings$method=="absent"| final_processed_mappings$method=="new" |final_processed_mappings$method=="reference"), ]
-final_processed_mappings<-base_traits
+base_traits<-subset(processed_mapping_df, grepl('_C$', processed_mapping_df$trait))
+base_traits<-subset(base_traits,!grepl('^no_', base_traits$trait))
+base_traits<-subset(base_traits,!grepl('^ZERO_new', base_traits$trait))
+#base_traits <-processed_mapping_df[(processed_mapping_df$method=="absent"| processed_mapping_df$method=="new" |processed_mapping_df$method=="reference"), ]
+processed_mapping_df<-base_traits
 # write out table of info on each unique peak
-peaks <- final_processed_mappings[final_processed_mappings$peak_id!="NA",]
+peaks <- processed_mapping_df[processed_mapping_df$peak_id!="NA",]
 
+peaks<-filter(processed_mapping_df,!is.na(peak_id))
 
-#pull unique combinations of pheno and peak id
-sites_clean <- distinct(peaks, peak_id, pheno)
+#pull unique combinations of trait and peak id
+sites_clean <- distinct(peaks, peak_id, trait)
+all_sites_clean<-sites_clean # this df will be used to retain the total counts
 
 # do we only want the distinct ones here?
 names(sites_clean)
-levels(sites_clean$chr)
-print(sites_clean$pheno)
+levels(sites_clean$CHROM)
+print(sites_clean$trait)
 nrow(sites_clean)
 
-sites_clean<-mutate(sites_clean, phenoT=gsub("_C$","",pheno))
+sites_clean<-mutate(sites_clean, traitT=gsub("_C$","",trait))
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
 classdata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
-names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
+names(classdata)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
-#remove chr and pos info from TE info
+#remove CHROM and pos info from TE info
 classdata$id <- gsub("\\w+_\\d+_" ,"",classdata$id)
 print(classdata$id)
 
 
-classdata<-mutate(classdata, phenoT=paste(method,"TRANS",id,sep="_"))
-class_subset <- classdata %>% distinct(phenoT) %>% select(phenoT,class)
+classdata<-mutate(classdata, traitT=paste(method,"TRANS",id,sep="_"))
+class_subset <- classdata %>% distinct(traitT) %>% select(traitT,class)
 #
 #
-sites_clean <-merge(sites_clean, class_subset, by="phenoT")
+sites_clean <-merge(sites_clean, class_subset, by="traitT")
+#after the merge there are less rows because no longer including the "total" counts, only the family ones
+
 nrow(sites_clean)
 #revalue classes
 sites_clean$class <- factor(sites_clean$class,
@@ -88,16 +91,16 @@ method_labeller <- function(variable,value){
 
 a<-filter(sites_clean,method=="reference")
 unique(sites_clean$method)
-a <- ggplot(data = sites_clean, aes(x = pos/1e6, y=value)) #,colour=method
-a <- a + geom_segment(aes(x = pos/1e6, y = 1, xend = pos/1e6, yend = 25))+
-  facet_grid(method ~ chr,scale="free",space = "free_x",labeller=method_labeller)+
+a <- ggplot(data = sites_clean, aes(x = POS/1e6, y=value)) #,colour=method
+a <- a + geom_segment(aes(x = POS/1e6, y = 1, xend = POS/1e6, yend = 25))+
+  facet_grid(method ~ CHROM,scale="free",space = "free_x",labeller=method_labeller)+
  geom_point(data = sites_clean,aes(x=0, y=2),alpha=0) +  #phantom point at x=0
-  geom_point(data = subset(sites_clean, chr=="I"),aes(x=max_1/1e6, y=2),alpha=0) +
-  geom_point(data = subset(sites_clean, chr=="II"),aes(x=max_2/1e6, y=2),alpha=0) +
-  geom_point(data = subset(sites_clean, chr=="III"),aes(x=max_3/1e6, y=2),alpha=0) +
-  geom_point(data = subset(sites_clean, chr=="IV"),aes(x=max_4/1e6, y=2),alpha=0) +
-  geom_point(data = subset(sites_clean, chr=="V"),aes(x=max_5/1e6, y=2),alpha=0) +
-  geom_point(data = subset(sites_clean, chr=="X"),aes(x=max_6/1e6, y=2),alpha=0) +
+  geom_point(data = subset(sites_clean, CHROM=="I"),aes(x=max_1/1e6, y=2),alpha=0) +
+  geom_point(data = subset(sites_clean, CHROM=="II"),aes(x=max_2/1e6, y=2),alpha=0) +
+  geom_point(data = subset(sites_clean, CHROM=="III"),aes(x=max_3/1e6, y=2),alpha=0) +
+  geom_point(data = subset(sites_clean, CHROM=="IV"),aes(x=max_4/1e6, y=2),alpha=0) +
+  geom_point(data = subset(sites_clean, CHROM=="V"),aes(x=max_5/1e6, y=2),alpha=0) +
+  geom_point(data = subset(sites_clean, CHROM=="X"),aes(x=max_6/1e6, y=2),alpha=0) +
   labs(x="Chromosome Position (Mb)", y="")+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 9, colour = "black",face="bold"),
@@ -127,14 +130,9 @@ ggsave(filename="Aggregate_GWAS.tiff",
        height=4,
        units="in")
 
-
-
 #piRNA
-sites_clean <- mutate(sites_clean, MB=pos/(1e6))
-piRNA<-filter(sites_clean, chr=="IV",MB>=4.5 & MB<=7|MB>13.5 & MB<17.2)
+piRNA<-filter(all_sites_clean, CHROM=="IV",POS>=4500000 & POS<=7000000|POS>=13500000 & POS<=17200000)
 save(piRNA,file="piRNA_QTL.Rda")
-
-
 
 
 

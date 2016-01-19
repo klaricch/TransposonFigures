@@ -8,6 +8,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(stringr)
+#install.packages("cowplot")
 library(cowplot)
 library(grid)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
@@ -23,7 +24,6 @@ summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
 summarydata$method<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1]
 #new column that specifies TE family
 summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
-families<-summarydata
 summarydata<-filter(summarydata,transposon=="total")
 
 #names(summarydata)
@@ -35,22 +35,8 @@ total_absence<-filter(summarydata,method=="absent")
 total_reference<-filter(summarydata,method=="reference")
 total_insertion<-filter(summarydata,method=="new")
 
-
-
-
-#
-#
-#
-#
-#remove coverage, etc, traits
-#
-#
-#
-#
-
 #SCATTER
-initial_merge <- merge(total_absence,total_reference, by="sample")
-final_merge <- merge(initial_merge,total_insertion, by="sample")
+final_merge<- Reduce(function(x, y) merge(x, y, all=TRUE,by="sample"), list(total_absence, total_reference, total_insertion))
 
 names(final_merge)<-c("sample", "trait.x",	"method.x",	"transposon.x",	"total_absences",	"trait.y",	"method.y",	"transposon.y",	"total_references",	"trait",	"method",	"transposon",	"total_insertions")
 
@@ -88,7 +74,6 @@ newdf <-bind_rows(summarydata, class_subset)
 print(newdf)
 names(newdf)
 
-####
 
 #1 ABSENCE vs INSERTION
 #spearman correlation
@@ -97,7 +82,6 @@ rho<-round(correlation$estimate,3)
 
 max_insertions<-max(final_merge$total_insertions)
 max_absences<-max(final_merge$total_absences)
-
 
 la <- paste("italic(rho) == ", rho)
 m1 <- ggplot(final_merge, aes(x=total_insertions, y=total_absences))
@@ -207,12 +191,6 @@ ggsave(filename="All_vs_All.tiff",
        height=2.25,
        units="in")
 
-
-
-
-
-#
-
 #TRANSPOSONS vs STRAINS
 names(summarydata)
 #INSERTIONS
@@ -272,8 +250,6 @@ ggsave(filename="References_per_Strain.tiff",
        height=10,
        units="in")
 
-
-
 plot_grid(m1, m2, m3,ncol=1,labels=c('A', 'B','C'))
 ggsave(filename="All_per_Strain.tiff",
        dpi=300,
@@ -281,16 +257,12 @@ ggsave(filename="All_per_Strain.tiff",
        height=10,
        units="in")
 
-
-
 min(absences$total_tes)
 max(absences$total_tes)
 mean(absences$total_tes)
-
 min(insertions$total_tes)
 max(insertions$total_tes)
 mean(insertions$total_tes)
-
 min(references$total_tes)
 max(references$total_tes)
 mean(references$total_tes)

@@ -5,7 +5,7 @@
 # calcuates the average rho and SD between all combinations of counts and activity traits 
 # USE: correlations.R
 
-setwd("/Users/kristen/Documents/transposon_figure_data/data")
+setwd("/Users/kristen/Documents/transposon_figure_data/data_t")
 load("Processed_Transposon_Mappings.Rda")
 library(ggplot2)
 library(dplyr)
@@ -17,19 +17,19 @@ library(data.table)
 ################################################################################################################
 # COUNT FRACTION CORRELATION
 #add columns
-final_processed_mappings$family <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,2]
-final_processed_mappings$method <- stringr::str_split_fixed(final_processed_mappings$pheno, "_TRANS_",2)[,1]
-base_traits <-final_processed_mappings[(final_processed_mappings$method=="absent"| final_processed_mappings$method=="new" |final_processed_mappings$method=="reference"|final_processed_mappings$method=="ZERO_new"|final_processed_mappings$method=="ONE_new"), ]
+processed_mapping_df$family <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
+processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
+base_traits <-processed_mapping_df[(processed_mapping_df$method=="absent"| processed_mapping_df$method=="new" |processed_mapping_df$method=="reference"|processed_mapping_df$method=="ZERO_new"|processed_mapping_df$method=="ONE_new"), ]
 
 # TAKE OUT NEW IN ABOVE!!!!!!!
-
-peaks <- base_traits[base_traits$peak_id!="NA",]
-#pull unique combinations of peak, strain,and pheno
-distinct_sites <- distinct(peaks,strain,pheno)
+peaks <- filter(base_traits,!is.na(peak_id))
+peaks <- filter(peaks,!is.na(allele))
+#pull unique combinations of peak, strain,and trait
+distinct_sites <- distinct(peaks,strain,trait)
 #split into counts and fractions dataframes
 #subset data
-counts<-subset(distinct_sites, grepl("_C$", distinct_sites$pheno))
-fractions<-subset(distinct_sites, !grepl("_C$", distinct_sites$pheno))
+counts<-subset(distinct_sites, grepl("_C$", distinct_sites$trait))
+fractions<-subset(distinct_sites, !grepl("_C$", distinct_sites$trait))
 counts$family <- gsub("_C$" ,"",counts$family)
 
 
@@ -59,7 +59,7 @@ for (TE in unique(counts$family)){
 }
 
 m <- ggplot(corr_df, aes(x=rho))
-m <- m + geom_bar(binwidth=.001) +
+m <- m + geom_histogram(binwidth=.001) +
   theme(panel.background = element_rect(fill = "white"),
         axis.ticks =element_line(colour = "black"),
         axis.text.y = element_text(colour = "black",size=9),
@@ -84,9 +84,9 @@ count_mins <- data.frame(TE=character(),
 frac_mins <- data.frame(TE=character(),
                         min_p=numeric())
                                            
-#just iterate through disticnt pheno
-for (phenotype in unique(base_traits$pheno)){
-  temp_df<-filter(base_traits, pheno==phenotype) 
+#just iterate through disticnt trait
+for (phenotype in unique(base_traits$trait)){
+  temp_df<-filter(base_traits, trait==phenotype) 
   minimum_p<-min(temp_df$ps)
   if(grepl("_C$", phenotype)==TRUE){ #counts
     count_mins <- rbind(count_mins, data.frame(TE = phenotype, min_p = minimum_p))
@@ -112,18 +112,18 @@ print(SD_F)
 ################################################################################################################
 ################################################################################################################
 # COUNT ACTIVITY CORRELATION
-activity_traits<-subset(final_processed_mappings, grepl('^(?!absent).*', final_processed_mappings$method,perl=T) &
-                          grepl('^(?!reference).*', final_processed_mappings$method,perl=T) &
-                          grepl('^(?!ZERO_new).*', final_processed_mappings$method,perl=T) &
-                          grepl('^(?!ONE_new).*', final_processed_mappings$method,perl=T) &
-                          grepl('^(?!I).*', final_processed_mappings$method,perl=T) &
-                          grepl('^(?!V).*', final_processed_mappings$method,perl=T) &
-                          grepl('^(?!X).*', final_processed_mappings$method,perl=T) &
-                          grepl('^(?!coverage).*', final_processed_mappings$method,perl=T))
+activity_traits<-subset(processed_mapping_df, grepl('^(?!absent).*', processed_mapping_df$method,perl=T) &
+                          grepl('^(?!reference).*', processed_mapping_df$method,perl=T) &
+                          grepl('^(?!ZERO_new).*', processed_mapping_df$method,perl=T) &
+                          grepl('^(?!ONE_new).*', processed_mapping_df$method,perl=T) &
+                          grepl('^(?!I).*', processed_mapping_df$method,perl=T) &
+                          grepl('^(?!V).*', processed_mapping_df$method,perl=T) &
+                          grepl('^(?!X).*', processed_mapping_df$method,perl=T) &
+                          grepl('^(?!coverage).*', processed_mapping_df$method,perl=T))
 activity_traits$family <- gsub("_C$" ,"",activity_traits$family)
 ac_peaks <- activity_traits[activity_traits$peak_id!="NA",]
-#pull unique combinations of peak, strain,and pheno
-activity_traits <- distinct(ac_peaks,strain,pheno)
+#pull unique combinations of peak, strain,and trait
+activity_traits <- distinct(ac_peaks,strain,trait)
 #initiate an empty dataframe
 final_corr <- data.frame(transposon=character(),
                       base=character(),
