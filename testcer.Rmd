@@ -2,7 +2,7 @@
 output: pdf_document
 geometry: margin=1in
 ---
-
+  
 ```{r,fig.width=7.5, fig.height=5,warning=F, message=F, echo=F,results='asis'}
 
 library(dplyr)
@@ -14,20 +14,26 @@ library(gridExtra)
 library(knitr)
 library(tidyr)
 library(scales)
-library(gtable)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-#load("Processed_Transposon_Mappings.Rda")
-load("Processed_Transposon_Mappings_SUBSET.Rda")
+load("Processed_Transposon_Mappings.Rda")
 load("position_QTL.Rda")
 load("count_QTL.Rda")
+#load("away_phenos.Rda")
+#load("median_phenos.Rda")
+#load("low_ld.Rda")
+#load("counts_to_remove.Rda")
+#load("Amedian.Rda")
+
+
+
 
 
 #remove fraction and movement traits
 #processed_mapping_df<-subset(processed_mapping_df,
- #                                grepl('^I', processed_mapping_df$trait) |
-  #                                 grepl('^V', processed_mapping_df$trait) |
-   #                                grepl('^X', processed_mapping_df$trait)|
-    #                               grepl('_C$', processed_mapping_df$trait))
+#                                grepl('^I', processed_mapping_df$trait) |
+#                                 grepl('^V', processed_mapping_df$trait) |
+#                                grepl('^X', processed_mapping_df$trait)|
+#                               grepl('_C$', processed_mapping_df$trait))
 #processed_mapping_df<-subset(processed_mapping_df,!grepl('^no_', processed_mapping_df$trait))
 
 
@@ -36,8 +42,8 @@ load("count_QTL.Rda")
 hm<-processed_mapping_df
 hm<-distinct(processed_mapping_df, trait,strain,peak_id)
 hm$allele <- factor(hm$allele,
-                          levels = c(-1,1),
-                          labels = c("REF", "ALT"))
+                    levels = c(-1,1),
+                    labels = c("Ref", "Alt"))
 c<-filter(processed_mapping_df, log10p> BF)
 #d<-filter(processed_mapping_df,peak_id=="2", trait=="absent_TRANS_CER1_C")
 e<-filter(processed_mapping_df,!is.na(peak_id), trait=="absent_TRANS_CER1_C")
@@ -47,16 +53,15 @@ gwasPxG <- function(trt,specific_peak){
   #load("~/Dropbox/AndersenLab/RCode/Stefan/good_gwasMappingsINlinkage_phenotypes.Rda")
   
   hm %>%
-    filter(trait==trt,peak_id==specific_peak,!is.na(allele))%>%
+    filter(trait==trt,peak_id==specific_peak)%>%
     ggplot(.)+
     aes(x=allele,y = value,fill=as.factor(allele))+
-    geom_boxplot(outlier.shape=NA,size =.5,color="gray52")+
     geom_point(size = 1, alpha = .8,position=position_jitter(w=.4,  h=.025),na.rm=TRUE)+
-    
+    geom_boxplot(outlier.shape=NA,size =1,color="hotpink2")+
     #scale_fill_brewer(palette = "Set2")+
     
     #geom_point(size = 1, alpha = .8,position=position_jitter(w=.4,  h=.025),na.rm=TRUE)+
-   # geom_jitter(size = 3, alpha = .8,postion=position_jitter(0,  0))  +
+    # geom_jitter(size = 3, alpha = .8,postion=position_jitter(0,  0))  +
     theme_bw()+
     theme(axis.text.x = element_text(size=9, , color="black"),
           axis.text.y = element_text(size=9,  color="black"),
@@ -69,10 +74,10 @@ gwasPxG <- function(trt,specific_peak){
           panel.border = element_rect(size=1, colour = "black"),
           plot.margin = unit(c(.05,.05,.05,.05), "cm"),
           legend.position = "none")+
-          scale_y_continuous(breaks= pretty_breaks())+
+    scale_y_continuous(breaks= pretty_breaks())+
     labs( x = "Genotype",y="Value")+
-
-    scale_fill_manual( values = c("darkgray", "burlywood2", "darkolivegreen","black"))
+    
+    scale_fill_manual( values = c("steelblue3", "indianred1", "darkolivegreen","black"))
 }
 
 # pull unique combos, remove strain column(don't need specific strain info at this point)
@@ -83,6 +88,9 @@ processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker,strain)
 #create family and method columns
 processed_mapping_df$family <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
 processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
+
+
+processed_mapping_df<-filter(processed_mapping_df, family=="CER1_C")
 
 #set up method labellers
 method_names <- list(
@@ -151,10 +159,9 @@ position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
 processed_mapping_df<-processed_mapping_df %>%mutate(family = ifelse(processed_mapping_df$trait %in% position_traits$trait, (paste(stringr::str_split_fixed(processed_mapping_df$trait, "_",4)[,3],stringr::str_split_fixed(processed_mapping_df$trait, "_",4)[,4],sep="_")), processed_mapping_df$family))
 
 
-#bind count and position traits option...choose oen of below three
-#selection<-rbind(counts,position_traits)
-selection<-counts
-#selection<-position_traits
+#bind count and position traits option...choose oen of below two
+selection<-rbind(counts,position_traits)
+#selection<-counts
 
 #COMMENT OUT BELOW!!!!!!
 
@@ -166,7 +173,8 @@ selection<-counts
 #selection<-selection[selection$trait=="II_507265_LINE2C",]
 #absent_TRANS_CER1
 
-#selection<-selection[selection$trait=="absent_TRANS_CER1_C",]
+selection<-selection[selection$trait=="absent_TRANS_CER1_C",]
+
 
 #
 
@@ -192,23 +200,15 @@ selection <- filter(selection, (trait %in% count_QTL$trait2 |trait %in% position
 #unique(position_QTL$trait2)
 #unique(selection$trait)
 processed_mapping_df<-filter(processed_mapping_df,CHROM != "MtDNA")
-#selection$trait<-gsub("_non-reference_.*","",selection$trait)
-#processed_mapping_df$trait<-gsub("_non-reference_.*","",processed_mapping_df$trait)
-#i="II_3339832_MARINCE1_non-reference__temp_sr_1036_39_+_new_ED3005"
-#i="II_2866830_CELE45_non-reference__temp_rp_212_9.5_+_new_NIC265"
-#iterate through the phenotypes and plot the results
-#i="II_2866830_CELE45"
-#i="II_3339832_MARINCE1"
 
 
-load("reciprocal_removals.Rda")
-
-processed_mapping_df<-filter(processed_mapping_df,!(trait %in% reciprocal_removals$TE))
-selection<-filter(selection,!(trait %in% reciprocal_removals$TE))
 
 
 i="absent_TRANS_CER1"
-for (i in sort(unique(selection$trait))){
+
+
+#iterate through the phenotypes and plot the results
+for (i in unique(selection$trait)){
   specific_trait<- processed_mapping_df[processed_mapping_df$trait == i, ]
   empty <-specific_trait[specific_trait$method==NA,]
   #specific_trait_mx <- max(specific_trait$log10p)
@@ -220,13 +220,12 @@ for (i in sort(unique(selection$trait))){
   #sapply(Mappings, function(x)all(is.na(x)))
   A<- processed_mapping_df %>%
     filter(trait == i)%>%
-    .[order(.$peak_id,na.last=FALSE),]%>% 
     ggplot(.)+
     aes(x=POS/1e6,y=log10p)+
-  geom_rect(data=rect_data,mapping=aes(xmin=startPOS/1e6, xmax=endPOS/1e6, ymin=0, ymax= specific_trait_mx),fill="thistle1", alpha=1) +
+    geom_rect( data=rect_data,mapping=aes(xmin=startPOS/1e6, xmax=endPOS/1e6, ymin=0, ymax= specific_trait_mx),fill="thistle1", alpha=1)+
     geom_point(aes( color=ifelse(log10p> BF & SNP_col=="PASS", 'red', 'black')),size=1)+
     
-    facet_grid(.~CHROM,scale="free_x",space = "free_x")+scale_color_identity()  +
+    facet_grid(.~CHROM,scale="free_x",space = "free_x")+scale_color_identity()+
     ggtitle(i)+
     geom_hline(aes(yintercept=BF),color="grey60",linetype="dashed")+
     theme(strip.background = element_rect(fill = "white"),
@@ -244,7 +243,6 @@ for (i in sort(unique(selection$trait))){
   
   #scale_y_continuous(expand=c(0,0),limits=c(0,specific_trait_mx+.075*specific_trait_mx),labels = function(x) format(x,width = 4))
 
-  
   # pull out  X maxs of each panel
   panel1<-filter(ggplot_build(A)$data[[2]],PANEL==1)
   max1<-max(panel1$x)
@@ -294,7 +292,7 @@ for (i in sort(unique(selection$trait))){
   #m <-m + geom_histogram(binwidth=.25)+
   
   #ggplot(data = combo, aes(x = TEMP_support,y=TELOCATE_support,color=ifelse(method=="absent","darkorange",ifelse(method=="blank","black",ifelse(method=="insertion",""turquoise3"","slateblue1")))))+scale_color_identity()
-#    m <- ggplot(traitPositions, aes(x=start/1e6,color=ifelse(method=="absent","darkorange",ifelse(method=="blank","black",ifelse(method=="new","turquoise3","slateblue1")))))+scale_color_identity()
+  #    m <- ggplot(traitPositions, aes(x=start/1e6,color=ifelse(method=="absent","darkorange",ifelse(method=="blank","black",ifelse(method=="new","turquoise3","slateblue1")))))+scale_color_identity()
   m <- ggplot(traitPositions, aes(x=start/1e6,fill=method))+scale_fill_manual(values = c('new' = "turquoise3", 'reference' = "slateblue1", 'absent' = "darkorange","blank"="black"))
   m <-m + geom_histogram(data=subset(traitPositions,strain=="fake"), fill="white", colour="white", binwidth=.25)
   m <-m + geom_histogram(data=subset(traitPositions,strain!="fake"), binwidth=.25)+
@@ -335,7 +333,7 @@ for (i in sort(unique(selection$trait))){
   m <- m + scale_y_continuous(expand = c(0,0),limits=c(0,max(ggplot_build(m)$panel$ranges[[1]]$y.range)*1.075)) 
   
   
-  
+  library(gtable)
   g1<-ggplotGrob(A)
   g2<-ggplotGrob(m)
   #Bind the tables
@@ -344,35 +342,35 @@ for (i in sort(unique(selection$trait))){
   #g <- gtable_add_rows(g, unit(-1,"cm"), POS=nrow(g1))
   #draw
   panels <- g$layout$t[grep("panel", g$layout$name)]
-  g$heights[panels] <- lapply(c(8,8), unit, "null")
+  g$heights[panels] <- lapply(c(10,10), unit, "null")
   grid.newpage()
   grid.draw(g)
   
-
+  
   df <- data.frame(1,2)
   blank_plot<-ggplot(df,aes(x=1,y=1)) + geom_point(color="white") +
-  theme(axis.text =element_blank(),axis.ticks =element_blank(),axis.title =element_blank(),panel.background = element_blank(),panel.grid = element_blank())
-
+    theme(axis.text =element_blank(),axis.ticks =element_blank(),axis.title =element_blank(),panel.background = element_blank(),panel.grid = element_blank())
+  
   plist<-vector()
   for (p in rect_data$peak_id){
     plist<-c(plist,p)
   }
-
+  
   box_list <- lapply(c(plist),FUN=function(x){gwasPxG(i,x)})
   #H<-do.call("grid.arrange", c(box_list, ncol=length(plist)))
   grid.draw(grid.arrange(do.call("grid.arrange", c(box_list, ncol=length(plist))),blank_plot))
   #J<-grid.arrange(H,blank_plot) #bind with blank plot to get appropriate height
   #grid.draw(J)
-
   
-
+  
+  
   #medians<-filter(Amedian_df,trait==i)
- # median_diff<-medians$median_diff
+  # median_diff<-medians$median_diff
   #diff<-medians$diff
   #print(median_diff)
   #print(diff)
-
-
+  
+  
   cat("\n\n\\pagebreak\n")
 }
 

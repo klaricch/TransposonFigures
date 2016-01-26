@@ -43,7 +43,7 @@ position_traits$family <- gsub("_non-reference(.*)$" ,"",position_traits$family)
 distinct_sites <- distinct(position_traits,trait,CHROM,peak_id,POS)
 distinct_sites<-arrange(distinct_sites, trait,peak_id,log10p) #sort by ascending trait and descending pvalue (ascending log10p)
 distinct_sites <- filter(distinct_sites,!is.na(peak_id))#remove NA peaks
-distinct_sites <- filter(distinct_sites,!is.na(allele))
+#distinct_sites <- filter(distinct_sites,!is.na(allele))
 distinct_sites <- distinct(distinct_sites,trait,peak_id)
 
 #pull out all unique marker used for the mappings
@@ -101,10 +101,10 @@ max_five=length(five)
 max_six=length(six)
 
 #initiate an empty dataframe
-away<- as.data.frame(matrix(0, ncol = 27, nrow = 0))
+away<- as.data.frame(matrix(0, ncol = 18, nrow = 0))
 names(away) <-c(colnames(position_traits))
 
-not_away<- as.data.frame(matrix(0, ncol = 27, nrow = 0))
+not_away<- as.data.frame(matrix(0, ncol = 18, nrow = 0))
 names(not_away) <-c(colnames(position_traits))
 
 #iterate through unique QTL peaks
@@ -303,29 +303,35 @@ for (phenotype in unique(distinct_sites$trait)){
 }
 save(away, file="away_phenos.Rda")
 
-
+away<-mutate(away,ID=paste(trait,peak_id,sep="_"))
 
 ##########################################################################################
 #                               MEDIAN Differences
 ##########################################################################################
 
-#get medians of positions traits that are in away df:
-median_df <- position_traits[position_traits$trait %in% away$trait,]
+#get medians of positions traits that are in away df:processed_mapping_df
+position_traits<-mutate(position_traits,ID=paste(trait,peak_id,sep="_"))
+median_df <- position_traits[position_traits$ID %in% away$ID,]
+#unique(median_df$ID)
 median_df <- filter(median_df,!is.na(peak_id))
 median_df <- filter(median_df,!is.na(allele))
-median_df <- distinct(median_df,trait,strain,peak_id)
+median_df <- distinct(median_df,strain,trait,peak_id)
+unique(median_df$ID)
 #calculate median for each phenotype allele group
-median_df <- median_df %>% group_by(trait,allele,peak_id) %>% summarise(med=median(value,na.rm=TRUE))
-median_df<-mutate(median_df, Trait=paste(trait,peak_id,sep="_"))
-median_df <- median_df %>% ungroup() %>% select(-trait,-peak_id)
+median_df <- median_df %>% group_by(ID,allele) %>% summarise(med=median(value,na.rm=TRUE))
+#median_df<-mutate(median_df, Trait=paste(trait,peak_id,sep="_"))
+#median_df <- median_df %>% ungroup() %>% select(-trait,-peak_id)
 median_df<-spread(median_df, allele,med)
+#
 colnames(median_df)<-c("trait","ref","alt")
 #pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
 median_df<-filter(median_df,ref!=alt)
-median_df$trait <- gsub("_[0-9]+$" ,"",median_df$trait)
-save(median_df, file="median_phenos.Rda")
+#median_df$trait <- gsub("_[0-9]+$" ,"",median_df$trait) # at this point onyl saving trait, acutlly want ID?
+position_QTL<-median_df
+save(position_QTL, file="position_QTL.Rda")
+#save(median_df, file="median_phenos.Rda")
 
-
+d<-filter(processed_mapping_df,strain=="N2",!is.na(allele))
 ##########################################################################################
 #                               LD check
 ##########################################################################################

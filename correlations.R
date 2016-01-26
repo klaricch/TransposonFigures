@@ -5,8 +5,8 @@
 # calcuates the average rho and SD between all combinations of counts and activity traits 
 # USE: correlations.R
 
-setwd("/Users/kristen/Documents/transposon_figure_data/data_t")
-load("Processed_Transposon_Mappings.Rda")
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+load("Processed_Transposon_Mappings_with activity.Rda")
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -16,113 +16,32 @@ library(data.table)
 ################################################################################################################
 ################################################################################################################
 # COUNT FRACTION CORRELATION
-#add columns
+#add columns for family and method (will only apply to count traits eventually)
 processed_mapping_df$family <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
 processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
-base_traits <-processed_mapping_df[(processed_mapping_df$method=="absent"| processed_mapping_df$method=="new" |processed_mapping_df$method=="reference"|processed_mapping_df$method=="ZERO_new"|processed_mapping_df$method=="ONE_new"), ]
-
-# TAKE OUT NEW IN ABOVE!!!!!!!
+#pull out base (counts and fractions if present) traits for families
+base_traits <-processed_mapping_df[(processed_mapping_df$method=="absent"|processed_mapping_df$method=="reference"|processed_mapping_df$method=="ZERO_new"|processed_mapping_df$method=="ONE_new"), ]
+#remove "NA" peak_ids and alleles
 peaks <- filter(base_traits,!is.na(peak_id))
 peaks <- filter(peaks,!is.na(allele))
-#pull unique combinations of peak, strain,and trait
+#pull unique combinations of  strain and trait
 distinct_sites <- distinct(peaks,strain,trait)
-#split into counts and fractions dataframes
-#subset data
+#subset data to get only count traits (will remove fraction traits if present) 
 counts<-subset(distinct_sites, grepl("_C$", distinct_sites$trait))
-fractions<-subset(distinct_sites, !grepl("_C$", distinct_sites$trait))
+# remove trailing "_C" from family names
 counts$family <- gsub("_C$" ,"",counts$family)
-
-
-#remove stuff CHECK STUFF OVER HERE
+#remove "total" traits
 counts <- filter(counts, family!="total" ) #remove totals which will only be in counts and not fractions
-
-#initiate an empty dataframe
-corr_df <- data.frame(TE=character(),
-                      method=character(),
-                      rho=numeric())
-
-for (TE in unique(counts$family)){
-  temp_df<-filter(counts, family==TE)
-  for (way in unique(temp_df$method)){
-
-    count_TE <- filter(counts, family==TE,method==way)
-    fraction_TE <- filter(fractions, family==TE,method==way)
-    #join dataframes
-    all<-merge(count_TE,fraction_TE,by="strain")
-    if (nrow(all)!=0){ # check if TE and method were in both counts and fractions...if not, all will be none (so far only happens with LTRCER1) 
-    #spearman correlation
-    correlation<-cor.test(all$value.x, all$value.y,method="spearman",exact=FALSE)
-    rho_value <-correlation$estimate
-    corr_df <- rbind(corr_df, data.frame(TE = TE, method = way,rho=rho_value))
-  }
-  }
-}
-
-m <- ggplot(corr_df, aes(x=rho))
-m <- m + geom_histogram(binwidth=.001) +
-  theme(panel.background = element_rect(fill = "white"),
-        axis.ticks =element_line(colour = "black"),
-        axis.text.y = element_text(colour = "black",size=9),
-        axis.text.x = element_text(colour = "black",size=9),
-        axis.line=element_line(linetype="solid"),
-        axis.title=element_text(size=9))+
-  guides(fill=FALSE) +
-  labs(x="rho", y="Count")+
-  scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))
-m
-setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Correlation_Counts_Fractions.tiff",dpi=300, width=7.5,height=3.5,units="in")
-
-################################################################################################################
-################################################################################################################
-################################################################################################################
-#MEAN AND SD
-#initiate an empty dataframe
-count_mins <- data.frame(TE=character(),
-                      min_p=numeric())
-                      
-frac_mins <- data.frame(TE=character(),
-                        min_p=numeric())
-                                           
-#just iterate through disticnt trait
-for (phenotype in unique(base_traits$trait)){
-  temp_df<-filter(base_traits, trait==phenotype) 
-  minimum_p<-min(temp_df$ps)
-  if(grepl("_C$", phenotype)==TRUE){ #counts
-    count_mins <- rbind(count_mins, data.frame(TE = phenotype, min_p = minimum_p))
-  }
-  else if (!grepl("_C$", phenotype)==TRUE){ #fractions
-    frac_mins <- rbind(frac_mins, data.frame(TE = phenotype, min_p = minimum_p))
-   
-  }
-}
-
-#calculate means and SDs of the minimum P values:
-mean_C=mean(count_mins$min_p)
-SD_C=sd(count_mins$min_p)
-mean_F=mean(frac_mins$min_p)
-SD_F=sd(frac_mins$min_p)
-
-print(mean_C)
-print(mean_F)
-print(SD_C)
-print(SD_F)
 
 ################################################################################################################
 ################################################################################################################
 ################################################################################################################
 # COUNT ACTIVITY CORRELATION
-activity_traits<-subset(processed_mapping_df, grepl('^(?!absent).*', processed_mapping_df$method,perl=T) &
-                          grepl('^(?!reference).*', processed_mapping_df$method,perl=T) &
-                          grepl('^(?!ZERO_new).*', processed_mapping_df$method,perl=T) &
-                          grepl('^(?!ONE_new).*', processed_mapping_df$method,perl=T) &
-                          grepl('^(?!I).*', processed_mapping_df$method,perl=T) &
-                          grepl('^(?!V).*', processed_mapping_df$method,perl=T) &
-                          grepl('^(?!X).*', processed_mapping_df$method,perl=T) &
-                          grepl('^(?!coverage).*', processed_mapping_df$method,perl=T))
+#pull out only activity traits
+activity_traits<-subset(processed_mapping_df, grepl('^no_', processed_mapping_df$trait))
 activity_traits$family <- gsub("_C$" ,"",activity_traits$family)
 ac_peaks <- activity_traits[activity_traits$peak_id!="NA",]
-#pull unique combinations of peak, strain,and trait
+#pull unique combinations of strain and trait
 activity_traits <- distinct(ac_peaks,strain,trait)
 #initiate an empty dataframe
 final_corr <- data.frame(transposon=character(),
@@ -131,12 +50,12 @@ final_corr <- data.frame(transposon=character(),
                       rho=numeric())
 
 #correlations for each TE fam, abse, trait, activity trait
-for (TE in unique(counts$family)){
-  temp_df<-filter(counts, family==TE)
-  for (way in unique(temp_df$method)){ #no longer matching methods
-    count_TE <- filter(counts, family==TE,method==way)
-    for (act in unique(activity_traits$method)){
-      activity_TE <- filter(activity_traits, family==TE,method==act)
+for (TE in unique(counts$family)){ #for each count family mapped
+  temp_df<-filter(counts, family==TE) #subset the count df for that family
+  for (way in unique(temp_df$method)){ #for each method(absent,ref, ONE_new, ZERO_new); no longer matching methods
+    count_TE <- filter(counts, family==TE,method==way) # subset the count df for that method
+    for (act in unique(activity_traits$method)){ # for each activity trait method
+      activity_TE <- filter(activity_traits, family==TE,method==act) # subset the activity df for that method and TE family
       #join dataframes
       all<-merge(count_TE,activity_TE,by="strain")
       if (nrow(all)!=0){ # check if TE and method were in both counts and activity...if not, all will be none (so far only happens with LTRCER1) 
@@ -169,6 +88,7 @@ for (M1 in unique(final_corr$base)){
 #reverse sort
 combo_corr <- combo_corr[order(-combo_corr$mean) , ]
 #write output to table
+write.table(final_corr, "/Users/kristen/Documents/transposon_figure_data/figures/final_corr.txt", sep="\t")
 write.table(combo_corr, "/Users/kristen/Documents/transposon_figure_data/figures/combo_corr.txt", sep="\t")
 
 

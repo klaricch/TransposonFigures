@@ -38,24 +38,24 @@ processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$tra
 selection<-filter(processed_mapping_df, log10p > BF)
  
 #extract the count base traits
-base_traits <-selection[(selection$method=="absent"| selection$method=="new" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
+base_traits <-selection[(selection$method=="absent" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
 counts<-subset(base_traits, grepl("_C$", base_traits$family))
 counts$family <- gsub("_C$" ,"",counts$family)
 
 
-count_df<-filter(counts,!is.na(peak_id))
-count_df<-filter(count_df,!is.na(allele))
-count_df <- distinct(count_df,trait,strain)
-#calculate median, min, max for each phenotype allele group
-count_df_temp1 <- count_df %>% group_by(trait) %>% summarise(minimum=min(value,na.rm=TRUE),maximum=max(value,na.rm=TRUE))
-count_df_temp2 <- count_df %>% group_by(trait,allele) %>% summarise(med=median(value,na.rm=TRUE)) #dont actually have to calculate median here b/c do this step later
+#count_df<-filter(counts,!is.na(peak_id))
+#count_df<-filter(count_df,!is.na(allele))
+#count_df <- distinct(count_df,trait,strain)
+##calculate median, min, max for each phenotype allele group
+#count_df_temp1 <- count_df %>% group_by(trait) %>% summarise(minimum=min(value,na.rm=TRUE),maximum=max(value,na.rm=TRUE))
+#count_df_temp2 <- count_df %>% group_by(trait,allele) %>% summarise(med=median(value,na.rm=TRUE)) #dont actually have to calculate median here b/c do this step later
 library(tidyr)
-count_df_temp2<-spread(count_df_temp2, allele,med)
-#merge min/max and median dataframes
-count_df<-merge(count_df_temp1, count_df_temp2,by="trait")
-colnames(count_df)<-c("trait","minimum", "maximum","ref","alt")
+#count_df_temp2<-spread(count_df_temp2, allele,med)
+##merge min/max and median dataframes
+#count_df<-merge(count_df_temp1, count_df_temp2,by="trait")
+#colnames(count_df)<-c("trait","minimum", "maximum","ref","alt")
 
-count_df_pa<-filter(count_df,minimum=="0",maximum=="1")
+#count_df_pa<-filter(count_df,minimum=="0",maximum=="1")
 
 
 #get count pa traits where the medians are the same between the ref and alt allele, then remove these from the count_df
@@ -64,9 +64,9 @@ count_df_pa<-filter(count_df,minimum=="0",maximum=="1")
 all_counts<-counts
 #counts<-all_counts
 
-
+unique(counts$trait)
 #get the one occurence count traits from the full dataset
-counts<-filter(counts,(trait %in% count_df_pa$trait))
+#counts<-filter(counts,(trait %in% count_df_pa$trait))
 counts$trait <- gsub("_C$" ,"",counts$trait)
 
 
@@ -98,6 +98,7 @@ distinct_sites<-arrange(distinct_sites, trait,peak_id,log10p)
 distinct_sites <- filter(distinct_sites,peak_id!="NA")
 distinct_sites <- distinct(distinct_sites,trait,peak_id)
 
+unique(distinct_sites$trait)
 #pull out all unique SNPs used for the mappings
 SNP<- distinct(processed_mapping_df,CHROM,POS)
 
@@ -153,14 +154,18 @@ max_five=length(five)
 max_six=length(six)
 
 #initiate an empty dataframe
-away<- as.data.frame(matrix(0, ncol = 28, nrow = 0))
+away<- as.data.frame(matrix(0, ncol = 19, nrow = 0))
 names(away) <-c(colnames(counts))
 
-not_away<- as.data.frame(matrix(0, ncol = 28, nrow = 0))
+not_away<- as.data.frame(matrix(0, ncol = 19, nrow = 0))
 names(not_away) <-c(colnames(counts))
 
 ncol(counts)
 
+#remove totals
+distinct_sites<-filter(distinct_sites,!grepl('total', family))
+
+distinct_sites$family
 #iterate through unique QTL peaks
 for (phenotype in unique(distinct_sites$trait)){
   TE_one <- vector()
@@ -363,13 +368,24 @@ for (phenotype in unique(distinct_sites$trait)){
 away_counts<-away
 save(away_counts, file="away_counts_phenos.Rda")
 
+away_counts<-mutate(away_counts,ID=paste(trait,peak_id,sep="_"))
 
 
+unique(away_counts$trait)
 ##########################################################################################
 #                               MEDIAN Differences
 ##########################################################################################
-#get medians of positions traits that are in away df:
-median_df <- counts[counts$trait %in% away$trait,]
+
+#counts <- filter(counts,!is.na(peak_id))
+#counts <- filter(counts,!is.na(allele))
+#get medians of positions traits that are in away df:processed_mapping_df
+
+#d<-filter(counts,!is.na(peak_id))
+#c<-filter(counts,ID=="absent_TRANS_Tc9_2")
+#e<-filter(away_counts,ID=="absent_TRANS_Tc9_2")
+counts<-mutate(counts,ID=paste(trait,peak_id,sep="_"))
+median_df<-filter(counts,counts$ID %in% away_counts$ID)
+#median_df <- counts[counts$ID %in% away_counts$ID]
 
 median_df <- filter(median_df,!is.na(peak_id))
 median_df <- filter(median_df,!is.na(allele))
@@ -377,23 +393,24 @@ median_df <- distinct(median_df,trait,strain,peak_id)
 
 unique(median_df$allele)
 #calculate median for each phenotype allele group
-median_df <- median_df %>% group_by(trait,allele,peak_id) %>% summarise(med=median(value,na.rm=TRUE))
+median_df <- median_df %>% group_by(ID,allele) %>% summarise(med=median(value,na.rm=TRUE))
 
-median_df<-mutate(median_df, Trait=paste(trait,peak_id,sep="_"))
-median_df <- median_df %>% ungroup() %>% select(-trait,-peak_id)
+#median_df<-mutate(median_df, Trait=paste(trait,peak_id,sep="_"))
+#median_df <- median_df %>% ungroup() %>% select(-trait,-peak_id)
 median_df<-spread(median_df, allele,med)
 colnames(median_df)<-c("trait","ref","alt")
 #pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
 median_df<-filter(median_df,ref!=alt)
 
 
-median_df$trait <- gsub("_[0-9]+$" ,"",median_df$trait)
+#median_df$trait <- gsub("_[0-9]+$" ,"",median_df$trait)
 
-length(unique(away$trait))
-length(unique(median_df$trait))
-median_df_counts<-median_df
-save(median_df_counts, file="median_phenos_counts.Rda")
-
+#length(unique(away$trait))
+#length(unique(median_df$trait))
+count_QTL<-median_df
+save(count_QTL, file="count_QTL.Rda")
+#median_df_counts<-median_df
+#save(median_df_counts, file="median_phenos_counts.Rda")
 
 
 ##########################################################################################
@@ -416,54 +433,54 @@ save(median_df_counts, file="median_phenos_counts.Rda")
 #get medians of positions traits that are in away df:
 #Amedian_df <- all_counts[all_counts$trait %in% away$trait,]
 
-Amedian_df  <- filter(all_counts,!is.na(peak_id))
-Amedian_df  <- filter(Amedian_df ,!is.na(allele))
-Amedian_df <- distinct(Amedian_df,trait,strain,peak_id)
+#Amedian_df  <- filter(all_counts,!is.na(peak_id))
+#Amedian_df  <- filter(Amedian_df ,!is.na(allele))
+#Amedian_df <- distinct(Amedian_df,trait,strain,peak_id)
 
 #calculate median for each phenotype allele group
-Amedian_df <- Amedian_df %>% group_by(trait,allele,peak_id) %>% summarise(med=median(value,na.rm=TRUE))
+#Amedian_df <- Amedian_df %>% group_by(trait,allele,peak_id) %>% summarise(med=median(value,na.rm=TRUE))
 
-Amedian_df<-mutate(Amedian_df, Trait=paste(trait,peak_id,sep="_"))
-Amedian_df <- Amedian_df %>% ungroup() %>% select(-trait,-peak_id)
-Amedian_df<-spread(Amedian_df, allele,med)
-colnames(Amedian_df)<-c("trait","ref","alt")
+#Amedian_df<-mutate(Amedian_df, Trait=paste(trait,peak_id,sep="_"))
+#Amedian_df <- Amedian_df %>% ungroup() %>% select(-trait,-peak_id)
+#Amedian_df<-spread(Amedian_df, allele,med)
+#colnames(Amedian_df)<-c("trait","ref","alt")
 
 #pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
-Amedian_df<-mutate(Amedian_df,median_diff=abs(ref-alt))
-Amedian_df<-mutate(Amedian_df,diff=ifelse(ref==alt,"SAME","DIFFERENT"))
-ABmedian_df<-Amedian_df
-Amedian_df$trait <- gsub("_C_[0-9]+$" ,"",Amedian_df$trait) # get rid to the "_C"
-ABmedian_df$trait <- gsub("_[0-9]+$" ,"",ABmedian_df$trait) # keep the "_C"
+#Amedian_df<-mutate(Amedian_df,median_diff=abs(ref-alt))
+#Amedian_df<-mutate(Amedian_df,diff=ifelse(ref==alt,"SAME","DIFFERENT"))
+#ABmedian_df<-Amedian_df
+#Amedian_df$trait <- gsub("_C_[0-9]+$" ,"",Amedian_df$trait) # get rid to the "_C"
+#ABmedian_df$trait <- gsub("_[0-9]+$" ,"",ABmedian_df$trait) # keep the "_C"
 #Amedian_df$trait <- gsub("_C$" ,"",Amedian_df$trait)
-save(Amedian_df, file="Amedian.Rda")
+#save(Amedian_df, file="Amedian.Rda")
 
-different<-filter(ABmedian_df, diff == "DIFFERENT")
+#different<-filter(ABmedian_df, diff == "DIFFERENT")
 
-unique(different$peak_id)
+#unique(different$peak_id)
 ##########################################################################################
 #                               Merge
 ##########################################################################################
 
-good_traits<-filter(counts,  (trait %in% away_counts$trait)) #100 SNPs away filter
-good_traits<-filter(good_traits,  (trait %in% median_df_counts$trait))  #median filter
+#good_traits<-filter(counts,  (trait %in% away_counts$trait)) #100 SNPs away filter
+#good_traits<-filter(good_traits,  (trait %in% median_df_counts$trait))  #median filter
 
 #good_traits<-filter(good_traits,  (trait %in% low_ld_counts$trait)) 
 
-bad_traits<-filter(counts,  !(trait %in% good_traits$trait)) 
+#bad_traits<-filter(counts,  !(trait %in% good_traits$trait)) 
 #bad_traits2<-filter(all_counts,  !(trait %in% few_chr$trait)) #chr filter
-bad_traits3<-filter(all_counts,  !(trait %in% different$trait)) #chr filter
+#bad_traits3<-filter(all_counts,  !(trait %in% different$trait)) #chr filter
 #bad_traits2$trait <- gsub("_C$" ,"",bad_traits2$trait)
-bad_traits3$trait <- gsub("_C$" ,"",bad_traits3$trait)
+#bad_traits3$trait <- gsub("_C$" ,"",bad_traits3$trait)
 #length(unique(bad_traits2$trait))
 
 #merged <- rbind(bad_traits, bad_traits2)
-merged <- rbind(bad_traits, bad_traits3)
+#merged <- rbind(bad_traits, bad_traits3)
 
-all_counts$trait <- gsub("_C$" ,"",all_counts$trait)
+#all_counts$trait <- gsub("_C$" ,"",all_counts$trait)
 #counts_to_remove<-filter(all_counts, (trait %in% bad_traits$trait))
-counts_to_remove<-filter(all_counts, (trait %in% merged$trait))
-length(unique(counts_to_remove$trait))
-save(counts_to_remove, file="counts_to_remove.Rda")
+#counts_to_remove<-filter(all_counts, (trait %in% merged$trait))
+#length(unique(counts_to_remove$trait))
+#save(counts_to_remove, file="counts_to_remove.Rda")
 
 
 
