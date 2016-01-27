@@ -9,27 +9,10 @@ library(dplyr)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 data <- read.table("essentiality_nonredundant_GO.txt",sep="\t",header=TRUE)
 data<-filter(data, Method=="new")
-head(data)
 
-method_names <- list(
-  'absent'="Absence",
-  'new' = "Insertion",
-  'reference' = "Reference"
-)
-
-method_labeller <- function(variable,value){
-  if (variable=='method') {
-    return(method_names[value])
-  }else {
-    return(as.character(value))
-  }
-}
-
-?labellers
-labeller
 m <- ggplot(data,aes(x=TE_start/1e6,fill=Region))
 m <- m + geom_histogram(binwidth=.25)+
-  facet_grid(.~Chromosome, scale="free", space="free_x",labeller=method_labeller)+
+  facet_grid(.~Chromosome, scale="free", space="free_x")+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
   geom_point(aes(y=45), alpha=0)+
   theme(strip.background = element_blank(),

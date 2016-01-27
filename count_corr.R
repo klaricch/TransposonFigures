@@ -86,6 +86,10 @@ thres_set<-mutate(thres_set,trait_recip_remove=paste(base_two,"TRANS",transposon
 head(processed_mapping_df)
 #initiate an empty dataframe
 reciprocal_removals <- data.frame(TE=character())
+non_removals <- data.frame(marker=character(),
+                           trait=character(),
+                           peak_id=character())
+
 
 
 for  (i in 1:nrow(thres_set)){
@@ -95,14 +99,34 @@ temp1<-filter(processed_mapping_df,trait==temp_df$trait_recip_keep,!is.na(peak_i
 temp1<-distinct(temp1,marker)
 temp2<-filter(processed_mapping_df,trait==temp_df$trait_recip_remove,!is.na(peak_id))
 temp2<-distinct(temp2,marker)
-if(all(temp1$marker==temp2$marker)==TRUE){reciprocal_removals <- rbind(reciprocal_removals, data.frame(TE = temp_df$trait_recip_remove))}
+if(all(temp1$marker==temp2$marker)==TRUE){reciprocal_removals <- rbind(reciprocal_removals, data.frame(TE = temp_df$trait_recip_remove))} else {
+  t1<-select(temp1,marker,trait,peak_id,log10p)
+  t2<-select(temp2,marker,trait,peak_id,log10p)
+  t3<-full_join(t1, t2, by = "marker")
+  t3<-filter(t3, !is.na(log10p.x) & !is.na(log10p.y))
+  if (nrow(t3)>0){
+    t3<-mutate(t3,dec=ifelse(log10p.x>log10p.y,"WIN",ifelse(log10p.x==log10p.y,"TIE","LOSE")))
+  #keep the default recip trait if it WINs or TIEs in number of greater pvalues between shared markers
+   if (nrow(t3[t3$dec=="LOSE",]) <= nrow(t3[t3$dec=="WIN",])){
+      reciprocal_removals <-rbind(reciprocal_removals, data.frame(TE = temp_df$trait_recip_remove))} else {
+        reciprocal_removals <-rbind(reciprocal_removals, data.frame(TE = temp_df$trait_recip_keep))}
+  } else{  non_removals<-rbind(non_removals, t1)
+           non_removals<-rbind(non_removals, t2)}
+
+}
+
 }
 
 
+### CHECK TO MAKE SURE ABSENCE COMES BEFORE REFERENCE!!!!
 
 save(reciprocal_removals, file="reciprocal_removals.Rda")
 
+#  t1<-select(temp1,marker,trait,peak_id,log10p)
+#t2<-select(temp2,marker,trait,peak_id,log10p)
+#non_removals<-rbind(non_removals, t1)
+#non_removals<-rbind(non_removals, t2)
 
-
-
+test<-filter(processed_mapping_df,trait=="reference_TRANS_MIRAGE1",!is.na(peak_id))
+test2<-filter(processed_mapping_df,trait=="absent_TRANS_MIRAGE1",!is.na(peak_id))
 

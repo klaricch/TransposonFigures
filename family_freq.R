@@ -49,8 +49,11 @@ summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2
 
 #revalue
 summarydata$caller<- factor(summarydata$caller,
-                          levels = c("absent", "new","reference"),
-                          labels = c("Absence", "Insertion", "Reference"))
+                          levels = c("new","reference","absent"),
+                          labels = c("Insertion","Reference","Absence"))
+
+
+unique(summarydata$class)
 
 m <- ggplot(summarydata,aes(y=transposon,x=TOTAL))
 m <- m + geom_point(size=1.25,aes(color=class))+
@@ -71,7 +74,7 @@ m <- m + geom_point(size=1.25,aes(color=class))+
         legend.key=element_rect(fill=NA),
         legend.position="none",
         legend.text=element_text(size=9))+
-  scale_color_manual(values = c("navy", "brown3", "darkgoldenrod2"))+
+  scale_color_manual(values = c("DNA Transposon" = "navy", "Retrotransposon"="brown3","Unknown"="darkgoldenrod2"))+
   labs(y="", x="Total Transposition Events")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")

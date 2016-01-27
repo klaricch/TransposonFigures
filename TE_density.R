@@ -7,26 +7,11 @@ library(grid)
 library(dplyr)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-summarydata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+summarydata <- read.table("CtCp_all_nonredundant.txt")
 names(summarydata)
 names(summarydata)<-c("chr","start","end","TE","orientation","method","strain","class")
 
 #3X-BIN .25MB
-method_names <- list(
-  'absent'="Absence",
-  'new'="Insertion",
-  'reference'="Reference"
-)
-
-method_labeller <- function(variable,value){
-  if (variable=='method') {
-    return(method_names[value])
-  }else {
-    return(as.character(value))
-  }
-}
-
-
 summarydata <- distinct(summarydata, chr,start,method, orientation,class)
 
 # Add y coordinates for "phantom" points
@@ -42,16 +27,20 @@ summarydata$class <- factor(summarydata$class,
                           levels = c("dnatransposon", "retrotransposon","unknown"),
                           labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
 
+#revalue methods
+summarydata$method <- factor(summarydata$method,
+                            levels = c("new","reference","absent"),
+                            labels = c("Insertion", "Reference","Absence"))
 
 
 
 m <- ggplot(summarydata, aes(x=start/1e6,fill=class))
-m <-m + geom_bar(binwidth=.25)+
+m <-m + geom_histogram(binwidth=.25)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
-  facet_grid(method ~ chr,scale="free",space = "free_x",labeller=method_labeller)+
-  geom_point(data = subset(summarydata, method=="absent"),aes(y=top),alpha=0) +
-  geom_point(data = subset(summarydata, method=="new"),aes(y=top),alpha=0) +
-  geom_point(data = subset(summarydata, method=="reference"),aes(y=top),alpha=0) +
+  facet_grid(method ~ chr,scale="free",space = "free_x")+
+  geom_point(data = subset(summarydata, method=="Absence"),aes(y=top),alpha=0) +
+  geom_point(data = subset(summarydata, method=="Insertion"),aes(y=top),alpha=0) +
+  geom_point(data = subset(summarydata, method=="Reference"),aes(y=top),alpha=0) +
   
   labs(x="Chromosome Position (Mb)", y="Number of Transposition Events")+
   theme(strip.background = element_blank(),
@@ -68,7 +57,9 @@ m <-m + geom_bar(binwidth=.25)+
         legend.position="bottom",
         legend.key.size=unit(.1,"cm"),
         legend.text=element_text(size=8))+
-  scale_fill_manual(values = c("navy", "brown3", "darkgoldenrod2"))
+  #scale_fill_manual(values = c("navy", "brown3", "darkgoldenrod2"))
+  scale_fill_manual(values = c("DNA Transposon" = "navy", "Retrotransposon"="brown3","Unknown"="darkgoldenrod2"))
+
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Chromosome_Distribution.tiff",
@@ -78,13 +69,7 @@ ggsave(filename="Chromosome_Distribution.tiff",
        units="in")
 
 
-
-
-
-
-
 #ARMS  AND  CENTERS (in bp)
-
 I_A<-c(1:3858000,11040001:15072434)
 I_C<-(3858001:11040000)
 
@@ -136,10 +121,10 @@ summarydata<-rbind(one,two,three,four,five,six)
 #summarydata<-mutate(summarydata, region=ifelse(start %in% get(arm),"ARM",ifelse(start %in% get(center),"CENTER","ERROR")))
 errors<-filter(summarydata,region=="ERROR")
 
-get(I_A)
+
 
 #remove TEs on chromosome tips
-AC<-filter(summarydata,region!="tip")
+AC<-filter(summarydata,region!="tip") # nothign should be filtered here
 #remove X chromosome
 AC<-filter(AC,chr!="X")
 
@@ -148,12 +133,13 @@ chi_total <- table(AC$region)
 chi_class <- table(AC$class,AC$region)
 chi_method <- table(AC$method,AC$region)
 
+
 chi_DNA <- chi_class[1,]
 chi_Retro <- chi_class[2,]
 chi_Unknown <- chi_class[3,]
-chi_absent <- chi_method[1,]
-chi_new <- chi_method[2,]
-chi_reference <- chi_method[3,]
+chi_new <- chi_method[1,]
+chi_reference <- chi_method[2,]
+chi_absent<- chi_method[3,]
 
 # chi square test with the hypothesized probabilities
 chisq.test(chi_total,p=c(prob_arms,prob_center))
@@ -165,5 +151,31 @@ chisq.test(chi_new,p=c(prob_arms,prob_center))
 chisq.test(chi_reference,p=c(prob_arms,prob_center))
 
 
+#Chi-Square tests per genomic feature
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+data <- read.table("essentiality_nonredundant_GO.txt",sep="\t",header=TRUE)
+data<-filter(data, Method=="new")
+data <- mutate(data, ID=paste(Chromosome, TE_start,sep="_"))
+data<-filter(data,Chromosome!="X")
+AC <- mutate(AC, ID=paste(chr,start,sep="_"))
+ACS <- select(AC, ID, region) #take subset of columns in AC
+ACS<- distinct(ACS)
+data<-left_join(data, ACS, by = "ID")
+
+#generate chi square contingency tables
+chi_feature <- table(data$Region,data$region)
+
+chi_exon <- chi_feature[1,]
+chi_gene <- chi_feature[2,]
+chi_intergenic <- chi_feature[3,]
+chi_intron <- chi_feature[4,]
+chi_promoter <- chi_feature[5,]
+
+# chi square test with the hypothesized probabilities
+chisq.test(chi_exon,p=c(prob_arms,prob_center))
+chisq.test(chi_gene,p=c(prob_arms,prob_center))
+chisq.test(chi_intergenic,p=c(prob_arms,prob_center))
+chisq.test(chi_intron ,p=c(prob_arms,prob_center))
+chisq.test(chi_promoter,p=c(prob_arms,prob_center))
 
 

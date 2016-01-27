@@ -49,7 +49,7 @@ hh <- summarydata[summarydata$difference==0,]
 mean(summarydata$difference)
 median(summarydata$difference)
 m <- ggplot(summarydata, aes(x=difference))
-m <- m + geom_bar(binwidth=2) +
+m <- m + geom_histogram(binwidth=2) +
   theme(panel.background = element_rect(fill = "white"),
         axis.ticks =element_line(colour = "black"),
         axis.text.y = element_text(colour = "black",size=9),

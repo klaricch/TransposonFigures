@@ -264,18 +264,6 @@ save(outliers,file="outlier_slopes.Rda")
 
 
 #Histogram Versions
-names(summarydata)
-head(summarydata)
-method_names <- list(
-  'new'="Insertion",
-  'reference'="Reference",
-  'absent'="Absence"  
-)
-
-method_labeller <- function(variable,value){
-  return(method_names[value])
-}
-
 hist_data$method <- factor(hist_data$method,
                        levels = c("new", "reference", "absent"),
                        labels = c("Insertion", "Reference", "Absence"))

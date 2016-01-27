@@ -84,22 +84,6 @@ processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker,strain)
 processed_mapping_df$family <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
 processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
 
-#set up method labellers
-method_names <- list(
-  'absent'="absence",
-  'new'="insertion",
-  'reference'="reference"
-)
-
-method_labeller <- function(variable,value){
-  if (variable=='method') {
-    return(method_names[value])
-  }else {
-    return(as.character(value))
-  }
-}
-
-
 #read in position data and create family column
 positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
 names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
@@ -206,9 +190,9 @@ load("reciprocal_removals.Rda")
 processed_mapping_df<-filter(processed_mapping_df,!(trait %in% reciprocal_removals$TE))
 selection<-filter(selection,!(trait %in% reciprocal_removals$TE))
 
-
+selection<-arrange(selection,family,method)
 i="absent_TRANS_CER1"
-for (i in sort(unique(selection$trait))){
+for (i in unique(selection$trait)){
   specific_trait<- processed_mapping_df[processed_mapping_df$trait == i, ]
   empty <-specific_trait[specific_trait$method==NA,]
   #specific_trait_mx <- max(specific_trait$log10p)
@@ -357,7 +341,7 @@ for (i in sort(unique(selection$trait))){
   for (p in rect_data$peak_id){
     plist<-c(plist,p)
   }
-
+  plist<-sort(plist)
   box_list <- lapply(c(plist),FUN=function(x){gwasPxG(i,x)})
   #H<-do.call("grid.arrange", c(box_list, ncol=length(plist)))
   grid.draw(grid.arrange(do.call("grid.arrange", c(box_list, ncol=length(plist))),blank_plot))

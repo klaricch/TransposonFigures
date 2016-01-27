@@ -33,8 +33,8 @@ Rscript away_counts.R
 Rscript away.R
 # calculate correlations betweeen count, fraction, and activity traits
 #Rscript correlations.R
-# plot heatmap of correlation between counts and activity traits
-#Rscript heatmap.R
+# plot table of QTL peaks
+Rscript peak_TABLE.R
 
 
 ############## Simulation Figures ##############
@@ -53,7 +53,6 @@ Rscript away.R
 ############## Rmd ##############
 #echo "Running Markdown Scripts..."
 #GWAS2.Rmd
-#peak_TABLE.Rmd
 #cer1_mappings.Rmd
 
 echo "Done"

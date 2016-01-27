@@ -40,16 +40,6 @@ final_merge<- Reduce(function(x, y) merge(x, y, all=TRUE,by="sample"), list(tota
 
 names(final_merge)<-c("sample", "trait.x",	"method.x",	"transposon.x",	"total_absences",	"trait.y",	"method.y",	"transposon.y",	"total_references",	"trait",	"method",	"transposon",	"total_insertions")
 
-method_names <- list(
-  'absent'="Absence",
-  'new'="Insertion",
-  'reference'="Reference"
-)
-
-method_labeller <- function(variable,value){
-  return(method_names[value])
-}
-
 ######
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
@@ -100,7 +90,6 @@ m1 <- m1 + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
-  scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
   guides(fill=FALSE) +
   labs(x = "Insertion Events", y = "Absence Events")
 m1
@@ -136,7 +125,6 @@ m2 <- m2 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
-  scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
   guides(fill=FALSE) +
   labs(x = "Reference Events", y = "Absence Events")
 
@@ -174,7 +162,6 @@ m3 <- m3 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
-  scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
   guides(fill=FALSE) +
   labs(x = "Reference Events", y = "Insertion Events")
 

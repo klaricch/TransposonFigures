@@ -2,6 +2,14 @@ library(cegwas)
 library(dplyr)
 library(ggplot2)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
+load("count_QTL.Rda")
+load("Processed_Transposon_Mappings.Rda")
+unique(processed_mapping_df$trait)
+counts<-subset(processed_mapping_df, grepl("_C$", processed_mapping_df$trait))
+unique(counts$trait)
+unique(counts$value)
+
+table(counts$value)
 df<-read.table("cer_95_set.txt",header=TRUE)
 
 AA<-filter(df, trait=="absent_TRANS_CER1_C")
@@ -65,3 +73,23 @@ graphDD<- DD %>%
         legend.position=('none'))+
   labs(x="",y="-log10(p)")
 graphDD
+
+
+load("away_counts_phenos.Rda")
+library(dplyr)
+singles<-read.table("singles.txt",header=TRUE)
+t<-filter(processed_mapping_df,trait %in% singles$family)
+final_t<-unique(t$trait)
+print(final_t)
+t<-distinct(t,trait,peakPOS)
+save(t,file="pa.Rda")
+
+
+load("pa.Rda")
+
+bb<-distinct(processed_mapping_df,trait,peakPOS)
+aa<-filter(bb,peakPOS=="13458478")
+aa<-filter(bb,peakPOS=="5942259")
+
+
+cc<-filter(processed_mapping_df,trait=="reference_TRANS_CER10.I_CE_C", !is.na(peak_id))
