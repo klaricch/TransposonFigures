@@ -9,6 +9,8 @@ library(grid)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
+load("count_QTL.Rda")
+#load("reciprocal_removals.Rda")
 
 #pull max position on each chromosome for the phantom points
 max_1<-max(processed_mapping_df[(processed_mapping_df$CHROM=="I"), ]$POS)
@@ -18,10 +20,10 @@ max_4<-max(processed_mapping_df[(processed_mapping_df$CHROM=="IV"), ]$POS)
 max_5<-max(processed_mapping_df[(processed_mapping_df$CHROM=="V"), ]$POS)
 max_6<-max(processed_mapping_df[(processed_mapping_df$CHROM=="X"), ]$POS)
 
-##MAYBE NEED TO GET RID OF THIS
-processed_mapping_df$trait<- gsub("^ONE_new" ,"new",processed_mapping_df$trait)
+###MAYBE NEED TO GET RID OF THIS
+#processed_mapping_df$trait<- gsub("^ONE_new" ,"new",processed_mapping_df$trait)
 
-# creat family and caller columns
+# create family and caller columns
 transposon <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
 processed_mapping_df$family <- transposon
 caller <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
@@ -31,7 +33,7 @@ processed_mapping_df$method <- caller
 #remove fraction and movement traits
 base_traits<-subset(processed_mapping_df, grepl('_C$', processed_mapping_df$trait))
 base_traits<-subset(base_traits,!grepl('^no_', base_traits$trait))
-base_traits<-subset(base_traits,!grepl('^ZERO_new', base_traits$trait))
+#base_traits<-subset(base_traits,!grepl('^ZERO_new', base_traits$trait))
 #base_traits <-processed_mapping_df[(processed_mapping_df$method=="absent"| processed_mapping_df$method=="new" |processed_mapping_df$method=="reference"), ]
 processed_mapping_df<-base_traits
 # write out table of info on each unique peak
@@ -49,31 +51,54 @@ nrow(sites_clean)
 
 sites_clean<-mutate(sites_clean, traitT=gsub("_C$","",trait))
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
-classdata <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+classdata <- read.table("CtCp_all_nonredundant.txt")
 names(classdata)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
 #remove CHROM and pos info from TE info
 classdata$id <- gsub("\\w+_\\d+_" ,"",classdata$id)
 
-classdata<-mutate(classdata, traitT=paste(method,"TRANS",id,sep="_"))
-class_subset <- classdata %>% distinct(traitT) %>% select(traitT,class)
+classdata<-mutate(classdata, family=paste(id,"C",sep="_"))
+class_subset <- classdata %>% distinct(family,class) %>% select(family,class)
 
 #
 sites_clean$traitTset<-gsub("_C$","",sites_clean$traitT)
-sites_clean <-merge(sites_clean, class_subset, by="traitT")
+sites_clean <-merge(sites_clean, class_subset, by="family")
 #after the merge there are less rows because no longer including the "total" counts, only the family ones
+
+
+
+#
+
+#all sites clean
+#sites clean
+count_QTL<-mutate(count_QTL, trait2=gsub("_\\d+$","",trait)) 
+sites_clean<-filter(sites_clean,(traitT %in% count_QTL$trait2))
+
+all_sites_clean$trait<-gsub("_C$","",all_sites_clean$trait)
+all_sites_clean<-filter(all_sites_clean,(trait %in% count_QTL$trait2)|grepl("total",trait))
+
+#length(unique(count_QTL$trait2))
+#length(unique(sites_clean$trait))
+
+
 
 #revalue classes
 sites_clean$class <- factor(sites_clean$class,
                             levels = c("dnatransposon", "retrotransposon","unknown"),
                             labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
+
+
+sites_clean$method<- gsub("^ONE_new" ,"new",sites_clean$method)
+sites_clean$method<- gsub("^ZERO_new" ,"new",sites_clean$method)
+
 #revalue methods
 sites_clean$method <- factor(sites_clean$method,
                              levels = c("new","reference","absent"),
                              labels = c("Insertion", "Reference","Absence"))
+unique(sites_clean$trait)
 
 a <- ggplot(data = sites_clean, aes(x = POS/1e6, y=value)) #,colour=method
-a <- a + geom_segment(aes(x = POS/1e6, y = 1, xend = POS/1e6, yend = 25,color=class))+
+a <- a + geom_segment(aes(x = POS/1e6, y = 1, xend = POS/1e6, yend = 25),colour="lightskyblue3")+
   facet_grid(method ~ CHROM,scale="free",space = "free_x")+
  geom_point(data = sites_clean,aes(x=0, y=2),alpha=0) +  #phantom point at x=0
   geom_point(data = subset(sites_clean, CHROM=="I"),aes(x=max_1/1e6, y=2),alpha=0) +
@@ -99,7 +124,7 @@ a <- a + geom_segment(aes(x = POS/1e6, y = 1, xend = POS/1e6, yend = 25,color=cl
         legend.key=element_rect(fill=NA),
         legend.position="none",
         legend.text=element_text(size=9))+
-  scale_colour_manual(values = c('DNA Transposon' = "navy", 'Retrotransposon' = "brown3", 'Unknown' = "darkgoldenrod2"))+
+  #scale_colour_manual(values = c('DNA Transposon' = "navy", 'Retrotransposon' = "brown3", 'Unknown' = "darkgoldenrod2"))+
   scale_y_continuous(expand = c(0,0)) 
 a
 
@@ -111,7 +136,10 @@ ggsave(filename="Aggregate_GWAS.tiff",
        units="in")
 
 #piRNA
-piRNA<-filter(all_sites_clean, CHROM=="IV",POS>=4500000 & POS<=7000000|POS>=13500000 & POS<=17200000)
+#check for QTL with peak poisiton of L/R CI within piRNA on chr IV
+piRNA<-filter(all_sites_clean, CHROM=="IV",POS>=4500000 & POS<=7000000|POS>=13500000 & POS<=17200000|
+                startPOS>=4500000 & startPOS<=7000000|startPOS>=13500000 & startPOS<=17200000|
+                endPOS>=4500000 & endPOS<=7000000|endPOS>=13500000 & endPOS<=17200000)
 save(piRNA,file="piRNA_QTL.Rda")
 
 

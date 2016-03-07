@@ -21,7 +21,7 @@ load("Processed_Transposon_Mappings.Rda")
 
 
 # read in positions of all TEs
-positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+positions <- read.table("CtCp_all_nonredundant.txt")
 names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 #create TE family column
 positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?reference"),2)[,1]

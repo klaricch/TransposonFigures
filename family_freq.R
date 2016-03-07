@@ -15,7 +15,7 @@ summarydata<-subset(summarydata,!grepl('^ZERO_new', summarydata$trait))
 #clean trait names
 summarydata$trait <- gsub("_C$" ,"",summarydata$trait)
 summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
-classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+classdata<- read.table("CtCp_all_nonredundant.txt")
 names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
 
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
@@ -24,20 +24,19 @@ classdata$family<- paste(stringr::str_split_fixed(classdata$family, "_",4)[,3],s
 classdata$family <- gsub("_$" ,"",classdata$family)
 classdata$family <- gsub("_non-reference(.*)$" ,"",classdata$family)
 classdata<-mutate(classdata, trait=paste(method,"TRANS",family,sep="_"))
-class_subset <- classdata %>% distinct(trait) %>% select(trait,class)
-summarydata <-merge(summarydata, class_subset, by="trait")
-
+class_subset <- classdata %>% distinct(family,class) %>% select(family,class)
+summarydata$family<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
+summarydata <-merge(summarydata, class_subset, by="family")
+summarydata<-select(summarydata, -family)
 #revalue classes
 summarydata$class <- factor(summarydata$class,
                             levels = c("dnatransposon", "retrotransposon","unknown"),
                             labels = c("DNA Transposon", "Retrotransposon", "Unknown"))
 
-#double check,remove total counts and coverage, could also check total dna and retro
-summarydata <- filter(summarydata, trait != "absent_TRANS_total" )
-summarydata <- filter(summarydata, trait != "new_TRANS_total" )
-summarydata <- filter(summarydata, trait != "reference_TRANS_total" )
+#double check removed total, but shouls have been removed in the merge
+summarydata<-filter(summarydata,!grepl('total', trait))
 summarydata <- filter(summarydata, trait != "coverage" )
-names(summarydata)
+
 no_cols<-ncol(summarydata)-1
 print(summarydata[,no_cols])
 summarydata<-mutate(summarydata, TOTAL=rowSums(summarydata[2:no_cols],na.rm = TRUE))
@@ -51,9 +50,6 @@ summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2
 summarydata$caller<- factor(summarydata$caller,
                           levels = c("new","reference","absent"),
                           labels = c("Insertion","Reference","Absence"))
-
-
-unique(summarydata$class)
 
 m <- ggplot(summarydata,aes(y=transposon,x=TOTAL))
 m <- m + geom_point(size=1.25,aes(color=class))+
@@ -91,9 +87,24 @@ total_means<-summarydata %>% group_by(caller,class) %>% summarise(mean=mean(TOTA
 total_means<- mutate(total_means, id = paste(class,caller,sep="_"))
 summarydata<- mutate(summarydata, id = paste(class,caller,sep="_"))
 
-
 merged<-merge(summarydata, total_means, by="id")
 merged<-mutate(merged, outL=ifelse(abs(TOTAL-mean)>SD, "OUTLIER", "n"))
 outliers<-filter(merged,outL=="OUTLIER")
 save(outliers,file="outlier_total_events_per_family.Rda")
+
+names(summarydata)
+test<-distinct(summarydata,caller, transposon)
+RR<-filter(summarydata,caller=="Reference")
+AA<-filter(summarydata,caller=="Absence")
+NN<-filter(summarydata,caller=="Insertion")
+CC<-filter(summarydata,caller=="Reference"|caller=="Absence")
+length(unique(summarydata$transposon))
+(unique(summarydata$caller))
+length(unique(RR$transposon))
+length(unique(AA$transposon))
+length(unique(NN$transposon))
+length(unique(CC$transposon))
+test<-distinct(CC,caller, transposon)
+
+length(unique(CC$trait))
 

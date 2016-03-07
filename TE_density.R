@@ -54,7 +54,7 @@ m <-m + geom_histogram(binwidth=.25)+
         #axis.text.x = element_text(colour = "black",size=9),
         axis.ticks =element_line(colour = "black"),
         legend.title=element_blank(),
-        legend.position="bottom",
+        legend.position="none",
         legend.key.size=unit(.1,"cm"),
         legend.text=element_text(size=8))+
   #scale_fill_manual(values = c("navy", "brown3", "darkgoldenrod2"))

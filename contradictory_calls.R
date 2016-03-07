@@ -71,6 +71,8 @@ cer1<-summarydata %>% filter(grepl("CER1_reference", TE))
 #add in "CORRECT/INCORRECT calls"
 combo <-merge(comparison, cer1, by="strain")
 
+
+test<-filter(combo, outcome!="NA")
 #filtered
 hun<-round((nrow(filter(combo, rel>100))/nrow(combo))*100,digits=2)
 thirty<-round((nrow(filter(combo, rel>30))/nrow(combo))*100,digits=2)

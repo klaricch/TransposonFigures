@@ -3,6 +3,9 @@
 # USE: generate_figures.sh  (in R_scripts dir)
 
 
+# replace numbers with trait names
+Rscript rename.R
+
 ############## TE Information ##############
 echo "Generating TE Plots..."
 # plot contradictory calls and histograms of their differences in read support
@@ -25,17 +28,16 @@ Rscript TE_vs_DR.R
 
 ############## GWAS Mappings ##############
 echo "Generating GWAS Plots..."
+# for count triats, output new dataframe for QTL that have   phenotypes with non-equal medians
+Rscript away_counts.R
 # plot genomic locations of QTL:
 Rscript aggregate_GWAS.R
-# for count triats, output new dataframe for QTL that don't meet following requirements: for QTL 100 SNPs away from TE positions and with phenotypes with non-equal medians
-Rscript away_counts.R
-# for position traits, output new dataframes for QTL 100 SNPs away from TE positions and with phenotypes with non-equal medians
-Rscript away.R
-# calculate correlations betweeen count, fraction, and activity traits
-#Rscript correlations.R
 # plot table of QTL peaks
 Rscript peak_TABLE.R
-
+# generates main figure of select GWAS mappings
+Rscript main_GWAS_plots.R
+# generate fine mapping results
+fine_mappings.R
 
 ############## Simulation Figures ##############
 #echo "Generating Simulation Plots..."
@@ -53,6 +55,7 @@ Rscript peak_TABLE.R
 ############## Rmd ##############
 #echo "Running Markdown Scripts..."
 #GWAS2.Rmd
-#cer1_mappings.Rmd
+#GWAS2_totals.Rmd
+
 
 echo "Done"

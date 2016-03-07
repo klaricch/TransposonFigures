@@ -4,7 +4,7 @@ geometry: margin=1in
 mainfont: Times New Roman
 ---
 
-```{r,fig.width=7.5, fig.height=7.5,warning=F, message=F, echo=F,comment="K",results='asis'}
+```{r,fig.width=7.5, fig.height=4,warning=F, message=F, echo=F,comment="K",results='asis'}
 
 
 library(pander)
@@ -23,6 +23,8 @@ panderOptions('knitr.auto.asis', TRUE)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings.Rda")
+
+
 #load("Processed_Transposon_Mappings_SUBSET.Rda")
 #load("Processed_Transposon_Mappings_SUBSET2.Rda")
 load("position_QTL.Rda")
@@ -97,7 +99,6 @@ processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker,strain)
 processed_mapping_df$family <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,2]
 processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
 
-
 #read in position data and create family column
 positions <- read.table("CtCp_all_nonredundant.txt")
 names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
@@ -113,8 +114,6 @@ selection<-filter(processed_mapping_df, log10p > BF)
 base_traits <-selection[(selection$method=="absent"| selection$method=="new" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
 counts<-subset(base_traits, grepl("_C$", base_traits$family))
 counts$family <- gsub("_C$" ,"",counts$family)
-
-
 
 #
 #
@@ -149,7 +148,6 @@ processed_mapping_df<-processed_mapping_df %>%mutate(family = ifelse(processed_m
 selection<-counts
 #selection<-position_traits
 
-
 #
 
 #strip count marker and remnant marks from dataframes
@@ -162,38 +160,36 @@ processed_mapping_df$family <- gsub("_non-reference(.*)$" ,"",processed_mapping_
 
 processed_mapping_df<-mutate(processed_mapping_df,ID=paste(trait,peak_id,sep="_"))
 copy<-processed_mapping_df
-processed_mapping_df<-mutate(processed_mapping_df,SNP_col=ifelse(ID %in% position_QTL$trait | ID %in% count_QTL$trait,"PASS","FAIL" ))
 
-#unique(count_QTL$trait)
-#unique(selection$trait)
-#unique(processed_mapping_df$trait)
+##FIX HERE
+processed_mapping_df<-mutate(processed_mapping_df,SNP_col=ifelse(is.na(peak_id), "NO","PASS"))
 #### NEED TO FIX HERE
 
 count_QTL<-mutate(count_QTL, trait2=gsub("_\\d+$","",trait)) 
 position_QTL<-mutate(position_QTL, trait2=gsub("_\\d+$","",trait))  
-selection <- filter(selection, (trait %in% count_QTL$trait2 |trait %in% position_QTL$trait2))
-#unique(count_QTL$trait2)
-#unique(position_QTL$trait2)
-#unique(selection$trait)
+
+
+
+#skip the below
+#selection <- filter(selection, (trait %in% count_QTL$trait2 |trait %in% position_QTL$trait2))
+
 processed_mapping_df<-filter(processed_mapping_df,CHROM != "MtDNA")
-#selection$trait<-gsub("_non-reference_.*","",selection$trait)
-#processed_mapping_df$trait<-gsub("_non-reference_.*","",processed_mapping_df$trait)
+load("reciprocal_removals.Rda")
+processed_mapping_df<-filter(processed_mapping_df,!(trait %in% reciprocal_removals$TE))
 
-#load("reciprocal_removals.Rda")
-#thing<-filter(selection,(trait %in% reciprocal_removals$TE))
-#length(unique(thing$trait))
-#unique(thing$trait)
 
-#processed_mapping_df<-filter(processed_mapping_df,!(trait %in% reciprocal_removals$TE))
-#selection<-filter(selection,!(trait %in% reciprocal_removals$TE))
+selection<-filter(selection,!(trait %in% reciprocal_removals$TE))
+selection<-filter(selection,grepl('total',family))
 
+#HERE
 class_subset<- positions %>% distinct(class,family) %>% select(class,family)
-selection <-merge(selection, class_subset, by="family")
+#skip the below
+#selection <-merge(selection, class_subset, by="family")
 
 
-selection<-arrange(selection,class,family,method)
+selection<-arrange(selection,family,method)
 label<-expression(bold(-log["10"](p)))
-i="ZERO_new_TRANS_CELETC2"
+i="ONE_new_TRANS_total"
 for (i in unique(selection$trait)){
   specific_trait<- processed_mapping_df[processed_mapping_df$trait == i, ]
   empty <-specific_trait[specific_trait$method==NA,]
@@ -202,13 +198,19 @@ for (i in unique(selection$trait)){
   pvalues<-filter(specific_trait,log10p !="Inf") #
   specific_trait_mx <- max(pvalues$log10p) #
   TE<-specific_trait$family[1]
-  rect_data<-filter(specific_trait,SNP_col=="PASS")
+  rect_data<-filter(specific_trait,SNP_col==ifelse(is.na(peak_id), "NO", "PASS"))
   plot_method<-unique(filter(selection,trait==i)$method)
   plot_title<-gsub(".*_TRANS_","",i)
   plot_title<-gsub("_CE$","",plot_title)
   plot_title<-gsub("WBTransposon","WBT",plot_title)
+  plot_title<-gsub("total","Total",plot_title)
+  plot_title<-gsub("Total$","Total Transposons",plot_title)
+  plot_title<-gsub("_"," ",plot_title)
+  plot_title<-gsub("retrotransposon","Retrotransposons",plot_title)
+  plot_title<-gsub("dnatransposon","DNA Transposons",plot_title)
   plot_title<-paste(plot_title,ifelse(plot_method=="ZERO_new","(ins)",ifelse(plot_method=="absent","(abs)",ifelse(plot_method=="ONE_new", "(ins)",ifelse(plot_method=="new", "(ins)", "(ref)")))),sep=" ")
   plot_title
+  
   ##check for NAs
   #sapply(Mappings, function(x)all(is.na(x)))
   A<- processed_mapping_df %>%
@@ -216,7 +218,7 @@ for (i in unique(selection$trait)){
     .[order(.$peak_id,na.last=FALSE),]%>% 
     ggplot(.)+
     aes(x=POS/1e6,y=log10p)+
-  geom_rect(data=rect_data,mapping=aes(xmin=startPOS/1e6, xmax=endPOS/1e6, ymin=0, ymax= Inf),fill="thistle1", alpha=1) +
+  geom_rect(data=rect_data,mapping=aes(xmin=startPOS/1e6, xmax=endPOS/1e6, ymin=0, ymax= Inf),fill="thistle1", alpha=1)+
     geom_point(aes( color=ifelse(log10p> BF & SNP_col=="PASS", 'red', 'black')),size=1)+
     
     facet_grid(.~CHROM,scale="free_x",space = "free_x")+scale_color_identity()  +
@@ -231,117 +233,15 @@ for (i in unique(selection$trait)){
           axis.text.y = element_text(colour = "black"),
           axis.text.x = element_text(colour = "black"),
           axis.title=element_text(size=9,face="bold"),
-          plot.margin=unit(c(.1,.1,-.5,.1), "cm"),
-          plot.title = element_text(colour=ifelse(class_TE=="dnatransposon","navy",ifelse(class_TE=="retrotransposon","brown3","darkgoldenrod2"))),
+          plot.margin=unit(c(.1,.1,.1,.1), "cm"),
+          
+          #ADDD COLOR HERE STILLLL
+         # plot.title = element_text(colour=ifelse(class_TE=="dnatransposon","navy",ifelse(class_TE=="retrotransposon","brown3","darkgoldenrod2"))),
           legend.position=('none'))+
-    labs(x="",y=label)+
+    labs(x="Chromosome Position (Mb)",y=label)+
     scale_y_continuous(expand=c(0,0),limits=c(0,specific_trait_mx+.075*specific_trait_mx),labels = function(x) format(x,width = 4),breaks= pretty_breaks())
   
-  
- 
-  A
-  # pull out  X maxs of each panel
-  panel1<-filter(ggplot_build(A)$data[[2]],PANEL==1)
-  max1<-max(panel1$x)
-  min1<-(min(panel1$x))
-  panel2<-filter(ggplot_build(A)$data[[2]],PANEL==2)
-  max2<-(max(panel2$x))
-  min2<-(min(panel2$x))
-  panel3<-filter(ggplot_build(A)$data[[2]],PANEL==3)
-  max3<-(max(panel3$x))
-  min3<-(min(panel3$x))
-  panel4<-filter(ggplot_build(A)$data[[2]],PANEL==4)
-  max4<-(max(panel4$x))
-  min4<-(min(panel4$x))
-  panel5<-filter(ggplot_build(A)$data[[2]],PANEL==5)
-  max5<-(max(panel5$x))
-  min5<-(min(panel5$x))
-  panel6<-filter(ggplot_build(A)$data[[2]],PANEL==6)
-  max6<-(max(panel6$x))
-  min6<-(min(panel6$x))
-  
-  positions$TRAIT_col<-paste(positions$method, "TRANS", positions$family, sep="_")
-  #traitPositions<-positions[positions$TRAIT_col==i,]
-  traitPositions<-positions[positions$family==TE,]
-  
-  blank <- data.frame(CHROM=character(),
-                      start=integer(),
-                      end=integer(),
-                      TE=character(),
-                      orientation=character(),
-                      method=character(),
-                      strain=character(),
-                      class=character(),
-                      family=character(),
-                      TRAIT_col=character(),
-                      stringsAsFactors=FALSE)
-  
-  blank[1,]<- c( "I", as.integer(10000000),as.integer(10000000),"blank","+","blank","fake","blank","blank","blank")
-  blank[2,]<- c( "II", as.integer(10000000),as.integer(10000000),"blank","+","blank","fake","blank","blank","blank")
-  blank[3,]<- c( "III", as.integer(10000000),as.integer(10000000),"blank","+","blank","fake","blank","blank","blank")
-  blank[4,]<- c( "IV", as.integer(10000000),as.integer(10000000),"blank","+","blank","fake","blank","blank","blank")
-  blank[5,]<- c( "V", as.integer(10000000),as.integer(10000000),"blank","+","blank","fake","blank","blank","blank")
-  blank[6,]<- c( "X", as.integer(10000000),as.integer(10000000),"blank","+","blank","fake","blank","blank","blank")
-  
-  traitPositions<-rbind(traitPositions,blank)
-  traitPositions$start<-as.integer(traitPositions$start)
-  
-
-  m <- ggplot(traitPositions, aes(x=start/1e6,fill=method))+scale_fill_manual(values = c('new' = "turquoise3", 'reference' = "slateblue1", 'absent' = "darkorange","blank"="black"))
-  m <-m + geom_histogram(data=subset(traitPositions,strain=="fake"), fill="white", colour="white", binwidth=.25)
-  m <-m + geom_histogram(data=subset(traitPositions,strain!="fake"), binwidth=.25)+
-    facet_grid(. ~ CHROM,scale="free",,space = "free_x",drop=FALSE)+
-    ggtitle("")+
-    geom_point(data = subset(traitPositions, CHROM=="I"),aes(x=max1,y=0),alpha=0)+
-    geom_point(data = subset(traitPositions, CHROM=="II"),aes(x=max2,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="III"),aes(x=max3,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="IV"),aes(x=max4,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="V"),aes(x=max5,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="X"),aes(x=max6,y=0),alpha=0) +
-    
-    geom_point(data = subset(traitPositions, CHROM=="I"),aes(x=min1,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="II"),aes(x=min2,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="III"),aes(x=min3,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="IV"),aes(x=min4,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="V"),aes(x=min5,y=0),alpha=0) +
-    geom_point(data = subset(traitPositions, CHROM=="X"),aes(x=min6,y=0),alpha=0)+
-    
-    labs(x = "Chromosome Position (Mb)", y="Number of Transposition Events")+
-    theme(strip.background = element_blank(),
-          strip.text.x = element_blank(),
-          #strip.text = element_text(size = 9, colour = "black",face="bold"),
-          panel.margin = unit(.6, "lines"),
-          panel.border = element_rect(fill=NA,colour = "black"),
-          panel.background = element_rect(fill = "white"),
-          axis.ticks =element_line(colour = "black"),
-          axis.title=element_text(size=9),
-          axis.text.y = element_text(colour = "black",size=9),
-          axis.text.x = element_text(colour = "black",size=9),
-          legend.title=element_blank(),
-          # legend.position="bottom",
-          plot.margin=unit(c(-.5,.1,.1,.1), "cm"),
-          legend.position=('none'))
-  m
-  
-  #now can check plot for max value and set y limit to a certain percent above that max value 
-  m <- m + scale_y_continuous(expand = c(0,0),limits=c(0,max(ggplot_build(m)$panel$ranges[[1]]$y.range)*1.075),breaks= pretty_breaks()) 
-  
-
-  g1<-ggplotGrob(A)
-  g2<-ggplotGrob(m)
-  
-  #Bind the tables
-  g<-gtable:::rbind_gtable(g1, g2, "first")
-  panels <- g$layout$t[grep("panel", g$layout$name)]
-  g$heights[panels] <- lapply(c(8,8), unit, "null")
-  #grid.newpage()
-  # grid.draw(g)
-
- 
-
-  df <- data.frame(1,2)
-  blank_plot<-ggplot(df,aes(x=1,y=1)) + geom_point(color="white") +
-  theme(axis.text =element_blank(),axis.ticks =element_blank(),axis.title =element_blank(),panel.background = element_blank(),panel.grid = element_blank())
+  plot(A)
 
   plist<-vector()
   for (p in rect_data$peak_id){
@@ -349,34 +249,18 @@ for (i in unique(selection$trait)){
   }
   plist<-sort(plist)
   box_list <- lapply(c(plist),FUN=function(x){gwasPxG(i,x)})
-#plot(plot_grid(do.call("grid.arrange", c(box_list, ncol=length(plist))),blank_plot,ncol=1))
- grid.draw(grid.arrange(g,do.call("grid.arrange", c(box_list, ncol=length(plist))),heights=c(.70,.30)))
-
-
-
-  
-
-  #medians<-filter(Amedian_df,trait==i)
- # median_diff<-medians$median_diff
-  #diff<-medians$diff
-  #print(median_diff)
-  #print(diff)
+(do.call("grid.arrange", c(box_list, ncol=length(plist))))
 
   TE_info<-filter(pg,trait==i)
   TE_info<-select(TE_info,info)
   TE_info<-TE_info[1,]
  TE_info<-toString(TE_info)
 
-#panderOptions('knitr.auto.asis',FALSE)
-#pandoc.header()
-##n<-pandoc.header(TE_info)
 pandoc.p(TE_info)
-
-                 
+              
   cat("\n\n\\pagebreak\n")
-
 }
-#pandoc.header("UUUUU")
+
 
 
 ```

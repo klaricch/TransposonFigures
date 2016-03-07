@@ -6,7 +6,7 @@ library(stringr)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("kin_matrix_full.txt",header=TRUE)
-#count numebr of "1" scores
+#count number of "1" scores
 no_cols=ncol(summarydata)
 summarydata<-mutate(summarydata, freq=rowSums(summarydata[2:no_cols],na.rm = TRUE))
 #count number of non-NA value
@@ -33,4 +33,3 @@ m <- m + geom_histogram(binwidth=.05) +
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Allele Frequency.tiff",dpi=300, width=7.5,height=3.5,units="in")
-

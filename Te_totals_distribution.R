@@ -8,7 +8,6 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(stringr)
-#install.packages("cowplot")
 library(cowplot)
 library(grid)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
@@ -24,7 +23,8 @@ summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
 summarydata$method<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1]
 #new column that specifies TE family
 summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
-summarydata<-filter(summarydata,transposon=="total")
+summarydata<-filter(summarydata,transposon=="total") # this will get total ins,ref,abs calls, NOT total DNA, Retro, Unknonwn
+unique(summarydata$transposon)
 
 #names(summarydata)
 summarydata<-gather(summarydata, "sample","value",2:(ncol(summarydata)-2))
@@ -37,32 +37,7 @@ total_insertion<-filter(summarydata,method=="new")
 
 #SCATTER
 final_merge<- Reduce(function(x, y) merge(x, y, all=TRUE,by="sample"), list(total_absence, total_reference, total_insertion))
-
 names(final_merge)<-c("sample", "trait.x",	"method.x",	"transposon.x",	"total_absences",	"trait.y",	"method.y",	"transposon.y",	"total_references",	"trait",	"method",	"transposon",	"total_insertions")
-
-######
-# add te class info to summarydata(new_TRANS_end_tes will be removed)
-setwd("/Users/kristen/Documents/transposon_figure_data/data")
-classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
-names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
-classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
-classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference"),2)[,1]
-classdata$id<- paste(stringr::str_split_fixed(classdata$id, "_",4)[,3],stringr::str_split_fixed(classdata$id, "_",4)[,4],sep="_")
-classdata$id <- gsub("_$" ,"",classdata$id)
-classdata$id <- gsub("_non-reference(.*)$" ,"",classdata$id)
-classdata<-mutate(classdata, trait=paste(method,"TRANS",id,sep="_"))
-class_subset <- classdata %>% distinct(id) %>% select(id,class)
-print(class_subset)
-df<-t(class_subset)
-print(df)
-names(summarydata)
-names(df)
-colnames(df) <- df[1,]
-print(df[1,])
-names(df)
-newdf <-bind_rows(summarydata, class_subset)
-print(newdf)
-names(newdf)
 
 
 #1 ABSENCE vs INSERTION
@@ -127,7 +102,7 @@ m2 <- m2 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
   labs(x = "Reference Events", y = "Absence Events")
-
+m2
 ggsave(filename="Absence_vs_Reference.tiff",
        dpi=300,
        width=4,
@@ -187,7 +162,7 @@ insertions<-(insertions[ order(insertions$total_tes), ])
 #pdf(file = "insertions_per_strain.pdf")
 m1 <- ggplot(insertions, aes(x=reorder(insertions$sample,insertions$total_tes), y=insertions$total_tes)) 
 m1<- m1 + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(color="black",size=8,angle=90),
+  theme(axis.text.x = element_text(color="black",size=8,angle=90,hjust=1),
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
@@ -206,7 +181,7 @@ absences<-(absences[ order(absences$total_tes), ])
 #pdf(file = "absences_per_strain.pdf")
 m2 <- ggplot(absences, aes(x=reorder(absences$sample,absences$total_tes), y=absences$total_tes)) 
 m2<- m2 + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(color="black",size=8,angle=90),
+  theme(axis.text.x = element_text(color="black",size=8,angle=90,hjust=1),
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
@@ -225,7 +200,7 @@ references<-(references[ order(references$total_tes), ])
 #pdf(file = "references_per_strain.pdf")
 m3 <- ggplot(references, aes(x=reorder(references$sample,references$total_tes), y=references$total_tes)) 
 m3<- m3 + geom_point(size=.75) +aes(group=1)+
-  theme(axis.text.x = element_text(color="black",size=8,angle=90),
+  theme(axis.text.x = element_text(color="black",size=8,angle=90,hjust=1),
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
@@ -237,13 +212,14 @@ ggsave(filename="References_per_Strain.tiff",
        height=10,
        units="in")
 
-plot_grid(m1, m2, m3,ncol=1,labels=c('A', 'B','C'))
+plot_grid(m1, m3, m2,ncol=1,labels=c('A', 'B','C'))
 ggsave(filename="All_per_Strain.tiff",
        dpi=300,
        width=7.5,
        height=10,
        units="in")
 
+test<-arrange(total_insertion, total_tes)
 min(absences$total_tes)
 max(absences$total_tes)
 mean(absences$total_tes)

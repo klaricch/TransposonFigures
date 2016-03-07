@@ -16,19 +16,16 @@ library(cowplot)
 
 ####DISTANCE
 
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round20",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round21",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round22",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round23")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round20",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round21",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round22",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round23")
 
 #loop through levels of coverage simulations
 for (i in file_list){
   print(i)
-  
   setwd(i)
-  
   fileID<-basename(i)
-  #fileID<-str_match(file, 'RSV_simulations_Aug31_(.*)_contra_call_TPFD.txt')[2]
   print(file)
   
  
@@ -88,6 +85,7 @@ a <- a + geom_line(color="black")+ xlim(0,51)+
         axis.text.x = element_text(colour = "black",size=8),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
+        axis.title.x=element_text(face="bold"),
         axis.title.y=element_text(vjust=1.75),
         plot.title = element_text(size=9),
         legend.position=('none'))+
@@ -158,6 +156,7 @@ b <- b + geom_line(color="black")+ xlim(0,51)+
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
         axis.title.y=element_text(vjust=1.75),
+        axis.title.x=element_text(face="bold"),
         plot.title = element_text(size=9),
         legend.position=('none'))+
   labs(x = "Minimum Read Support Threshold", y="",title=ID)+
@@ -227,6 +226,7 @@ c <- c + geom_line(color="black")+ xlim(0,51)+
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
         axis.title.y=element_text(vjust=1.75),
+        axis.title.x=element_text(face="bold"),
         plot.title = element_text(size=9),
         legend.position=('none'))+
   labs(x = "Minimum PopFreq Support Threshold", y="")+
@@ -250,10 +250,12 @@ if (fileID=="round21"){fourth<-a;b_fourth<-b;c_fourth<-c}
 }
 
 
-setwd("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/")
-a_all<-plot_grid(first,second,third,fourth)
-b_all<-plot_grid(b_first,b_second,b_third,b_fourth)
-c_all<-plot_grid(c_first,c_second,c_third,c_fourth)
+setwd("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/")
+a_all<-plot_grid(first,second,third,fourth, labels=c("A","B","C","D"))
+b_all<-plot_grid(b_first,b_second,b_third,b_fourth,labels=c("A","B","C","D"))
+c_all<-plot_grid(c_first,c_second,c_third,c_fourth,labels=c("A","B","C","D"))
+
+
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(a_all,filename="Combined_Insertion_DS.tiff",dpi=300, width=7.5,height=5,units="in")
 ggsave(b_all,filename="Combined_Insertion_RS.tiff",dpi=300, width=7.5,height=5,units="in")

@@ -18,7 +18,7 @@ summarydata<-subset(summarydata,!grepl('^coverage', summarydata$trait))
 summarydata$trait <- gsub("_C$" ,"",summarydata$trait)
 summarydata$trait <- gsub("^ONE_new" ,"new",summarydata$trait)
 
-classdata<- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+classdata<- read.table("CtCp_all_nonredundant.txt")
 names(classdata)<-c("chr","start","end","TE","orientation","method","strain","class")
 
 # add te class info to summarydata(new_TRANS_end_tes will be removed)
@@ -27,10 +27,25 @@ classdata$family<- paste(stringr::str_split_fixed(classdata$family, "_",4)[,3],s
 classdata$family <- gsub("_$" ,"",classdata$family)
 classdata$family <- gsub("_non-reference(.*)$" ,"",classdata$family)
 classdata<-mutate(classdata, trait=paste(method,"TRANS",family,sep="_"))
-class_subset <- classdata %>% distinct(trait) %>% select(trait,class)
-summarydata <-merge(summarydata, class_subset, by="trait")
+class_subset <- classdata %>% distinct(family,class) %>% select(family,class)
+summarydata$family<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
+summarydata <-merge(summarydata, class_subset, by="family")
+summarydata<-select(summarydata, -family)
+unique(class_subset$method)
 
+
+#summarydata <-merge(summarydata, class_subset, by="trait")
+
+#nrow(distinct(classdata,method,TE))
+#x<-merge(summarydata, class_subset, by="family")
+#Z<-filter(summarydata, !(summarydata$trait %in% x$trait))
+#unique(summarydata$trait)
+#tail(classdata)
+#unique(classdata$family)
+#test1<-filter(classdata, family=="CEMUDR2")
 #names(summarydata)
+
+summarydata$trait
 summarydata<-gather(summarydata, "sample","value",2:(ncol(summarydata)-1))
 #summarydata<-rename(summarydata,total_tes=value)
 tail(summarydata)
@@ -41,10 +56,7 @@ summarydata$method<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,1
 summarydata$transposon<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
 #summarydata<-filter(summarydata,transposon=="total")
 
-
-
 families<-summarydata
-
 
 #reformat the data
 summarydata <- summarydata %>% group_by(sample,class, method) %>% summarise(XX=sum(value,na.rm=TRUE))
@@ -53,21 +65,13 @@ total_absence<-filter(summarydata,method=="absent")
 total_reference<-filter(summarydata,method=="reference")
 total_insertion<-filter(summarydata,method=="new")
 
-
-
-
-
 #SCATTER
 initial_merge <- merge(total_absence,total_reference, by=c("sample","class"))
-
 final_merge <- merge(initial_merge,total_insertion, by=c("sample","class"))
-
 names(final_merge)<-c("sample", "class", "method.x","total_absences",	"method.y", "total_references",	"method.z","total_insertions")
-
 
 #remove points in "unknown"classification
 final_merge<-filter(final_merge, class !="unknown")
-
 
 #revalue classes
 final_merge$class <- factor(final_merge$class,
@@ -269,11 +273,14 @@ hist_data$method <- factor(hist_data$method,
                        labels = c("Insertion", "Reference", "Absence"))
 
 
+#dim(hist_data)
+#sub_hist<-hist_data %>% group_by(method) %>% summarize(MM=max(XX))
+#hist_data<-merge(hist_data,sub_hist,by="method")
 
 m <- ggplot(hist_data, aes(x=XX,fill=class))
 m <-m + geom_histogram(binwidth=5)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
-  facet_wrap(~method,scale="free_y")+
+  facet_wrap(~method,scale="free")+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 9, colour = "black",face="bold"),
         panel.margin = unit(.25, "lines"),
@@ -288,6 +295,24 @@ m <-m + geom_histogram(binwidth=5)+
   scale_fill_manual(values = c('dnatransposon' = "navy", "retrotransposon"="brown3","unknown"="goldenrod"))+
   labs(x="Transposons Per Strain", y="Count")
 m
+
+#pull out y max of panels
+panel1<-filter(ggplot_build(m)$data[[1]],PANEL==1)
+max1<-max(panel1$y)
+max1
+panel2<-filter(ggplot_build(m)$data[[1]],PANEL==2)
+max2<-max(panel2$y)
+max2
+panel3<-filter(ggplot_build(m)$data[[1]],PANEL==3)
+max3<-max(panel3$y)
+max3
+
+m <- m + geom_point(data = subset(hist_data, method=="Insertion"),aes(y=1.05*max1),alpha=0)+
+  geom_point(data = subset(hist_data, method=="Reference"),aes(y=1.05*max2),alpha=0) +
+  geom_point(data = subset(hist_data, method=="Absence"),aes(y=1.05*max3),alpha=0)
+m
+
+
 
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Histogram_TE_per_Strain.tiff",

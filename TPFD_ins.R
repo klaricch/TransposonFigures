@@ -13,10 +13,10 @@ library(cowplot)
 library(dplyr)
 
 #Coverage absences
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round20",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round21",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round22",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round23")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round20",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round21",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round22",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round23")
 
 for (i in file_list){
   print(i)
@@ -85,10 +85,10 @@ ggsave(a_all,filename="Combined_Ins_Cov.tiff",dpi=300, width=7.5,height=5,units=
 ########################################################################################################################
 # absences READ SUPPORT
 
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round20",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round23",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round22",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round21")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round20",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round23",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round22",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round21")
 
 for (i in file_list){
   print(i)
@@ -155,10 +155,10 @@ ggsave(a_all,filename="Combined_Ins_R.tiff",dpi=300, width=7.5,height=5,units="i
 ########################################################################################################################
 ########################################################################################################################
 #SCATTER abs
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round20",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round23",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round22",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/round21")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round20",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round23",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round22",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round21")
 
 for (i in file_list){
   print(i)
@@ -186,7 +186,7 @@ for (i in file_list){
   below_FD<-filter(summarydata,N<8,call=="FD")
   bFD<-nrow(below_FD)
   per_FD=round(bFD/(bFD+aFD)*100,digits=2)
-  print(per_FD)
+
   
   #calculate percent of True Positives removed
   above_TP<-filter(summarydata,N>=8,call=="TP")
@@ -194,19 +194,21 @@ for (i in file_list){
   below_TP<-filter(summarydata,N<8,call=="TP")
   bTP<-nrow(below_TP)
   per_TP=round(bTP/(bTP+aTP)*100,digits=2)
-  print(per_TP)
+
   
   #plot discarded percentages of TP and FD calls the same relative distance above the cutoff line
   #.97 max coverage for x coordinate
   x_ann<-.97*max(summarydata$coverage)
   # for the TP y coordinate:
   Ty_ann<-max(summarydata[summarydata$call == "TP",]$N)
-  Ty_ann<-.30*(Ty_ann/8)+8
+  Ty_ann<-.60*(Ty_ann/8)+8
   # for the FD y coordinate:
   Fy_ann<-max(summarydata[summarydata$call == "FD",]$N)
-  Fy_ann<-.30*(Fy_ann/8)+8
+  Fy_ann<-.60*(Fy_ann/8)+8
   
   #reorder factor levels so that TP is above FD in the facets
+  
+  #summarydata<-arrange(summarydata,desc(call))
   summarydata$call <- factor(summarydata$call, levels = summarydata$call[order(summarydata$call, decreasing = TRUE)])
   a <- ggplot(data = summarydata, aes(x = coverage,y=N, colour=call))
   
@@ -217,19 +219,20 @@ for (i in file_list){
     geom_text(data = subset(summarydata, call=="FD"),label = paste(per_FD,"%"),x=x_ann,y=Fy_ann,size=2.2)+
     theme(strip.background = element_blank(),
           strip.text.x = element_text(size = 8, colour = "black",face="bold"),
-          strip.text.y = element_text(size = 8, colour = "black",face="bold",angle=90),
+          strip.text.y = element_text(margin = margin(t=0,r=0,l=10,b=0),size = 8, colour = "black",face="bold",angle=90),
+          axis.title.y = element_text(margin = margin(r=18),face="bold"),
+          axis.title.x=element_text(face="bold"),
           panel.background = element_rect(fill = "white"),
           panel.grid.major = element_line(colour = "grey97"),
           axis.ticks =element_line(colour = "black"),
-          axis.text.y = element_text(colour = "black",size=8),
+          axis.text.y = element_text(colour = "black",size=8),      
           axis.text.x = element_text(colour = "black",size=8),
           axis.line=element_line(linetype="solid"),
           axis.title=element_text(size=8),
-          axis.title.y=element_text(vjust=1.75),
           plot.title = element_text(colour = "black",size=8),
           legend.position=('none'))+
     geom_point(aes(x=0, y=0),alpha=0)+
-    labs(x="Coverage (Number of Reads)", y= "Read Support", title=ID)+
+    labs(x="Coverage (Number of Reads)", y= "Read Support", title=ID,face="bold")+
     scale_colour_manual(values = c("purple3","darkorange"))
   a
 
@@ -252,5 +255,7 @@ for (i in file_list){
 }
 
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-a_all<-plot_grid(first,second,third,fourth)
+a_all<-plot_grid(first,second,third,fourth,labels=c("A","B","C","D"))
+
+a_all
 ggsave(a_all,filename="Combined_Ins_Scatter.tiff",dpi=300, width=7.5,height=5,units="in")

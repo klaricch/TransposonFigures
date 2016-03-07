@@ -13,10 +13,10 @@ library(cowplot)
 library(dplyr)
 
 #Coverage references
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_half",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_quarter",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_tenth")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_half",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_quarter",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_tenth")
 
 for (i in file_list){
   print(i)
@@ -86,10 +86,10 @@ ggsave(a_all,filename="Combined_Ref_Cov.tiff",dpi=300, width=7.5,height=5,units=
 ########################################################################################################################
 # references READ SUPPORT
 
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_half",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_quarter",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_tenth")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_half",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_quarter",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_tenth")
 
 for (i in file_list){
   print(i)
@@ -156,10 +156,10 @@ ggsave(a_all,filename="Combined_Ref_R.tiff",dpi=300, width=7.5,height=5,units="i
 ########################################################################################################################
 ########################################################################################################################
 #SCATTER ref
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_half",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_quarter",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_tenth")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_half",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_quarter",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_tenth")
 
 for (i in file_list){
   print(i)
@@ -204,10 +204,10 @@ for (i in file_list){
   x_ann<-.97*max(summarydata$coverage)
   # for the TP y coordinate:
   Ty_ann<-max(summarydata[summarydata$call == "TP",]$N)
-  Ty_ann<-.30*(Ty_ann/3)+3
+  Ty_ann<-.50*(Ty_ann/3)+3
   # for the FD y coordinate:
   Fy_ann<-max(summarydata[summarydata$call == "FD",]$N)
-  Fy_ann<-.30*(Fy_ann/3)+3
+  Fy_ann<-.50*(Fy_ann/3)+3
   
   #reorder factor levels so that TP is above FD in the facets
   summarydata$call <- factor(summarydata$call, levels = summarydata$call[order(summarydata$call, decreasing = TRUE)])
@@ -220,7 +220,9 @@ for (i in file_list){
     geom_text(data = subset(summarydata, call=="FD"),label = paste(per_FD,"%"),x=x_ann,y=Fy_ann,size=2.2)+
     theme(strip.background = element_blank(),
           strip.text.x = element_text(size = 8, colour = "black",face="bold"),
-          strip.text.y = element_text(size = 8, colour = "black",face="bold",angle=90),
+          strip.text.y = element_text(margin = margin(t=0,r=0,l=10,b=0),size = 8, colour = "black",face="bold",angle=90),
+          axis.title.y = element_text(margin = margin(r=18),face="bold"),
+          axis.title.x=element_text(face="bold"),
           panel.background = element_rect(fill = "white"),
           panel.grid.major = element_line(colour = "grey97"),
           axis.ticks =element_line(colour = "black"),
@@ -228,13 +230,14 @@ for (i in file_list){
           axis.text.x = element_text(colour = "black",size=8),
           axis.line=element_line(linetype="solid"),
           axis.title=element_text(size=8),
-          axis.title.y=element_text(vjust=1.75),
           plot.title = element_text(colour = "black",size=8),
           legend.position=('none'))+
     geom_point(aes(x=0, y=0),alpha=0)+
     labs(x="Coverage (Number of Reads)", y= "Read Support", title=ID)+
     scale_colour_manual(values = c("purple3","darkorange"))
   a
+  
+  if (fileID=="RSV_SIM_quarter"){a<-a+geom_point(aes(x=0,y=4),size=.75,alpha=0)}
   
   a <- ggplotGrob(a)
   a$layout[a$layout$name == "strip-right",c("l", "r")] <- 2
@@ -246,6 +249,7 @@ for (i in file_list){
   ggsave(filename,dpi=300, width=7.5,height=3.5,units="in")
   ggsave(filename,dpi=300, width=7.5,height=3.5,units="in")
   
+
   if (fileID=="RSV_SIM"){first<-a}
   if (fileID=="RSV_SIM_half"){second<-a}
   if (fileID=="RSV_SIM_quarter"){third<-a}
@@ -254,5 +258,5 @@ for (i in file_list){
 }
 
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-a_all<-plot_grid(first,second,third,fourth)
+a_all<-plot_grid(first,second,third,fourth,labels=c("A","B","C","D"))
 ggsave(a_all,filename="Combined_Ref_Scatter.tiff",dpi=300, width=7.5,height=5,units="in")

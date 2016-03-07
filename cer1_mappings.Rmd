@@ -96,7 +96,7 @@ method_labeller <- function(variable,value){
 
 
 #read in position data and create family column
-positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+positions <- read.table("CtCp_all_nonredundant.txt")
 names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?reference"),2)[,1]
 positions$family<- paste(stringr::str_split_fixed(positions$family, "_",4)[,3],stringr::str_split_fixed(positions$family, "_",4)[,4],sep="_")

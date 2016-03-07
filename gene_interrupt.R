@@ -20,6 +20,7 @@ m <- m + geom_histogram(binwidth=.25)+
         panel.margin = unit(.25, "lines"),
         panel.border = element_rect(fill=NA, colour="black"),
         panel.background = element_blank(),
+        legend.title = element_blank(),
         axis.title = element_text(size=11,face="bold"),
         axis.text.y = element_text(colour="black", size=11,face="bold"),
         axis.text.x = element_blank(),
@@ -28,7 +29,7 @@ m <- m + geom_histogram(binwidth=.25)+
         #,
        # legend.position=('none'))+
   labs(x="Chromosome Position (Mb)", y= "Count")+
-  scale_fill_manual(values = c('exon' = "darkturquoise", "five_prime_UTR"="brown1","three_prime_UTR"="coral",'intron' = "plum2", 'promoter' = "steelblue4","gene"="lightgoldenrod2","intergenic"="indianred4"))
+  scale_fill_manual(values = c('CDS'="darkorange1",'exon' = "darkturquoise", "five_prime_UTR"="olivedrab1","three_prime_UTR"="darkolivegreen4",'intron' = "plum2", 'promoter' = "steelblue4","gene"="lightgoldenrod2","intergenic"="indianred4"))
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Genic_Features.tiff",

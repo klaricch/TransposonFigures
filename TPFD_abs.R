@@ -13,10 +13,10 @@ library(cowplot)
 library(dplyr)
 
 #Coverage absences
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_half",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_quarter",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_tenth")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_half",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_quarter",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_tenth")
 
 for (i in file_list){
   print(i)
@@ -87,10 +87,10 @@ ggsave(a_all,filename="Combined_Abs_Cov.tiff",dpi=300, width=7.5,height=5,units=
 ########################################################################################################################
 # absences READ SUPPORT
 
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_half",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_quarter",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_tenth")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_half",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_quarter",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_tenth")
 
 for (i in file_list){
   print(i)
@@ -158,10 +158,10 @@ ggsave(a_all,filename="Combined_Abs_R.tiff",dpi=300, width=7.5,height=5,units="i
 ########################################################################################################################
 ########################################################################################################################
 #SCATTER abs
-file_list=c("/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_half",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_quarter",
-            "/Users/kristen/Desktop/Fig_p/depth_TPFD_files/RSV_SIM_tenth")
+file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_half",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_quarter",
+            "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/RSV_SIM_tenth")
 
 for (i in file_list){
   print(i)
@@ -222,7 +222,9 @@ a <- a + geom_point(size=.75)+
   geom_text(data = subset(summarydata, call=="FD"),label = paste(per_FD,"%"),x=x_ann,y=Fy_ann,size=2.2)+
   theme(strip.background = element_blank(),
         strip.text.x = element_text(size = 8, colour = "black",face="bold"),
-        strip.text.y = element_text(size = 8, colour = "black",face="bold",angle=90),
+        strip.text.y = element_text(margin = margin(t=0,r=0,l=10,b=0),size = 8, colour = "black",face="bold",angle=90),
+        axis.title.y = element_text(margin = margin(r=18),face="bold"),
+        axis.title.x=element_text(face="bold"),
         panel.background = element_rect(fill = "white"),
         panel.grid.major = element_line(colour = "grey97"),
         axis.ticks =element_line(colour = "black"),
@@ -230,7 +232,6 @@ a <- a + geom_point(size=.75)+
         axis.text.x = element_text(colour = "black",size=8),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=8),
-        axis.title.y=element_text(vjust=1.75),
         plot.title = element_text(colour = "black",size=8),
         legend.position=('none'))+
   geom_point(aes(x=0, y=0),alpha=0)+
@@ -256,5 +257,5 @@ if (fileID=="RSV_SIM_tenth"){fourth<-a}
 }
 
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-a_all<-plot_grid(first,second,third,fourth)
+a_all<-plot_grid(first,second,third,fourth,labels=c("A","B","C","D"))
 ggsave(a_all,filename="Combined_Abs_Scatter.tiff",dpi=300, width=7.5,height=5,units="in")

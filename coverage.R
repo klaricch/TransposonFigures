@@ -55,3 +55,5 @@ ggsave(filename="Coverage_per_Strain.tiff",
        width=7.5,
        height=3.5,
        units="in")
+ mean(data$coverage)
+median(data$coverage)

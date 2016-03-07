@@ -71,7 +71,7 @@ counts$trait <- gsub("_C$" ,"",counts$trait)
 
 
 # read in positions of all TEs
-positions <- read.table("CtCp_all_nonredundant.txt",header=TRUE)
+positions <- read.table("CtCp_all_nonredundant.txt")
 names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 #create TE family column
 
@@ -79,6 +79,41 @@ positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?referen
 positions$family<- paste(stringr::str_split_fixed(positions$family, "_",4)[,3],stringr::str_split_fixed(positions$family, "_",4)[,4],sep="_")
 positions$family <- gsub("_$" ,"",positions$family)
 positions$family <- gsub("_non-reference(.*)$" ,"",positions$family)
+positions<-mutate(positions, traitT=paste(method,"TRANS",family,sep="_"))
+#class_subset <- positions %>% distinct(traitT) %>% select(traitT,class)
+class_subset <- positions %>% distinct(family,class) %>% select(family,class)
+
+counts<-mutate(counts,method2=gsub("ONE_","",method))
+counts<-mutate(counts,method3=gsub("ZERO_","",method2))
+counts<-mutate(counts, traitT=paste(method3,"TRANS",family,sep="_"))
+
+counts<-merge(counts, class_subset, by="family") #only traits not merging here will be the "total" traits (they will drop out)
+counts<-select(counts, -method2,-method3,-traitT)
+
+
+# get rid of reciprocal traits according to class
+counts<- filter(counts,ifelse(class=="retrotransposon",method=="ZERO_new"| method=="reference",ifelse(class=="dnatransposon",method=="ZERO_new"|method=="absent",method=="ZERO_new"|method=="absent"|method=="reference")))
+#test1<- filter(counts,class=="retrotransposon",method=="ZERO_new"| method=="reference")
+#test2<- filter(counts,class=="dnatransposon",method=="ZERO_new"| method=="absent")
+#test3<- filter(counts,class=="unknown",method=="ZERO_new"| method=="reference"| method=="absent")
+
+#length(unique(counts$trait))
+#length(unique(x$trait))
+
+#z<-filter(counts,!(counts$trait %in% x$trait))
+#zz<-distinct(z,trait,method)
+#xx<-distinct(x,trait,method)
+#cc<-distinct(counts,trait,method)
+#zzz<-filter(x,family=="CEMUDR1")
+
+#nrow(zz)
+#nrow(xx)
+#nrow(cc)
+#nrow(test1)+nrow(test2)+nrow(test3)
+#qtest1<-distinct(test1,method,class,trait)
+#qtest2<-distinct(test2,method,class,trait)
+#qtest3<-distinct(test3,method,class,trait)
+
 
 #pull out only position traits from mappings dataframe
 #position_traits<-subset(processed_mapping_df,
@@ -154,17 +189,15 @@ max_five=length(five)
 max_six=length(six)
 
 #initiate an empty dataframe
-away<- as.data.frame(matrix(0, ncol = 19, nrow = 0))
+away<- as.data.frame(matrix(0, ncol = 20, nrow = 0))
 names(away) <-c(colnames(counts))
 
-not_away<- as.data.frame(matrix(0, ncol = 19, nrow = 0))
+not_away<- as.data.frame(matrix(0, ncol = 20, nrow = 0))
 names(not_away) <-c(colnames(counts))
 
-ncol(counts)
 
 #remove totals
 distinct_sites<-filter(distinct_sites,!grepl('total', family))
-
 distinct_sites$family
 #iterate through unique QTL peaks
 for (phenotype in unique(distinct_sites$trait)){
@@ -367,7 +400,6 @@ for (phenotype in unique(distinct_sites$trait)){
 }
 away_counts<-away
 save(away_counts, file="away_counts_phenos.Rda")
-
 away_counts<-mutate(away_counts,ID=paste(trait,peak_id,sep="_"))
 
 
@@ -384,7 +416,11 @@ unique(away_counts$trait)
 #c<-filter(counts,ID=="absent_TRANS_Tc9_2")
 #e<-filter(away_counts,ID=="absent_TRANS_Tc9_2")
 counts<-mutate(counts,ID=paste(trait,peak_id,sep="_"))
-median_df<-filter(counts,counts$ID %in% away_counts$ID)
+
+
+###THIS STEP CHOICE
+#median_df<-filter(counts,counts$ID %in% away_counts$ID)
+median_df<-counts
 #median_df <- counts[counts$ID %in% away_counts$ID]
 
 median_df <- filter(median_df,!is.na(peak_id))
@@ -411,8 +447,7 @@ count_QTL<-median_df
 save(count_QTL, file="count_QTL.Rda")
 #median_df_counts<-median_df
 #save(median_df_counts, file="median_phenos_counts.Rda")
-
-
+#all_counts$trait <- gsub("_C$" ,"",all_counts$trait)
 ##########################################################################################
 #                               FEW CHRO
 ##########################################################################################
