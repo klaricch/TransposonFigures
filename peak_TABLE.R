@@ -9,7 +9,7 @@ library(dplyr)
 library(tidyr)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-load("/Users/kristen/Documents/transposon_figure_data/data/Processed_Transposon_Mappings.Rda") #processed mappings
+load("/Users/kristen/Documents/transposon_figure_data/data/Processed_Transposon_Mappings_2.Rda") #processed mappings
 load("count_QTL.Rda")
 
 #remove fraction, movement, and position traits
@@ -19,6 +19,7 @@ processed_mapping_df<-subset(processed_mapping_df,!grepl('^no_', processed_mappi
 #QTL filter here:
 processed_mapping_df$trait<-gsub("_C$","",processed_mapping_df$trait)
 count_QTL<-mutate(count_QTL, trait2=gsub("_\\d+$","",trait)) 
+
 #processed_mapping_df<-filter(processed_mapping_df,(trait %in% count_QTL$trait2))
 processed_mapping_df<-filter(processed_mapping_df,(trait %in% count_QTL$trait2)|grepl("total",trait))
 

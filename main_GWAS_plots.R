@@ -8,7 +8,6 @@ library(data.table)
 library(grid)
 library(stringr)
 library(gridExtra)
-library(knitr)
 library(tidyr)
 library(scales)
 library(gtable)
@@ -16,7 +15,9 @@ library(cowplot)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 load("Processed_Transposon_Mappings_SUBSET2.Rda")
-load("reciprocal_removals.Rda")
+
+
+unique(processed_mapping_df$trait)
 load("count_QTL.Rda")
 
 # pull unique combos, remove strain column(don't need specific strain info at this point)
@@ -76,8 +77,6 @@ count_QTL<-mutate(count_QTL, trait2=gsub("_\\d+$","",trait))
 selection <- filter(selection, (trait %in% count_QTL$trait2))
 
 processed_mapping_df<-filter(processed_mapping_df,CHROM != "MtDNA")
-processed_mapping_df<-filter(processed_mapping_df,!(trait %in% reciprocal_removals$TE))
-selection<-filter(selection,!(trait %in% reciprocal_removals$TE))
 class_subset<- positions %>% distinct(class,family) %>% select(class,family)
 selection <-merge(selection, class_subset, by="family")
 selection<-arrange(selection,class,family,method)
@@ -135,10 +134,11 @@ for (i in unique(selection$trait)){
   if (count==2){third<-A}
   if (count==3){fourth<-A}
   if (count==4){fifth<-A}
+  if (count==5){sixth<-A}
   count<-count+1
 }
 
-a_all<-plot_grid(first,second,third,fourth,fifth,ncol=1)
+a_all<-plot_grid(first,second,third,fourth,fifth,sixth,ncol=1) #ZER)_new_TRANS_NeSL-1_C no  longer in here so don't need fifth 
 label<-expression(bold(-log["10"](p)))
 
 a_all<- a_all + draw_label(label, x = .04, y = 0.5, hjust = .5, vjust = .5,
@@ -161,48 +161,3 @@ ggsave(filename="five_trait_QTL.tiff",
        height=10,
        units="in")
 
-
-
-
-###fine mappings
-library(cegwas)
-selection_test<-filter(selection,trait=="ZERO_new_TRANS_LINE2C")
-#"ZERO_new_TRANS_CELETC2"
-#trait=="ZERO_new_TRANS_LINE2C")
-unique(selection_test$trait)
-
-cegwas::variant_correlation
-
-crs <- cegwas::variant_correlation(selection_test,variant_severity = "ALL", gene_types = "ALL")
-save(crs,file="crs_test.Rda")
-load("/Users/kristen/Dropbox/AndersenLab/LabFolders/Kristen/gene_functions.rda")
-p_crs <- cegwas::process_correlations(crs)
-
-names(p_crs)
-
-unique(p_crs$spearman_cor)
-
-
-test<-filter(p_crs, abs_spearman_cor>quantile(abs_spearman_cor,probs=0.95))
-test<-distinct(test,CHROM, POS)
-piRNA<-collect(get_db()  %>% dplyr::filter(biotype == "piRNA"))
-test<-filter(test, molecular_name %in% piRNA$transcript_id)
-
-
-test2<-filter(p_crs, molecular_name %in% piRNA$transcript_id)
-test2<-distinct(test2,CHROM, POS)
-
-
-
-
-unique(p_crs$concise_description)
-unique(p_crs$effect)
-unique(p_crs$transcript_biotype)
-#test<-filter(selection, !is.na(peak_id))
-#test<-distinct(test,trait,peak_id)
-#unique(selection$trait)
-#library(cegwas)
-#vc1(selection)
-#snpeff("III:929224-1500101")
-
-#save(selection,file="sample_traits.Rda")

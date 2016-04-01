@@ -283,7 +283,7 @@ for (i in unique(selection$trait)){
     geom_point(data = subset(traitPositions, CHROM=="V"),aes(x=min5,y=0),alpha=0) +
     geom_point(data = subset(traitPositions, CHROM=="X"),aes(x=min6,y=0),alpha=0)+
     
-    labs(x = "Chromosome Position (Mb)", y="Number of Transposition Events")+
+    labs(x = "Chromosome Position (Mb)", y="Number of Sites")+
     theme(strip.background = element_blank(),
           strip.text.x = element_blank(),
           #strip.text = element_text(size = 9, colour = "black",face="bold"),

@@ -17,9 +17,11 @@ library(gridExtra)
 library(stringr)
 library(tidyr)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-load("Processed_Transposon_Mappings.Rda")
+load("Processed_Transposon_Mappings_2.Rda")
 
-
+##test<-filter(processed_mapping_df,trait=="ONE_new_TRANS_MIRAGE1_C")
+##test<-filter(processed_mapping_df,trait=="ONE_new_TRANS_Tc1_C")
+##test<-filter(processed_mapping_df,trait=="ONE_new_TRANS_Tc6_C")
 #remove fraction and movement traits
 processed_mapping_df<-subset(processed_mapping_df,
                                  grepl('^I', processed_mapping_df$trait) |
@@ -71,7 +73,7 @@ counts$trait <- gsub("_C$" ,"",counts$trait)
 
 
 # read in positions of all TEs
-positions <- read.table("CtCp_all_nonredundant.txt")
+positions <- read.table("CtCp_all_nonredundant_reduced.txt")
 names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 #create TE family column
 
@@ -92,7 +94,8 @@ counts<-select(counts, -method2,-method3,-traitT)
 
 
 # get rid of reciprocal traits according to class
-counts<- filter(counts,ifelse(class=="retrotransposon",method=="ZERO_new"| method=="reference",ifelse(class=="dnatransposon",method=="ZERO_new"|method=="absent",method=="ZERO_new"|method=="absent"|method=="reference")))
+counts<- filter(counts,ifelse(class=="retrotransposon", method=="reference"| method=="ONE_new",ifelse(class=="dnatransposon",method=="absent"| method=="ONE_new",method=="absent"|method=="reference"|| method=="ONE_new")))
+#counts<- filter(counts,ifelse(class=="retrotransposon",method=="ZERO_new"| method=="reference"| method=="ONE_new",ifelse(class=="dnatransposon",method=="ZERO_new"|method=="absent"| method=="ONE_new",method=="ZERO_new"|method=="absent"|method=="reference"|| method=="ONE_new")))
 #test1<- filter(counts,class=="retrotransposon",method=="ZERO_new"| method=="reference")
 #test2<- filter(counts,class=="dnatransposon",method=="ZERO_new"| method=="absent")
 #test3<- filter(counts,class=="unknown",method=="ZERO_new"| method=="reference"| method=="absent")
@@ -430,14 +433,13 @@ median_df <- distinct(median_df,trait,strain,peak_id)
 unique(median_df$allele)
 #calculate median for each phenotype allele group
 median_df <- median_df %>% group_by(ID,allele) %>% summarise(med=median(value,na.rm=TRUE))
-
+median_df<-ungroup(median_df)
 #median_df<-mutate(median_df, Trait=paste(trait,peak_id,sep="_"))
 #median_df <- median_df %>% ungroup() %>% select(-trait,-peak_id)
 median_df<-spread(median_df, allele,med)
 colnames(median_df)<-c("trait","ref","alt")
 #pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
-median_df<-filter(median_df,ref!=alt)
-
+median_df<-dplyr::filter(median_df,ref!=alt)
 
 #median_df$trait <- gsub("_[0-9]+$" ,"",median_df$trait)
 

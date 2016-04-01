@@ -1,8 +1,21 @@
-#this script replaces the numeric identifiers with their corresponding trait names
+library(cegwas)
 library(dplyr)
+library(tidyr)
+
+
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-load("20160321_processed_mapping_df.Rda")
-unique(processed_mapping_df$BF)
+load("20160321_complete_mapping_df.Rda")
+load("20160321_processed_transposons.Rda")
+
+
+map_df <- list()
+for(i in 1:length(mapping_df)){
+  map_df[[i]] <- mapping_df[[i]][[2]]
+}
+map_df<- rbind_all(map_df)
+processed_mapping_df<-process_mappings(map_df,transposon_phenotypes, BF=5)
+
+
 IDS1<-read.table("key_T_kin_C_matrix_full_id_reduced.txt")
 #IDS2<-read.table("key_kin_matrix_full_id.txt")
 #IDS3<-read.table("key_T_Full_Results_Activity_id.txt")
@@ -16,21 +29,12 @@ processed_mapping_df<-merge(processed_mapping_df,IDS, by="trait")
 copy<-processed_mapping_df
 processed_mapping_df<-select(processed_mapping_df, -trait)
 names(processed_mapping_df)[names(processed_mapping_df)=="id"] <- "trait"
-save(processed_mapping_df, file="Processed_Transposon_Mappings_with activity.Rda")
-
-#remove activty traits
-#pull out only activity traits
-
+#save(processed_mapping_df, file="Processed_Transposon_Mappings_with activity.Rda")
 processed_mapping_df$trait<-gsub("$","_C",processed_mapping_df$trait)
 processed_mapping_df$trait<-gsub("_C_C","_C",processed_mapping_df$trait)
 processed_mapping_df$trait<-gsub("coverage_C","coverage",processed_mapping_df$trait)
 processed_mapping_df<-subset(processed_mapping_df, !grepl('^no_', processed_mapping_df$trait))
-save(processed_mapping_df, file="Processed_Transposon_Mappings.Rda")
+save(processed_mapping_df, file="Processed_Transposon_Mappings_2.Rda")
 
-unique(processed_mapping_df$trait)
-# check that CER1 traits map correctly
-#names(processed_mapping_df)
-test<-filter(processed_mapping_df,!is.na(peak_id))
-test<-distinct(test,peakPOS,trait)
-AA<-filter(test,trait=="absent_TRANS_CER1_C")
-RR<-filter(test,trait=="reference_TRANS_CER1_C")
+#t<-filter(processed_mapping_df,trait=="ONE_new_TRANS_MIRAGE1_C")
+#unique(processed_mapping_df$BF)

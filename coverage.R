@@ -10,9 +10,11 @@ library(tidyr)
 library(ggplot2)
 library(dplyr)
 
-data<-summarydata %>%
-  gather(method, total_tes, absence:insertion:reference)
+#data<-summarydata %>%
+#  gather(method, total_tes, absence:insertion:reference)
 
+data<-summarydata %>%
+  gather(method, total_tes, absence:reference)
 
 #3X_REFACET
 a <- ggplot(data = data, aes(x = coverage,y=total_tes, fill=method))
@@ -31,7 +33,7 @@ a <- a + geom_point(size=1,aes( color=ifelse(method=="reference", 'slateblue1',i
         axis.text.x = element_text(colour = "black"),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
-  labs(x = "Depth of Coverage", y="Number of Transposition Events")
+  labs(x = "Depth of Coverage", y="Number of Sites")
 a
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Totals_vs_Coverage.tiff",dpi=300, width=7.5,height=3.5,units="in")

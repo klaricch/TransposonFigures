@@ -42,7 +42,7 @@ m <-m + geom_histogram(binwidth=.25)+
   geom_point(data = subset(summarydata, method=="Insertion"),aes(y=top),alpha=0) +
   geom_point(data = subset(summarydata, method=="Reference"),aes(y=top),alpha=0) +
   
-  labs(x="Chromosome Position (Mb)", y="Number of Transposition Events")+
+  labs(x="Chromosome Position (Mb)", y="Number of Sites")+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 9, colour = "black",face="bold"),
         panel.margin = unit(.25, "lines"),

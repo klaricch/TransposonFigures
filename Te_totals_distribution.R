@@ -66,7 +66,7 @@ m1 <- m1 + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
-  labs(x = "Insertion Events", y = "Absence Events")
+  labs(x = "Insertion Sites", y = "Absence Sites")
 m1
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Absence_vs_Insertion.tiff",
@@ -101,7 +101,7 @@ m2 <- m2 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
-  labs(x = "Reference Events", y = "Absence Events")
+  labs(x = "Reference Sites", y = "Absence Sites")
 m2
 ggsave(filename="Absence_vs_Reference.tiff",
        dpi=300,
@@ -138,7 +138,7 @@ m3 <- m3 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
-  labs(x = "Reference Events", y = "Insertion Events")
+  labs(x = "Reference Sites", y = "Insertion Sites")
 
 ggsave(filename="Insertion_vs_Reference.tiff",
        dpi=300,
@@ -166,7 +166,7 @@ m1<- m1 + geom_point(size=.75) +aes(group=1)+
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
-  labs(x="", y="Number of Insertion Events")
+  labs(x="", y="Number of Insertion Sites")
 m1
 ggsave(filename="Insertions_per_Strain.tiff",
        dpi=300,
@@ -185,7 +185,7 @@ m2<- m2 + geom_point(size=.75) +aes(group=1)+
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
-  labs(x="", y="Number of Absence Events")
+  labs(x="", y="Number of Absence Sites")
 m2
 ggsave(filename="Absences_per_Strain.tiff",
        dpi=300,
@@ -204,7 +204,7 @@ m3<- m3 + geom_point(size=.75) +aes(group=1)+
         axis.text.y = element_text(color="black",size=8),
         axis.title = element_text(color="black",size=9),
         axis.ticks =element_line(colour = "black"))+
-  labs(x="", y="Number of Reference Events")
+  labs(x="", y="Number of Reference Sites")
 m3
 ggsave(filename="References_per_Strain.tiff",
        dpi=300,

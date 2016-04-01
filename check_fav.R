@@ -1,10 +1,4 @@
----
-output: pdf_document
-geometry: margin=1in
-mainfont: Times New Roman
----
 
-```{r,fig.width=7.5, fig.height=4,warning=F, message=F, echo=F,comment="K",results='asis'}
 
 
 library(pander)
@@ -19,17 +13,47 @@ library(tidyr)
 library(scales)
 library(gtable)
 
-panderOptions('knitr.auto.asis', TRUE)
+
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-load("Processed_Transposon_Mappings_2.Rda")
+#load("Processed_Transposon_Mappings.Rda")
 
 
+#t<-filter(processed_mapping_df,trait=="ONE_new_TRANS_LINE2C_C")
+load("20160321_complete_mapping_df.Rda")
+load("20160321_processed_transposons.Rda")
+#load("20160321_processed_transposons.Rda")
+
+map_df <- list()
+for(i in 1:length(mapping_df)){
+  map_df[[i]] <- mapping_df[[i]][[2]]
+}
+map_df<- rbind_all(map_df)
+library(cegwas)
+#processed_mapping_df<-process_mappings(map_df,transposon_phenotypes, BF=5)
+
+
+
+
+
+IDS1<-read.table("key_T_kin_C_matrix_full_id_reduced.txt")
+colnames(IDS1)<-c("id", "trait")
+IDS<-IDS1
+processed_mapping_df<-merge(map_df,IDS, by="trait")
+copy<-processed_mapping_df
+processed_mapping_df<-select(processed_mapping_df, -trait)
+names(processed_mapping_df)[names(processed_mapping_df)=="id"] <- "trait"
+
+
+processed_mapping_df$trait<-gsub("$","_C",processed_mapping_df$trait)
+processed_mapping_df$trait<-gsub("_C_C","_C",processed_mapping_df$trait)
+processed_mapping_df$trait<-gsub("coverage_C","coverage",processed_mapping_df$trait)
+processed_mapping_df<-subset(processed_mapping_df, !grepl('^no_', processed_mapping_df$trait))
 #load("Processed_Transposon_Mappings_SUBSET.Rda")
 #load("Processed_Transposon_Mappings_SUBSET2.Rda")
 #load("position_QTL.Rda")
-load("count_QTL.Rda")
-pg<-read.table("paragraphs.txt",sep="\t",header=TRUE)
+#load("count_QTL.Rda")
+#pg<-read.table("paragraphs.txt",sep="\t",header=TRUE)
 
 
 # kexpand=function(){
@@ -46,53 +70,11 @@ pg<-read.table("paragraphs.txt",sep="\t",header=TRUE)
 
 
 
-# make cure C and frac are not getting confused
-#PxG function
-hm<-processed_mapping_df
-hm<-distinct(processed_mapping_df, trait,strain,peak_id)
-hm$allele <- factor(hm$allele,
-                          levels = c(-1,1),
-                          labels = c("REF", "ALT"))
-c<-filter(processed_mapping_df, log10p> BF)
-#d<-filter(processed_mapping_df,peak_id=="2", trait=="absent_TRANS_CER1_C")
-e<-filter(processed_mapping_df,!is.na(peak_id), trait=="absent_TRANS_CER1_C")
-f<-distinct(e,POS,peak_id)
 
-gwasPxG <- function(trt,specific_peak){
-  #load("~/Dropbox/AndersenLab/RCode/Stefan/good_gwasMappingsINlinkage_phenotypes.Rda")
-  
-  hm %>%
-    filter(trait==trt,peak_id==specific_peak,!is.na(allele))%>%
-    ggplot(.)+
-    aes(x=allele,y = value,fill=as.factor(allele))+
-    geom_boxplot(outlier.shape=NA,size =.5,color="gray52")+
-    geom_point(size = 1, alpha = .8,position=position_jitter(w=.4,  h=.025),na.rm=TRUE)+
-    
-    #scale_fill_brewer(palette = "Set2")+
-    
-    #geom_point(size = 1, alpha = .8,position=position_jitter(w=.4,  h=.025),na.rm=TRUE)+
-   # geom_jitter(size = 3, alpha = .8,postion=position_jitter(0,  0))  +
-    theme_bw()+
-    theme(axis.text.x = element_text(size=9, , color="black"),
-          axis.text.y = element_text(size=9,  color="black"),
-          axis.title.x = element_text(size=9,  color="black"),
-          axis.title.y = element_text(size=9,  color="black",vjust=1),
-          strip.text.x = element_text(size=9,  color="black"),
-          strip.text.y = element_text(size=9,  color="black"),
-          plot.title = element_text(size=9,  vjust=1),
-          legend.title = element_text(size=9),
-          panel.border = element_rect(size=1, colour = "black"),
-          plot.margin = unit(c(.05,.05,.05,.05), "cm"),
-          legend.position = "none")+
-          scale_y_continuous(breaks= pretty_breaks())+
-    labs( x = "Genotype",y="Value")+
-
-    scale_fill_manual( values = c("darkgray", "burlywood2", "darkolivegreen","black"))
-}
 
 # pull unique combos, remove strain column(don't need specific strain info at this point)
 #processed_mapping_df <- distinct(select(processed_mapping_df, -strain,-allele,-value))
-processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker,strain)
+processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker)
 
 
 #create family and method columns
@@ -108,7 +90,7 @@ positions$family <- gsub("_$" ,"",positions$family)
 positions$family <- gsub("_non-reference(.*)$" ,"",positions$family)
 
 #select traits above BF.....this step not needed, double checking everything is above BF
-selection<-filter(processed_mapping_df, log10p > BF)
+selection<-processed_mapping_df
 
 #extract the count base traits
 base_traits <-selection[(selection$method=="absent"| selection$method=="new" |selection$method=="reference"|selection$method=="ZERO_new"|selection$method=="ONE_new"), ]
@@ -123,7 +105,7 @@ counts$family <- gsub("_C$" ,"",counts$family)
 
 #
 #
-processed_mapping_df <- distinct(select(processed_mapping_df, -strain,-allele,-value))
+processed_mapping_df <- distinct(select(processed_mapping_df))
 processed_mapping_df<- processed_mapping_df %>% distinct(trait,marker)
 
 
@@ -162,7 +144,7 @@ processed_mapping_df<-mutate(processed_mapping_df,ID=paste(trait,peak_id,sep="_"
 copy<-processed_mapping_df
 
 ##FIX HERE
-processed_mapping_df<-mutate(processed_mapping_df,SNP_col=ifelse(is.na(peak_id), "NO","PASS"))
+processed_mapping_df<-mutate(processed_mapping_df,SNP_col= "NO")
 #### NEED TO FIX HERE
 
 count_QTL<-mutate(count_QTL, trait2=gsub("_\\d+$","",trait)) 
@@ -179,7 +161,8 @@ processed_mapping_df<-filter(processed_mapping_df,CHROM != "MtDNA")
 
 
 #selection<-filter(selection,!(trait %in% reciprocal_removals$TE))
-selection<-filter(selection,grepl('total',family))
+#selection<-filter(selection,grepl('total',family))
+selection<-filter(selection,trait=="ZERO_new_TRANS_CELETC2"|trait=="ZERO_new_TRANS_LINE2C"|trait=="ZERO_new_TRANS_Tc5B"|trait=="ZERO_new_TRANS_WBTransposon00000637"|trait=="ZERO_new_TRANS_NeSL-1"|trait=="ONE_new_TRANS_CELETC2"|trait=="ONE_new_TRANS_LINE2C"|trait=="ONE_new_TRANS_Tc5B"|trait=="ONE_new_TRANS_WBTransposon00000637"|trait=="ONE_new_TRANS_NeSL-1")
 
 #HERE
 class_subset<- positions %>% distinct(class,family) %>% select(class,family)
@@ -198,32 +181,23 @@ for (i in unique(selection$trait)){
   pvalues<-filter(specific_trait,log10p !="Inf") #
   specific_trait_mx <- max(pvalues$log10p) #
   TE<-specific_trait$family[1]
-  rect_data<-filter(specific_trait,SNP_col==ifelse(is.na(peak_id), "NO", "PASS"))
+  rect_data<-filter(specific_trait,SNP_col== "NO")
   plot_method<-unique(filter(selection,trait==i)$method)
-  plot_title<-gsub(".*_TRANS_","",i)
-  plot_title<-gsub("_CE$","",plot_title)
-  plot_title<-gsub("WBTransposon","WBT",plot_title)
-  plot_title<-gsub("total","Total",plot_title)
-  plot_title<-gsub("Total$","Total Transposons",plot_title)
-  plot_title<-gsub("_"," ",plot_title)
-  plot_title<-gsub("retrotransposon","Retrotransposons",plot_title)
-  plot_title<-gsub("dnatransposon","DNA Transposons",plot_title)
-  plot_title<-paste(plot_title,ifelse(plot_method=="ZERO_new","(ins)",ifelse(plot_method=="absent","(abs)",ifelse(plot_method=="ONE_new", "(ins)",ifelse(plot_method=="new", "(ins)", "(ref)")))),sep=" ")
+  plot_title<-i
   plot_title
   
   ##check for NAs
   #sapply(Mappings, function(x)all(is.na(x)))
   A<- processed_mapping_df %>%
     filter(trait == i)%>%
-    .[order(.$peak_id,na.last=FALSE),]%>% 
     ggplot(.)+
     aes(x=POS/1e6,y=log10p)+
-  geom_rect(data=rect_data,mapping=aes(xmin=startPOS/1e6, xmax=endPOS/1e6, ymin=0, ymax= Inf),fill="thistle1", alpha=1)+
-    geom_point(aes( color=ifelse(log10p> BF & SNP_col=="PASS", 'red', 'black')),size=1)+
+    #geom_rect(data=rect_data,mapping=aes(xmin=startPOS/1e6, xmax=endPOS/1e6, ymin=0, ymax= Inf),fill="thistle1", alpha=1)+
+    geom_point(aes( color='black',size=.5))+
     
     facet_grid(.~CHROM,scale="free_x",space = "free_x")+scale_color_identity()  +
     ggtitle(plot_title)+
-    geom_hline(aes(yintercept=BF),color="grey60",linetype="dashed")+
+    #geom_hline(aes(yintercept=BF),color="grey60",linetype="dashed")+
     theme(strip.background = element_rect(fill = "white"),
           strip.text.x = element_text(size = 9, colour = "black",face="bold"),
           panel.background = element_rect(fill = "white"),
@@ -236,32 +210,20 @@ for (i in unique(selection$trait)){
           plot.margin=unit(c(.1,.1,.1,.1), "cm"),
           
           #ADDD COLOR HERE STILLLL
-         # plot.title = element_text(colour=ifelse(class_TE=="dnatransposon","navy",ifelse(class_TE=="retrotransposon","brown3","darkgoldenrod2"))),
+          # plot.title = element_text(colour=ifelse(class_TE=="dnatransposon","navy",ifelse(class_TE=="retrotransposon","brown3","darkgoldenrod2"))),
           legend.position=('none'))+
     labs(x="Chromosome Position (Mb)",y=label)+
     scale_y_continuous(expand=c(0,0),limits=c(0,specific_trait_mx+.075*specific_trait_mx),labels = function(x) format(x,width = 4),breaks= pretty_breaks())
   
   plot(A)
+  
+  
+  ggsave(filename=i,dpi=300, width=7.5,height=3.5,units="in")
+   
+  
 
-  plist<-vector()
-  for (p in rect_data$peak_id){
-    plist<-c(plist,p)
-  }
-  plist<-sort(plist)
-  box_list <- lapply(c(plist),FUN=function(x){gwasPxG(i,x)})
-(do.call("grid.arrange", c(box_list, ncol=length(plist))))
-
-  TE_info<-filter(pg,trait==i)
-  TE_info<-select(TE_info,info)
-  TE_info<-TE_info[1,]
- TE_info<-toString(TE_info)
-
-pandoc.p(TE_info)
-              
-  cat("\n\n\\pagebreak\n")
 }
 
 
 
-```
-
+ 

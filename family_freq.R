@@ -71,7 +71,7 @@ m <- m + geom_point(size=1.25,aes(color=class))+
         legend.position="none",
         legend.text=element_text(size=9))+
   scale_color_manual(values = c("DNA Transposon" = "navy", "Retrotransposon"="brown3","Unknown"="darkgoldenrod2"))+
-  labs(y="", x="Total Transposition Events")
+  labs(y="", x="Total Sites")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Family_Frequency.tiff",

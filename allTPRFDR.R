@@ -1,4 +1,4 @@
-!/usr/bin/R
+#!/usr/bin/R
 ## this script plots the TPR and FDR for each transposon detection method
 ## produces graphs for both overall transposon detection and family-aware detection
 ## plots each method seaparately and on the same graph
@@ -8,11 +8,13 @@
 ## USE: (navigate to directory with BEDCOMAPRE results files) graph_TFPN_distances.R
 
 library(ggplot2)
-directory = getwd()
-setwd(directory)
-setwd("/Users/kristen/Desktop/recent")
+library(dplyr)
+library(tidyr)
+library(grid)
+
+setwd("/Users/kristen/Documents/transposon_figure_data/simulations/round19")
 summarydata <- read.table("BEDCOMPARE_MEANS.txt",header=TRUE)
-#print(summarydata)
+
 
 FAM <- summarydata[ summarydata$fam=="family_aware", ]
 
@@ -35,7 +37,11 @@ FDR<-select(FDR, method, DistanceCutoff,rate_name.x,rate_value.x,rate_value.y)
 colnames(FDR)<-c("Method","DistanceCutoff","Stat","Value","Error")
 
 N2_FAM<-rbind(TPR,FDR)
+N2_FAM$Method <- factor(N2_FAM$Method,
+                            levels = c("retroseq", "telocate","temp"),
+                            labels = c("RetroSeq", "TE-Locate", "TEMP"))
 
+N2_FAM$Stat <- factor(N2_FAM$Stat, levels = N2_FAM$Stat[order(N2_FAM$Stat, decreasing = TRUE)])
 #pdf(file = "FAMILY_AWARE_ALL_TPR.pdf")
 a <- ggplot(data = N2_FAM, aes(x = DistanceCutoff, y = Value,colour=Method))+
   geom_errorbar(aes(ymin=Value-Error, ymax=Value+Error),color="gray60") +
@@ -51,7 +57,18 @@ theme(strip.background = element_blank(),
       axis.line=element_line(linetype="solid"),
       axis.title=element_text(size=9),
       axis.title.x=element_text(face="bold"),
-      axis.title.y=element_text(vjust=1.75),
+      axis.title.y=element_text(vjust=1.75,face="bold", colour="white"),
+      legend.title=element_blank(),
+      legend.background = element_rect(fill=FALSE),
+      legend.key=element_rect(fill=NA),
       plot.title = element_text(size=9))+
   scale_colour_manual(values = c("tan1","paleturquoise1","indianred1"))
 a
+
+a <- ggplotGrob(a)
+a$layout[a$layout$name == "strip-right",c("l", "r")] <- 2
+plot(a)
+grid.draw(a)
+
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+ggsave(a, filename="te_progs.tiff",dpi=300, width=7.5,height=3.5,units="in")

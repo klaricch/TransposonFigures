@@ -124,7 +124,7 @@ for (family in sort(unique(summarydata$transposon))){
           axis.title=element_text(size=9))+
     scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
     guides(fill=FALSE) +
-    labs(x = "Insertion Events", y = "Absence Events")
+    labs(x = "Insertion Sites", y = "Absence Sites")
 
 
   } else{m1<-NULL}
@@ -157,7 +157,7 @@ for (family in sort(unique(summarydata$transposon))){
           axis.title=element_text(size=9))+
     scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
     guides(fill=FALSE) +
-    labs(x = "Reference Events", y = "Absence Events")
+    labs(x = "Reference Sites", y = "Absence Sites")
   } else{m2<-NULL}
 
   
@@ -191,7 +191,7 @@ for (family in sort(unique(summarydata$transposon))){
           axis.title=element_text(size=9))+
     scale_fill_manual(values = c("darkorange", "turquoise3", "slateblue1")) +
     guides(fill=FALSE) +
-    labs(x = "Reference Events", y = "Insertion Events")
+    labs(x = "Reference Sites", y = "Insertion Sites")
   
   } else{m3<-NULL}
   

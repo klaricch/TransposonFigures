@@ -1,0 +1,49 @@
+---
+output: pdf_document
+geometry: margin=1in
+mainfont: Times New Roman
+---
+
+```{r,fig.width=7.5, fig.height=4,warning=F, message=F, echo=F,comment="K",results='asis'}
+#!/usr/bin/R
+# this script plots a histogram of percentage of NAs in a strain for each TE family
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+nas<-read.table("T_kin_C_matrix_NAs_reduced.txt",header=TRUE,stringsAsFactors=F)
+nas<-filter(nas,grepl('ONE_new',trait))
+nas<-mutate(nas,total=AB1)
+nas<-mutate(nas,total=gsub(".*\\(.*/", "",total))
+nas<-mutate(nas,total=gsub(")", "",total))
+nas<-mutate(nas,trait=paste(trait,total, sep =":"))
+nas<-select(nas,-total)
+nas <- as.data.frame(sapply(nas,gsub,pattern="\\(.*\\)",replacement=""),stringsAsFactors=F)
+
+
+i="ONE_new_TRANS_CELE14B_NA:1"
+trait_list<-list(nas$trait)
+
+for (i in unique(nas$trait)){
+
+data<-filter(nas, trait==i)
+col_length=length(data)
+data[, c(2:col_length)] <- sapply(data[, c(2:col_length)], as.numeric)
+data<-data %>% gather(strain,value, AB1:WN2002)
+data<-mutate(data, value=as.numeric(value))
+#m <- geom_histogram(data)
+m <- ggplot(data, aes(x=value))
+m <- m + geom_histogram(binwidth=.05) +ggtitle(i)
+m <- m +theme(panel.background = element_rect(fill = "white"),
+              strip.background = element_rect(fill="white"),
+              axis.ticks = element_line(colour = "black"),
+              axis.text.y = element_text(colour = "black",size=9),
+              axis.text.x = element_text(colour = "black",size=9),
+              axis.line=element_line(linetype="solid"),
+              axis.title=element_text(size=9,face="bold"))
+plot(m)
+#cat("\n\n\\pagebreak\n")
+}

@@ -127,7 +127,7 @@ m <- m + geom_point(size=1.25) +
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
-  labs(x = "Insertion Events", y = "Absence Events")
+  labs(x = "Insertion Sites", y = "Absence Sites")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Absence_vs_Insertion_DR.tiff",
@@ -173,7 +173,7 @@ m <- m + geom_point(size=1.25) +
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
-  labs(x = "Reference Events", y = "Absence Events")
+  labs(x = "Reference Sites", y = "Absence Sites")
 m
 ggsave(filename="Absence_vs_Reference_DR.tiff",
        dpi=300,
@@ -214,7 +214,7 @@ m <- m + geom_point(size=1.25) +
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
-  labs(x = "Insertion Events", y = "Reference Events")
+  labs(x = "Insertion Sites", y = "Reference Sites")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Insertion_vs_Reference_DR.tiff",
@@ -234,7 +234,6 @@ sl<-rename(sl, New = new) #Rename the column "new"
 AR<-filter(sl, absent!="NA" & reference !="NA")
 AI<-filter(sl, absent!="NA" & New !="NA")
 RI<-filter(sl, reference!="NA" & New !="NA")
-?cor.test
 
 #calculate rho values
 AR_corr<-AR %>% group_by(class,transposon) %>% summarise(cor=round((cor.test(absent,reference,method="spearman",exact=FALSE))$estimate,3))
@@ -245,7 +244,6 @@ RI_corr<-RI %>% group_by(class,transposon) %>% summarise(cor=round((cor.test(ref
 AR_mean<-AR_corr %>% group_by(class) %>% summarise(mean=mean(cor,na.rm=TRUE),SD=sd(cor,na.rm=TRUE))
 AI_mean<-AI_corr %>% group_by(class) %>% summarise(mean=mean(cor,na.rm=TRUE),SD=sd(cor,na.rm=TRUE))
 RI_mean<-RI_corr %>% group_by(class) %>% summarise(mean=mean(cor,na.rm=TRUE),SD=sd(cor,na.rm=TRUE))
-?sd
 #
 merged_AR<-merge(AR_corr, AR_mean, by="class")
 merged_AI<-merge(AI_corr, AI_mean, by="class")
