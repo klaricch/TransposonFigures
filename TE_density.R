@@ -45,21 +45,29 @@ m <-m + geom_histogram(binwidth=.25)+
   labs(x="Chromosome Position (Mb)", y="Number of Sites")+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 9, colour = "black",face="bold"),
-        panel.margin = unit(.25, "lines"),
-        panel.border = element_rect(fill=NA,colour = "black"),
+        #panel.margin = unit(.25, "lines"),
+        panel.border = element_rect(fill=NA, colour="black",size=1, linetype="solid"),
         panel.background = element_blank(),
+        panel.margin.y=unit(.50,"cm"),
+        plot.margin=unit(c(.1,.1,0,.1), "cm"),
+        #panel.margin = unit(.75, "cm"),
+        #panel.margin = unit(c(.5,.5,.5,.5), "cm"),
+        #panel.margin = unit(c(.5,.5,.5,.5), "cm"),
         axis.title=element_text(size=9,face="bold"),
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x=element_blank(),
         #axis.text.x = element_text(colour = "black",size=9),
         axis.ticks =element_line(colour = "black"),
+        axis.text.x=element_text(colour="black"),
+        axis.text.y=element_text(colour="black"),
         legend.title=element_blank(),
         legend.position="none",
-        legend.key.size=unit(.1,"cm"),
-        legend.text=element_text(size=8))+
+        legend.key.size=unit(1,"cm"),
+        legend.text=element_text(size=9))+
   #scale_fill_manual(values = c("navy", "brown3", "darkgoldenrod2"))
   scale_fill_manual(values = c("DNA Transposon" = "navy", "Retrotransposon"="brown3","Unknown"="darkgoldenrod2"))
 
+m <- m
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Chromosome_Distribution.tiff",
@@ -90,8 +98,8 @@ X_C<-(6137001:12480000)
 
 
 #total the number of bases on arms,centers, and overall
-arm_bases<-length(c(I_A,II_A,III_A,IV_A,V_A))
-center_bases<-length(c(I_C,II_C,III_C,IV_C,V_C))
+arm_bases<-length(c(I_A,II_A,III_A,IV_A,V_A,X_A))
+center_bases<-length(c(I_C,II_C,III_C,IV_C,V_C,X_C))
 total_bases<-arm_bases+center_bases
 
 #calculate probability of base on arms or centers
@@ -126,7 +134,7 @@ errors<-filter(summarydata,region=="ERROR")
 #remove TEs on chromosome tips
 AC<-filter(summarydata,region!="tip") # nothign should be filtered here
 #remove X chromosome
-AC<-filter(AC,chr!="X")
+#AC<-filter(AC,chr!="X")
 
 #generate chi square contingency tables
 chi_total <- table(AC$region)

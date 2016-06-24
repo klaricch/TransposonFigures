@@ -44,7 +44,7 @@ names(final_merge)<-c("sample", "trait.x",	"method.x",	"transposon.x",	"total_ab
 #spearman correlation
 correlation<-cor.test(final_merge$total_absences, final_merge$total_insertions,method="spearman",exact=FALSE)
 rho<-round(correlation$estimate,3)
-
+correlation
 max_insertions<-max(final_merge$total_insertions)
 max_absences<-max(final_merge$total_absences)
 
@@ -64,7 +64,9 @@ m1 <- m1 + geom_point(size=1.25) + xlim(0,max_insertions)+ ylim(0,max_insertions
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
-        axis.title=element_text(size=9))+
+        axis.title=element_text(size=9),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"))+
   guides(fill=FALSE) +
   labs(x = "Insertion Sites", y = "Absence Sites")
 m1
@@ -79,7 +81,7 @@ ggsave(filename="Absence_vs_Insertion.tiff",
 #spearman correlation
 correlation<-cor.test(final_merge$total_absences, final_merge$total_references,method="spearman",exact=FALSE)
 rho<-round(correlation$estimate,3)
-
+correlation
 max_references<-max(final_merge$total_references)
 max_absences<-max(final_merge$total_absences)
 
@@ -99,7 +101,9 @@ m2 <- m2 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
-        axis.title=element_text(size=9))+
+        axis.title=element_text(size=9),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"))+
   guides(fill=FALSE) +
   labs(x = "Reference Sites", y = "Absence Sites")
 m2
@@ -115,7 +119,7 @@ ggsave(filename="Absence_vs_Reference.tiff",
 #spearman correlation
 correlation<-cor.test(final_merge$total_insertions, final_merge$total_references,method="spearman",exact=FALSE)
 rho<-round(correlation$estimate,3)
-
+correlation
 max_references<-max(final_merge$total_references)
 max_insertions<-max(final_merge$total_insertions)
 la <- paste("italic(rho) == ", rho)
@@ -136,7 +140,9 @@ m3 <- m3 + geom_point(size=1.25) + xlim(0,max_references)+ ylim(0,max_references
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
-        axis.title=element_text(size=9))+
+        axis.title=element_text(size=9),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"))+
   guides(fill=FALSE) +
   labs(x = "Reference Sites", y = "Insertion Sites")
 
@@ -164,8 +170,10 @@ m1 <- ggplot(insertions, aes(x=reorder(insertions$sample,insertions$total_tes), 
 m1<- m1 + geom_point(size=.75) +aes(group=1)+
   theme(axis.text.x = element_text(color="black",size=8,angle=90,hjust=1),
         axis.text.y = element_text(color="black",size=8),
-        axis.title = element_text(color="black",size=9),
-        axis.ticks =element_line(colour = "black"))+
+        axis.title = element_text(color="black",size=8),
+        axis.ticks =element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"))+
   labs(x="", y="Number of Insertion Sites")
 m1
 ggsave(filename="Insertions_per_Strain.tiff",
@@ -183,8 +191,10 @@ m2 <- ggplot(absences, aes(x=reorder(absences$sample,absences$total_tes), y=abse
 m2<- m2 + geom_point(size=.75) +aes(group=1)+
   theme(axis.text.x = element_text(color="black",size=8,angle=90,hjust=1),
         axis.text.y = element_text(color="black",size=8),
-        axis.title = element_text(color="black",size=9),
-        axis.ticks =element_line(colour = "black"))+
+        axis.title = element_text(color="black",size=8),
+        axis.ticks =element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"))+
   labs(x="", y="Number of Absence Sites")
 m2
 ggsave(filename="Absences_per_Strain.tiff",
@@ -202,8 +212,10 @@ m3 <- ggplot(references, aes(x=reorder(references$sample,references$total_tes), 
 m3<- m3 + geom_point(size=.75) +aes(group=1)+
   theme(axis.text.x = element_text(color="black",size=8,angle=90,hjust=1),
         axis.text.y = element_text(color="black",size=8),
-        axis.title = element_text(color="black",size=9),
-        axis.ticks =element_line(colour = "black"))+
+        axis.title = element_text(color="black",size=8),
+        axis.ticks =element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"))+
   labs(x="", y="Number of Reference Sites")
 m3
 ggsave(filename="References_per_Strain.tiff",
@@ -215,8 +227,8 @@ ggsave(filename="References_per_Strain.tiff",
 plot_grid(m1, m3, m2,ncol=1,labels=c('A', 'B','C'))
 ggsave(filename="All_per_Strain.tiff",
        dpi=300,
-       width=7.5,
-       height=10,
+       width=10,
+       height=4.5,
        units="in")
 
 test<-arrange(total_insertion, total_tes)
@@ -229,3 +241,11 @@ mean(insertions$total_tes)
 min(references$total_tes)
 max(references$total_tes)
 mean(references$total_tes)
+
+N2<-filter(summarydata, sample=="N2")
+LSJ1<-filter(summarydata, sample=="LSJ1")
+JU1200<-filter(summarydata, sample=="JU1200")
+QX1211<-filter(summarydata, sample=="QX1211")
+ECA36<-filter(summarydata, sample=="ECA36")
+CB4851<-filter(summarydata, sample=="CB4851")
+

@@ -53,6 +53,8 @@ a <- a + geom_bar(binwidth=5)+
         axis.title.y=element_text(vjust=1.75),
         axis.text.y = element_text(colour = "black",size=8),
         axis.text.x = element_text(colour = "black",size=8),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         plot.title = element_text(colour = "black",size=8),
         # legend.text=element_text(size=9),
         legend.position=('none'))+
@@ -123,6 +125,8 @@ a <- a + geom_bar(binwidth=5)+
         panel.background = element_rect(fill = "white"),
         panel.grid.major = element_line(colour = "grey97"),
         axis.title=element_text(size=8),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.title.y=element_text(vjust=1.75),
         axis.text.y = element_text(colour = "black",size=8),
         axis.text.x = element_text(colour = "black",size=8),
@@ -231,6 +235,8 @@ a <- a + geom_point(size=.75)+
         axis.text.y = element_text(colour = "black",size=8),
         axis.text.x = element_text(colour = "black",size=8),
         axis.line=element_line(linetype="solid"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.title=element_text(size=8),
         plot.title = element_text(colour = "black",size=8),
         legend.position=('none'))+

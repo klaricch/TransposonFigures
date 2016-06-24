@@ -49,6 +49,8 @@ m <- ggplot(data=data,aes(x=reorder(sample,coverage),y=coverage))
 m <- m + geom_point(size=.75)+
   theme(axis.text.x =element_text(angle = 90, hjust = 1, color = "black", size =5),
         axis.text.y=element_text(angle = 90, hjust = 1, color = "black", size = 9),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.ticks=element_line(colour = "black"))+
   labs(x="Strain",y="Depth of Coverage")
 m

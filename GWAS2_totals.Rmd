@@ -208,7 +208,7 @@ for (i in unique(selection$trait)){
   plot_title<-gsub("_"," ",plot_title)
   plot_title<-gsub("retrotransposon","Retrotransposons",plot_title)
   plot_title<-gsub("dnatransposon","DNA Transposons",plot_title)
-  plot_title<-paste(plot_title,ifelse(plot_method=="ZERO_new","(ins)",ifelse(plot_method=="absent","(abs)",ifelse(plot_method=="ONE_new", "(ins)",ifelse(plot_method=="new", "(ins)", "(ref)")))),sep=" ")
+  plot_title<-paste(plot_title,ifelse(plot_method=="ZERO_new","(ins)",ifelse(plot_method=="absent","(abs)",ifelse(plot_method=="ONE_new", "(ins)",ifelse(plot_method=="new", "(ins)", "(ref)")))),sep="")
   plot_title
   
   ##check for NAs

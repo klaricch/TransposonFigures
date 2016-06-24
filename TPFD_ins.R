@@ -51,6 +51,8 @@ for (i in file_list){
           axis.text.y = element_text(colour = "black",size=8),
           axis.text.x = element_text(colour = "black",size=8),
           axis.title.y=element_text(vjust=1.75),
+          axis.line.y = element_line(colour = "black"),
+          axis.line.x = element_line(colour = "black"),
           plot.title = element_text(colour = "black",size=8),
           # legend.text=element_text(size=9),
           legend.position=('none'))+
@@ -123,6 +125,8 @@ for (i in file_list){
           axis.text.y = element_text(colour = "black",size=8),
           axis.text.x = element_text(colour = "black",size=8),
           axis.title.y=element_text(vjust=1.75),
+          axis.line.y = element_line(colour = "black"),
+          axis.line.x = element_line(colour = "black"),
           plot.title = element_text(colour = "black",size=8),
           # legend.text=element_text(size=9),
           legend.position=('none'))+
@@ -228,6 +232,8 @@ for (i in file_list){
           axis.text.y = element_text(colour = "black",size=8),      
           axis.text.x = element_text(colour = "black",size=8),
           axis.line=element_line(linetype="solid"),
+          axis.line.y = element_line(colour = "black"),
+          axis.line.x = element_line(colour = "black"),
           axis.title=element_text(size=8),
           plot.title = element_text(colour = "black",size=8),
           legend.position=('none'))+

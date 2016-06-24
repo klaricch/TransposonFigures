@@ -51,6 +51,11 @@ summarydata$caller<- factor(summarydata$caller,
                           levels = c("new","reference","absent"),
                           labels = c("Insertion","Reference","Absence"))
 
+
+summarydata$transposon<-gsub("_CE$","",summarydata$transposon)
+summarydata$transposon<-gsub("WBTransposon","WBT",summarydata$transposon)
+
+
 m <- ggplot(summarydata,aes(y=transposon,x=TOTAL))
 m <- m + geom_point(size=1.25,aes(color=class))+
   facet_grid(.~caller, scale="free") +

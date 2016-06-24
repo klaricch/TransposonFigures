@@ -81,6 +81,7 @@ class_subset<- positions %>% distinct(class,family) %>% select(class,family)
 selection <-merge(selection, class_subset, by="family")
 selection<-arrange(selection,class,family,method)
 
+unique(selection$trait)
 count<-0
 for (i in unique(selection$trait)){
   specific_trait<- processed_mapping_df[processed_mapping_df$trait == i, ]
@@ -138,7 +139,7 @@ for (i in unique(selection$trait)){
   count<-count+1
 }
 
-a_all<-plot_grid(first,second,third,fourth,fifth,sixth,ncol=1) #ZER)_new_TRANS_NeSL-1_C no  longer in here so don't need fifth 
+a_all<-plot_grid(first,second,third,fourth,fifth,ncol=1) #ZER)_new_TRANS_NeSL-1_C no  longer in here so don't need fifth 
 label<-expression(bold(-log["10"](p)))
 
 a_all<- a_all + draw_label(label, x = .04, y = 0.5, hjust = .5, vjust = .5,

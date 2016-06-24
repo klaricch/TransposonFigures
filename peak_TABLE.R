@@ -34,18 +34,31 @@ peaks <- filter(peaks, !is.na(allele))
 #pull unique combinations of trait and peak id
 sites_clean <- distinct(peaks, peak_id, trait)
 
-table_info<-select(sites_clean, trait,peak_id,CHROM,POS,var.exp,startPOS,endPOS,method,family)
+table_info<-select(sites_clean, trait,peak_id,CHROM,POS,var.exp,log10p,startPOS,endPOS,method,family)
 
 table_info$family<-gsub("_C$","",table_info$family)
 table_info$family<-gsub("_CE$","",table_info$family)
 table_info$family<-gsub("WBTransposon","WBT",table_info$family)
-table_info<-mutate(table_info,test=paste(family,ifelse(method=="ZERO_new"|method=="ONE_new"|method=="new","(ins)",ifelse(method=="absent","(abs)","(ref)")),sep=" "))
+table_info<-mutate(table_info,test=paste(family,ifelse(method=="ZERO_new"|method=="ONE_new"|method=="new","(ins)",ifelse(method=="absent","(abs)","(ref)")),sep=""))
 
 table_info$trait<-table_info$test
 table_info<-select(table_info,-method,-family,-test)
 
+
 table_info<-arrange(table_info,CHROM,POS,trait)
+table_info$log10p<-round(table_info$log10p,digits=2)
 table_info$var.exp<-round((table_info$var.exp*100),digits=2) # convert variance explained to percentage and round
-colnames(table_info) <- c("Trait", "PeakID","Chromosome","BasePosition", "VarianceExplained(%)", "LeftCI", "RightCI")
+colnames(table_info) <- c("Trait", "PeakID","Chromosome","BasePosition", "VarianceExplained(%)","-log10p", "LeftCI", "RightCI")
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 write.table(table_info, file="Peak_Table.txt",sep="\t",quote=FALSE,row.names=FALSE)
+
+#length(unique(table_info$Trait))
+#length(unique(table_info$trait))
+
+#testF<-filter(table_info, !grepl("total",Trait))
+#length(unique(testF$Trait))
+#testT<-filter(table_info, grepl("total",Trait))
+#length(unique(testT$Trait))
+
+
+#length(unique(count_QTL$trait2))

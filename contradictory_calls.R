@@ -28,11 +28,15 @@ a <- a + geom_point(size=1,position="jitter",alpha=.5)+
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.title=element_text(size=9),
         legend.position=c(.90,0.85),
         legend.background = element_rect(fill=FALSE),
         legend.key=element_rect(fill=NA),
         legend.text=element_text(size=9))+
+   scale_y_continuous(expand = c(0,0),limits=c(0,max(summarydata$TELOCATE_support*1.075)))+
+  scale_x_continuous(expand = c(0,0),limits=c(0,max(summarydata$TEMP_support*1.075)))
   labs(x="Absence Call Read Support", y="Reference Call Read Support")
 a
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
@@ -101,7 +105,9 @@ ggsave(filename="CER1_Contradictory_Calls_Filtered.tiff",
        height=3.5,
        units="in")
 
-
+nrow(filter(combo,outcome=="NA"))
+nrow(filter(combo,outcome=="CORRECT"))
+nrow(filter(combo,outcome=="INCORRECT"))
 #nonfiltered
 combo<-arrange(combo,desc(outcome))
 a <- ggplot(data = combo, aes(x = TEMP_support,y=TELOCATE_support))
@@ -115,6 +121,8 @@ a<- a+ geom_point(aes(colour = outcome))+
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         legend.position=('none'))+
   labs(x="Absence Call Read Support", y="Reference Call Read Support")+
   scale_colour_manual(values = c("NA"="grey85","INCORRECT"="darkorange", "CORRECT"="purple3"))

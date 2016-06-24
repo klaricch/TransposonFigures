@@ -24,12 +24,15 @@ m <- m + geom_histogram(binwidth=.05) +
         axis.ticks = element_line(colour = "black"),
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.line=element_line(linetype="solid"),
         axis.title=element_text(size=9,face="bold"))+
   
   guides(fill=FALSE) +
   labs(x="Allele Frequency", y="Count")+
-  scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0),limits=c(0,.5))
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0))
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Allele Frequency.tiff",dpi=300, width=7.5,height=3.5,units="in")
+ggsave(filename="Allele Frequency.tiff",dpi=300, width=4,height=4,units="in")

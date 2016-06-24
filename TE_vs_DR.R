@@ -125,6 +125,8 @@ m <- m + geom_point(size=1.25) +
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
   labs(x = "Insertion Sites", y = "Absence Sites")
@@ -171,6 +173,8 @@ m <- m + geom_point(size=1.25) +
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
   labs(x = "Reference Sites", y = "Absence Sites")
@@ -212,6 +216,8 @@ m <- m + geom_point(size=1.25) +
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         axis.title=element_text(size=9))+
   guides(fill=FALSE) +
   labs(x = "Insertion Sites", y = "Reference Sites")
@@ -288,6 +294,8 @@ m <-m + geom_histogram(binwidth=5)+
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.ticks =element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         legend.title=element_blank(),
         legend.position="none")+
   scale_fill_manual(values = c('dnatransposon' = "navy", "retrotransposon"="brown3","unknown"="goldenrod"))+

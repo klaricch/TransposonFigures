@@ -7,9 +7,6 @@ library(cegwas)
 library(dplyr)
 library(tidyr)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
-
-
-
 homologs<-read.table("homologs.txt")
 colnames(homologs)<-c("type_of","WB","transcript","gene_name","homolog","homolog_transcript")
 
@@ -20,9 +17,9 @@ for (i in homologs$WB){
 for (i in homologs$homolog){
   hom_list<-c(hom_list,i)
 }
-str(hom_list)
+str(hom_list) # list of homologs to run through SnpEff
 
-hom_results<-snpeff(hom_list)
+hom_results<-snpeff(hom_list) # run SnpEff on the homologs
 hom_results<-distinct(hom_results)
 
 ins<-read.table("essentiality_nonredundant_cds.txt", sep = "\t")
@@ -34,30 +31,33 @@ colnames(temp2)<-c("WB","transcript")
 WB_trans_info<-rbind(temp1,temp2)
 
 full_ins_info<-full_join(ins_info,WB_trans_info,by="transcript")
-full_ins_info<-filter(full_ins_info,!is.na(strains))
+full_ins_info<-filter(full_ins_info,!is.na(strains)) # strains with insertions in CDS
 unique(full_ins_info$transcript)
 
 colnames(full_ins_info)<-c("strains","transcript","gene_id")
 hom_results<-left_join(hom_results,full_ins_info, by="gene_id")
 save(hom_results, file="hom_results.Rda")
+
+unique(hom_results$strain)
 #"strains" column is the strains with an insertion into the CDS of the corresponding gene
 class(hom_results$strains)
 strains_to_test<-unlist(strsplit(as.character(hom_results$strains), split=", "))
 unique(hom_results$transcript)
 
 # homolog pairs
-#WBGene00002041  #	WBGene00004969
-#WBGene00008296	#	WBGene00008297	
-#WBGene00006925 #	WBGene00006926	
-#WBGene00014193	#	WBGene00045515
-#WBGene00009607	#	WBGene00009609	
-#WBGene00004178	#	WBGene00004179	
+#WBGene00002041 #	WBGene00004969 hum-8
+#WBGene00008296	#	WBGene00008297	cdr-2
+#WBGene00006925 #	WBGene00006926	vit-1
+#WBGene00014193	#	WBGene00045515 nhr-247
+#WBGene00009607	#	WBGene00009609	oac-26
+#WBGene00004178	#	WBGene00004179 prg-1	
 
 hom_results_strains<-filter(hom_results, strain %in% strains_to_test)
 hom_results_strains<-select(hom_results_strains,CHROM,POS,strain,REF,ALT,a1,a2,GT,FT,FILTER,query,allele,effect,impact,gene_name,gene_id,feature_type,transcript_biotype,exon_intron_rank,nt_change,aa_change,protein_position,distance_to_feature,feature_id,strains,transcript)
 
 compare1<-filter(hom_results_strains,gene_id =="WBGene00002041"  |	gene_id =="WBGene00004969")
 strains_to_test<-unlist(strsplit(as.character(compare1$strains), split=", "))
+length(unique(compare1$strain))
 compare1<-filter(compare1, strain %in% strains_to_test)
 compare1<-filter(compare1, GT=="ALT")
 compare2<-filter(hom_results_strains,gene_id =="WBGene00008296"	|	gene_id =="WBGene00008297")
@@ -76,9 +76,13 @@ compare5<-filter(hom_results_strains,gene_id =="WBGene00009607"	|	gene_id =="WBG
 strains_to_test<-unlist(strsplit(as.character(compare5$strains), split=", "))
 compare5<-filter(compare5, strain %in% strains_to_test)
 compare5<-filter(compare5, GT=="ALT")
-compare6<-filter(hom_results_strains,gene_id =="WBGene00004178"  |	gene_id =="WBGene00004179")	
-strains_to_test<-unlist(strsplit(as.character(compare6$strains), split=", "))
-compare6<-filter(compare6, strain %in% strains_to_test)
-compare6<-filter(compare6, GT=="ALT")
+#compare6<-filter(hom_results_strains,gene_id =="WBGene00004178"  |	gene_id =="WBGene00004179")	
+#strains_to_test<-unlist(strsplit(as.character(compare6$strains), split=", "))
+#compare6<-filter(compare6, strain %in% strains_to_test)
+#compare6<-filter(compare6, GT=="ALT")
 
+#setwd("/Users/kristen/Dropbox/AndersenLab/LabFolders/Kristen/TEPaper/recent")
+#load("homolog_comparisons.Rda")
 save(compare1,compare2,compare3,compare4,compare5,compare6, file="homolog_comparisons.Rda")
+
+load("homolog_comparisons.Rda")

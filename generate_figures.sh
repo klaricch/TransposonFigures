@@ -3,7 +3,7 @@
 # USE: generate_figures.sh  (in R_scripts dir)
 
 # replace numbers with trait names
-Rscript rename.R
+Rscript process_new_BF.R #replaces rename.R
 # pull out main fig  traits
 Rscript subset.R
 
@@ -25,6 +25,8 @@ Rscript Te_totals_distribution.R
 Rscript allele_freq.R
 #  plots total transposons vs strain per insertions, references, and absences per class and plot histogram of transposons per strain
 Rscript TE_vs_DR.R
+# compare family counts for 15 strains with and without optical duplicates removed
+Rscript OD_comparison.R
 
 ############## GWAS Mappings ##############
 echo "Generating GWAS Plots..."
@@ -44,6 +46,8 @@ Rscript fine_mappings.R
 Rscript homologs.R
 # snpeff on lit genes and outlier strains
 Rscript lit_genes.R
+# snpeff on piRNA genes and outlier strains
+Rscript piRNA_genes.R
 # check traits of interest for LD between peaks
 Rscript LD_check.R
 

@@ -137,22 +137,21 @@ ggsave(filename="Aggregate_GWAS.tiff",
 
 #piRNA
 #check for QTL with peak poisiton of L/R CI within piRNA on chr IV
-piRNA<-filter(all_sites_clean, CHROM=="IV",POS>=4500000 & POS<=7000000|POS>=13500000 & POS<=17200000|
-                startPOS>=4500000 & startPOS<=7000000|startPOS>=13500000 & startPOS<=17200000|
-                endPOS>=4500000 & endPOS<=7000000|endPOS>=13500000 & endPOS<=17200000)
-setwd("/Users/kristen/Documents/transposon_figure_data/data")
-save(piRNA,file="piRNA_QTL.Rda")
-setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-write.table(piRNA, "/Users/kristen/Documents/transposon_figure_data/figures/piRNA_table.txt", sep="\t",quote=FALSE,row.names=FALSE)
+#piRNA<-filter(all_sites_clean, CHROM=="IV",POS>=4500000 & POS<=7000000|POS>=13500000 & POS<=17200000|
+#                startPOS>=4500000 & startPOS<=7000000|startPOS>=13500000 & startPOS<=17200000|
+#                endPOS>=4500000 & endPOS<=7000000|endPOS>=13500000 & endPOS<=17200000)
+#setwd("/Users/kristen/Documents/transposon_figure_data/data")
+#save(piRNA,file="piRNA_QTL.Rda")
+#setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+#write.table(piRNA, "/Users/kristen/Documents/transposon_figure_data/figures/piRNA_table.txt", sep="\t",quote=FALSE,row.names=FALSE)
 
-TT<-filter(all_sites_clean,trait=="ONE_new_TRANS_MIRAGE1"|
-             trait=="absent_TRANS_Tc1"|
-             trait=="ONE_new_TRANS_WBTransposon00000046"|
-             trait=="ONE_new_TRANS_CER8-I_CE"|
-             trait=="ONE_new_TRANS_LINE2A"|
-             trait=="reference_TRANS_CER4-I_CE")
+#TT<-filter(all_sites_clean,trait=="ONE_new_TRANS_MIRAGE1"|
+#             trait=="absent_TRANS_Tc1"|
+#             trait=="ONE_new_TRANS_WBTransposon00000046"|
+ #            trait=="ONE_new_TRANS_LINE2A"|
+#             trait=="reference_TRANS_CER4-I_CE")
 
-write.table(TT, "/Users/kristen/Documents/transposon_figure_data/figures/TT.txt", sep="\t",quote=FALSE,row.names=FALSE)
+#write.table(TT, "/Users/kristen/Documents/transposon_figure_data/figures/TT.txt", sep="\t",quote=FALSE,row.names=FALSE)
 
 
 

@@ -6,7 +6,7 @@ mainfont: Times New Roman
 
 ```{r,fig.width=7.5, fig.height=7.5,warning=F, message=F, echo=F,comment="K",results='asis'}
 
-
+# NOTE:like GWAS2.Rmd but includes all data, including unfiltered NA data for middle plot
 library(pander)
 library(dplyr)
 library(ggplot2)
@@ -20,6 +20,17 @@ library(scales)
 library(gtable)
 
 panderOptions('knitr.auto.asis', TRUE)
+
+
+
+
+
+
+
+
+
+
+
 
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
@@ -104,7 +115,7 @@ processed_mapping_df$method <- stringr::str_split_fixed(processed_mapping_df$tra
 
 
 #read in position data and create family column
-positions <- read.table("CtCp_all_nonredundant_reduced.txt")
+positions <- read.table("CtCp_all_nonredundant.txt")
 names(positions)<-c("CHROM","start","end","TE","orientation","method","strain","class")
 positions$family<- stringr::str_split_fixed(positions$TE, regex("_(non-)?reference"),2)[,1]
 positions$family<- paste(stringr::str_split_fixed(positions$family, "_",4)[,3],stringr::str_split_fixed(positions$family, "_",4)[,4],sep="_")
