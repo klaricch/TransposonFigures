@@ -12,12 +12,12 @@ library(tidyr)
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 
 piRNA<-scan("piRNA_gene_names.txt",what='character')
-PI<-snpeff(piRNA)
+#PI<-snpeff(piRNA)
 
 
 
-PI<-snpeff(piRNA1,variant_severity = c("HIGH","MODERATE","LOW"))
-PI<-snpeff(piRNA2,variant_severity = c("HIGH","MODERATE","LOW"))
+PI<-snpeff(piRNA,variant_severity = c("HIGH","MODERATE","LOW"))
+#PI<-snpeff(piRNA2,variant_severity = c("HIGH","MODERATE","LOW"))
 # pull "outlier" strains
 #outliers<-read.table("outliers_fam_tot.txt",header=TRUE)
 outliers<-read.table("outliers_families_pruned.txt",header=TRUE)
@@ -35,11 +35,11 @@ outlier_strains<-outliers$strain
 outliers_summary<-outliers %>% group_by(strain) %>% summarise(trait_outliers=toString(trait))
 
 
-snpeff("WBGene00049455")
-piRNA
-PI<-snpeff(piRNA)
+#snpeff("WBGene00049455")
+#piRNA
+#PI<-snpeff(piRNA)
 
-PI<-snpeff(piRNA,variant_severity = c("HIGH","MODERATE","LOW"))
+#PI<-snpeff(piRNA,variant_severity = c("HIGH","MODERATE","LOW"))
 
 PI<-distinct(PI)
 #PI<-filter(PI,FT=="PASS")

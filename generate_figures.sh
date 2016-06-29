@@ -3,14 +3,14 @@
 # USE: generate_figures.sh  (in R_scripts dir)
 
 # replace numbers with trait names
-Rscript process_new_BF.R #replaces rename.R
+XRscript process_new_BF.R #replaces rename.R
 # pull out main fig  traits
-Rscript subset.R
+XRscript subset.R
 
 ############## TE Information ##############
 echo "Generating TE Plots..."
 # plot contradictory calls and histograms of their differences in read support
-Rscript contradictory_calls.R
+XRscript contradictory_calls.R
 # plot TE counts vs coverage and plot depth of coverage per strain
 Rscript coverage.R
 # plot total absences, insertions, and references per transposon family 
@@ -26,30 +26,30 @@ Rscript allele_freq.R
 #  plots total transposons vs strain per insertions, references, and absences per class and plot histogram of transposons per strain
 Rscript TE_vs_DR.R
 # compare family counts for 15 strains with and without optical duplicates removed
-Rscript OD_comparison.R
+#Rscript OD_comparison.R
 
 ############## GWAS Mappings ##############
 echo "Generating GWAS Plots..."
 # plot histogram of percentage of NAs per TE position
-Rscript NA_pos.R
+XRscript NA_pos.R
 # for count traits, output new dataframe for QTL that have   phenotypes with non-equal medians
-Rscript away_counts.R
+XRscript away_counts.R
 # plot genomic locations of QTL:
-Rscript aggregate_GWAS.R
+XRscript aggregate_GWAS.R
 # plot table of QTL peaks
-Rscript peak_TABLE.R
+XRscript peak_TABLE.R
 # generates main figure of select GWAS mappings
-Rscript main_GWAS_plots.R
+XRscript main_GWAS_plots.R
 # generate fine mapping results
-Rscript fine_mappings.R
+XRscript fine_mappings.R
 # snpeff on homologs and genes of lethal RNA phenotype insertions
-Rscript homologs.R
+XRscript homologs.R
 # snpeff on lit genes and outlier strains
-Rscript lit_genes.R
+XRscript lit_genes.R
 # snpeff on piRNA genes and outlier strains
-Rscript piRNA_genes.R
+XRscript piRNA_genes.R
 # check traits of interest for LD between peaks
-Rscript LD_check.R
+XRscript LD_check.R
 
 
 ############## Simulation Figures ##############

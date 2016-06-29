@@ -20,6 +20,10 @@ processed_mapping_df<-subset(processed_mapping_df,!grepl('^no_', processed_mappi
 processed_mapping_df$trait<-gsub("_C$","",processed_mapping_df$trait)
 count_QTL<-mutate(count_QTL, trait2=gsub("_\\d+$","",trait)) 
 
+#write out trait names to file for GWAS2.Rmd script
+tn<-unique(processed_mapping_df$trait)
+write.table(tn, file="trait_names.txt",sep="\t",quote=FALSE,row.names=FALSE)
+
 #processed_mapping_df<-filter(processed_mapping_df,(trait %in% count_QTL$trait2))
 processed_mapping_df<-filter(processed_mapping_df,(trait %in% count_QTL$trait2)|grepl("total",trait))
 
@@ -34,9 +38,12 @@ peaks <- filter(peaks, !is.na(allele))
 #pull unique combinations of trait and peak id
 sites_clean <- distinct(peaks, peak_id, trait)
 
-table_info<-select(sites_clean, trait,peak_id,CHROM,POS,var.exp,log10p,startPOS,endPOS,method,family)
+table_info<-dplyr::select(sites_clean, trait,peak_id,CHROM,POS,var.exp,log10p,startPOS,endPOS,method,family)
 
 table_info$family<-gsub("_C$","",table_info$family)
+
+
+
 table_info$family<-gsub("_CE$","",table_info$family)
 table_info$family<-gsub("WBTransposon","WBT",table_info$family)
 table_info<-mutate(table_info,test=paste(family,ifelse(method=="ZERO_new"|method=="ONE_new"|method=="new","(ins)",ifelse(method=="absent","(abs)","(ref)")),sep=""))

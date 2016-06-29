@@ -12,6 +12,8 @@ library(grid)
 library(cowplot)
 library(dplyr)
 
+
+
 #Coverage absences
 file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round20",
             "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round21",
@@ -158,6 +160,7 @@ ggsave(a_all,filename="Combined_Ins_R.tiff",dpi=300, width=7.5,height=5,units="i
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
+
 #SCATTER abs
 file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round20",
             "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round23",
@@ -182,24 +185,39 @@ for (i in file_list){
   summarydata <- new_df
   
   
+  
+  
+  # EDIT HERE
+  nr_dir<-paste(i,"nr_files",sep="/")
+  setwd(nr_dir)
+  all_runs<-read.table("all_runs.txt")
+  colnames(all_runs)<-c("row.names","CHROM","Start", "End", "TE", "Read_Support","Orient","Variant_Support")
+  all_runs<-dplyr::select(all_runs,row.names,TE,Read_Support,Variant_Support)
+  summarydata<-left_join(summarydata,all_runs,by=c("row.names","TE"))
+  
+  
+  
+  
   ###CHECK THIS OVER!!!!!!!!
   #calculate percent of False Discoveries removed
   str(summarydata)
-  above_FD<-filter(summarydata,N>=8,call=="FD")
+  above_FD<-filter(summarydata,N>=8,Variant_Support>.25,call=="FD")
   aFD<-nrow(above_FD)
-  below_FD<-filter(summarydata,N<8,call=="FD")
+  below_FD<-filter(summarydata,N<8|Variant_Support<=.25,call=="FD")
   bFD<-nrow(below_FD)
   per_FD=round(bFD/(bFD+aFD)*100,digits=2)
 
   
   #calculate percent of True Positives removed
-  above_TP<-filter(summarydata,N>=8,call=="TP")
+  above_TP<-filter(summarydata,N>=8,Variant_Support>.25,call=="TP")
   aTP<-nrow(above_TP)
-  below_TP<-filter(summarydata,N<8,call=="TP")
+  below_TP<-filter(summarydata,N<8|Variant_Support<=.25,call=="TP")
   bTP<-nrow(below_TP)
   per_TP=round(bTP/(bTP+aTP)*100,digits=2)
-
   
+
+  #per_TP
+  #per_FD
   #plot discarded percentages of TP and FD calls the same relative distance above the cutoff line
   #.97 max coverage for x coordinate
   x_ann<-.97*max(summarydata$coverage)
@@ -212,15 +230,30 @@ for (i in file_list){
   
   #reorder factor levels so that TP is above FD in the facets
   
+  #set colors
+  summarydata <- mutate(summarydata,color_code=ifelse(Variant_Support>.25 & call=="TP" , 'purple3', ifelse(Variant_Support>.25 & call=="FD","darkorange",ifelse(Variant_Support<=.25 & call=="TP", "orchid3","goldenrod1"))))
+  
+  #unique(summarydata$color_code)
+  #unique(summarydata$call)
+  #test1<-filter(summarydata,Variant_Support>.25 & call=="TP")
+  #test2<-filter(summarydata,Variant_Support<=.25 & call=="TP")
+  #test3<-filter(summarydata,Variant_Support>.25 & call=="FD")
+  #test4<-filter(summarydata,Variant_Support<=.25 & call=="FD")
+  
   #summarydata<-arrange(summarydata,desc(call))
   summarydata$call <- factor(summarydata$call, levels = summarydata$call[order(summarydata$call, decreasing = TRUE)])
-  a <- ggplot(data = summarydata, aes(x = coverage,y=N, colour=call))
+  a <- ggplot(data = summarydata, aes(x = coverage,y=N, colour=color_code))
   
   a <- a + geom_point(size=.75)+
+  #a<-a + geom_point(aes( color=ifelse(Variant_Support>=.25 , 'red', 'black')),size=.75)+
+    
+    
+    
+    
     geom_hline(aes(yintercept = 8),linetype="dashed", color="black")+
     facet_grid(call ~ ., scale="free_y")+
-    geom_text(data = subset(summarydata, call=="TP"),label = paste(per_TP,"%"),x=x_ann,y=Ty_ann,size=2.2)+
-    geom_text(data = subset(summarydata, call=="FD"),label = paste(per_FD,"%"),x=x_ann,y=Fy_ann,size=2.2)+
+    geom_text(data = subset(summarydata, call=="TP"),label = paste(per_TP,"%"),x=x_ann,y=Ty_ann,size=2.2,color="purple3")+
+    geom_text(data = subset(summarydata, call=="FD"),label = paste(per_FD,"%"),x=x_ann,y=Fy_ann,size=2.2,color="darkorange")+
     theme(strip.background = element_blank(),
           strip.text.x = element_text(size = 8, colour = "black",face="bold"),
           strip.text.y = element_text(margin = margin(t=0,r=0,l=10,b=0),size = 8, colour = "black",face="bold",angle=90),
@@ -239,7 +272,7 @@ for (i in file_list){
           legend.position=('none'))+
     geom_point(aes(x=0, y=0),alpha=0)+
     labs(x="Coverage (Number of Reads)", y= "Read Support", title=ID,face="bold")+
-    scale_colour_manual(values = c("purple3","darkorange"))
+    scale_colour_manual(values = c('purple3'="purple3",'darkorange'="darkorange",'orchid3'="orchid3",'goldenrod1'="goldenrod1"))
   a
 
   

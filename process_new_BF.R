@@ -15,6 +15,7 @@ load("20160501_processed_transposons.Rda")
 #}
 #map_df<- rbind_all(map_df)
 
+get_old_bf<-process_mappings(mapping_df,transposon_phenotypes)
 
 processed_mapping_df<-process_mappings(mapping_df,transposon_phenotypes, BF=5)
 

@@ -1,0 +1,46 @@
+---
+output: pdf_document
+geometry: margin=1in
+mainfont: Times New Roman
+---
+
+```{r,fig.width=7.5, fig.height=7.5,warning=F, message=F, echo=F,comment="K",results='asis'}
+
+library(cegwas)
+library(cegwas)
+library(genetics)
+library(pander)
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(grid)
+library(stringr)
+library(gridExtra)
+library(knitr)
+library(tidyr)
+library(scales)
+library(gtable)
+library(cowplot)
+
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+#load("Processed_Transposon_Mappings_2.Rda")
+#load("Processed_Transposon_Mappings_SUBSET.Rda")
+load("Processed_Transposon_Mappings_SUBSET2.Rda")
+
+
+for (i in unique(processed_mapping_df$trait)){
+  test<-filter(processed_mapping_df,trait==i)
+  sns <- dplyr::filter(test, aboveBF == 1, !is.na(peak_id) )
+  ans<-
+  
+  if (nrow(sns)>1){
+  crs <- plot_peak_ld(test)
+  #ld<-ggplotGrob(crs)
+  grid.draw(crs)
+
+  } else {
+  crs<-NULL #single peak, no need to check for LD
+  }
+
+
+}

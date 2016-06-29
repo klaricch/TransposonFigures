@@ -236,7 +236,7 @@ c <- c + geom_line(color="black")+ xlim(0,51)+
         plot.title = element_text(size=9),
         legend.position=('none'))+
   labs(x = "Minimum PopFreq Support Threshold", y="")+
-  scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0),limits=c(0,1.1))
+  scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0),limits=c(0,1))
 c
 
 c <- ggplotGrob(c)
