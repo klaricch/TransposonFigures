@@ -185,3 +185,7 @@ m_all<-plot_grid(m_first,m_second,m_third,m_fourth,labels=c("A","B","C","D"))
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(a_all,filename="Combined_Temp.tiff",dpi=300, width=7.5,height=5,units="in")
 ggsave(m_all,filename="Combined_Telocate.tiff",dpi=300, width=7.5,height=5,units="in")
+
+
+ggsave(a_all,filename="Combined_Temp.png",dpi=300, width=7.5,height=5,units="in")
+ggsave(m_all,filename="Combined_Telocate.png",dpi=300, width=7.5,height=5,units="in")

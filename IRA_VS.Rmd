@@ -38,7 +38,7 @@ classdata$family<- paste(stringr::str_split_fixed(classdata$family, "_",4)[,3],s
 classdata$family <- gsub("_$" ,"",classdata$family)
 classdata$family <- gsub("_non-reference(.*)$" ,"",classdata$family)
 classdata<-mutate(classdata, trait=paste(method,"TRANS",family,sep="_"))
-class_subset <- classdata %>% distinct(family) %>% select(family,class)
+class_subset <- classdata %>% distinct(family,.keep_all=TRUE) %>% select(family,class)
 
 summarydata$family<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
 summarydata<-merge(summarydata, class_subset, by="family")

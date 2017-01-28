@@ -3,6 +3,7 @@
 # USE: family_freq.R
 
 library(dplyr)
+library(tidyr)
 library(stringr)
 library(ggplot2)
 library(grid)
@@ -24,10 +25,12 @@ classdata$family<- paste(stringr::str_split_fixed(classdata$family, "_",4)[,3],s
 classdata$family <- gsub("_$" ,"",classdata$family)
 classdata$family <- gsub("_non-reference(.*)$" ,"",classdata$family)
 classdata<-mutate(classdata, trait=paste(method,"TRANS",family,sep="_"))
-class_subset <- classdata %>% distinct(family,class) %>% select(family,class)
+class_subset<-distinct(classdata, family,class,.keep_all=TRUE)
+class_subset<-dplyr::select(class_subset,family,class)
+#class_subset <- classdata %>% distinct(family,class) %>% select(family,class)
 summarydata$family<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
 summarydata <-merge(summarydata, class_subset, by="family")
-summarydata<-select(summarydata, -family)
+summarydata<-dplyr::select(summarydata, -family)
 #revalue classes
 summarydata$class <- factor(summarydata$class,
                             levels = c("dnatransposon", "retrotransposon","unknown"),
@@ -55,21 +58,41 @@ summarydata$caller<- factor(summarydata$caller,
 summarydata$transposon<-gsub("_CE$","",summarydata$transposon)
 summarydata$transposon<-gsub("WBTransposon","WBT",summarydata$transposon)
 
+#colnames(summarydata)
+summarydata<-dplyr::select(summarydata,trait,class,TOTAL,caller,transposon)
+
+########
+summarydata<-summarydata
+summarydata<-dplyr::select(summarydata,-trait)
+summarydata<-spread(summarydata,caller,TOTAL)
+summarydata$Reference[is.na(summarydata$Reference)] <- 0
+summarydata<-mutate(summarydata,All=Insertion+Reference)
+summarydata<-dplyr::select(summarydata,-Reference)
+summarydata<-gather(summarydata, "caller","TOTAL",Insertion,Absence,All)
+
+####
+summarydata$caller = factor(summarydata$caller, levels=c('Insertion','Absence','All'),
+                            labels = c("Insertion Sites", "Active Reference Sites","All Transposon Sites"))
 
 m <- ggplot(summarydata,aes(y=transposon,x=TOTAL))
 m <- m + geom_point(size=1.25,aes(color=class))+
   facet_grid(.~caller, scale="free") +
   theme(strip.background = element_rect(fill="white"),
-        strip.text.y = element_text(size = 8, colour = "black",face="bold"),
-        panel.margin = unit(.6, "lines"),
+        strip.text.x = element_text(size = 9, colour = "black",face="bold"),
+        panel.spacing = unit(.6, "lines"),
+        panel.spacing.y=unit(.50,"cm"),
+        plot.margin=unit(c(.1,.1,0,.1), "cm"),
         panel.border = element_rect(fill=NA,colour = "black"),
         panel.background = element_rect(fill = "white"),
         panel.grid.major = element_line(colour = "grey87"),
         panel.grid.minor = element_line(colour = "grey87"),
         axis.ticks =element_line(colour = "black"),
         axis.title=element_text(size=9),
+        axis.title.x=element_text(face="bold"),
         axis.text.y = element_text(colour = "black",size=5),
         axis.text.x = element_text(color="black",size=8),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
         legend.title=element_blank(),
         legend.background = element_rect(fill=FALSE),
         legend.key=element_rect(fill=NA),
@@ -79,11 +102,8 @@ m <- m + geom_point(size=1.25,aes(color=class))+
   labs(y="", x="Total Sites")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Family_Frequency.tiff",
-       dpi=300,
-       width=7.5,
-       height=10,
-       units="in")
+ggsave(filename="Family_Frequency.tiff", dpi=300, width=7.5, height=10, units="in")
+ggsave(filename="Family_Frequency.png", dpi=300, width=7.5, height=10, units="in")
 
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
@@ -97,12 +117,21 @@ merged<-mutate(merged, outL=ifelse(abs(TOTAL-mean)>SD, "OUTLIER", "n"))
 outliers<-filter(merged,outL=="OUTLIER")
 save(outliers,file="outlier_total_events_per_family.Rda")
 
+
+setwd("/Users/kristen/Documents/transposon_figure_data/figures")
+outlier_table<-dplyr::select(outliers,transposon, caller.x,class.x,TOTAL,mean,SD)
+outlier_table$mean<-signif(outlier_table$mean,4)
+outlier_table$SD<-signif(outlier_table$SD,4)
+outlier_table<-arrange(outlier_table,transposon,TOTAL,caller.x)
+colnames(outlier_table)<-c("Transposon", "Site Type","Class","Total Number","Mean","SD")
+write.table(outlier_table, file="Outlier_Table.txt",sep="\t",quote=FALSE,row.names=FALSE)
+
 names(summarydata)
 test<-distinct(summarydata,caller, transposon)
 RR<-filter(summarydata,caller=="Reference")
-AA<-filter(summarydata,caller=="Absence")
-NN<-filter(summarydata,caller=="Insertion")
-CC<-filter(summarydata,caller=="Reference"|caller=="Absence")
+AA<-filter(summarydata,caller=="Active References")
+NN<-filter(summarydata,caller=="Insertions")
+CC<-filter(summarydata,caller=="Reference"|caller=="Active References")
 length(unique(summarydata$transposon))
 (unique(summarydata$caller))
 length(unique(RR$transposon))
@@ -112,4 +141,9 @@ length(unique(CC$transposon))
 test<-distinct(CC,caller, transposon)
 
 length(unique(CC$trait))
+
+
+test<-filter(merged,transposon=="MARINER2")
+test<-filter(merged,caller.y=="Insertions")
+
 

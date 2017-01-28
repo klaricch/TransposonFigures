@@ -37,6 +37,7 @@ a <- a + geom_point(size=1,aes( color=ifelse(method=="reference", 'slateblue1',i
 a
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="Totals_vs_Coverage.tiff",dpi=300, width=7.5,height=3.5,units="in")
+ggsave(filename="Totals_vs_Coverage.png",dpi=300, width=7.5,height=3.5,units="in")
 
 
 ########################################################################################
@@ -54,10 +55,8 @@ m <- m + geom_point(size=.75)+
         axis.ticks=element_line(colour = "black"))+
   labs(x="Strain",y="Depth of Coverage")
 m
-ggsave(filename="Coverage_per_Strain.tiff",
-       dpi=300,
-       width=7.5,
-       height=3.5,
-       units="in")
- mean(data$coverage)
+ggsave(filename="Coverage_per_Strain.tiff", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Coverage_per_Strain.png", dpi=300, width=7.5, height=3.5, units="in")
+
+mean(data$coverage)
 median(data$coverage)

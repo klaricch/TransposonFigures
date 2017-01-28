@@ -30,10 +30,10 @@ TPRE<- N2_FAM[(N2_FAM$rate_name=="TPR"& (N2_FAM$calc=="F_error")),]
 FDRE<- N2_FAM[(N2_FAM$rate_name=="FDR"& (N2_FAM$calc=="F_error")),]
 
 TPR<-merge(TPR,TPRE, by=c("method","DistanceCutoff"))
-TPR<-select(TPR, method, DistanceCutoff,rate_name.x,rate_value.x,rate_value.y)
+TPR<-dplyr::select(TPR, method, DistanceCutoff,rate_name.x,rate_value.x,rate_value.y)
 colnames(TPR)<-c("Method","DistanceCutoff","Stat","Value","Error")
 FDR<-merge(FDR,FDRE, by=c("method","DistanceCutoff"))
-FDR<-select(FDR, method, DistanceCutoff,rate_name.x,rate_value.x,rate_value.y)
+FDR<-dplyr::select(FDR, method, DistanceCutoff,rate_name.x,rate_value.x,rate_value.y)
 colnames(FDR)<-c("Method","DistanceCutoff","Stat","Value","Error")
 
 N2_FAM<-rbind(TPR,FDR)
@@ -52,8 +52,8 @@ theme(strip.background = element_blank(),
       strip.text.y = element_text(size = 9, colour = "black",face="bold",angle=90),
       panel.background = element_rect(fill = "white"),
       axis.ticks =element_line(colour = "black"),
-      axis.text.y = element_text(colour = "black",size=8),
-      axis.text.x = element_text(colour = "black",size=8),
+      axis.text.y = element_text(colour = "black",size=9),
+      axis.text.x = element_text(colour = "black",size=9),
       axis.line=element_line(linetype="solid"),
       axis.line.y = element_line(colour = "black"),
       axis.line.x = element_line(colour = "black"),
@@ -74,3 +74,4 @@ grid.draw(a)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(a, filename="te_progs.tiff",dpi=300, width=7.5,height=3.5,units="in")
+ggsave(a, filename="te_progs.png",dpi=300, width=7.5,height=3.5,units="in")

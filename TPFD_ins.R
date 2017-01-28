@@ -82,6 +82,7 @@ for (i in file_list){
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth)
 ggsave(a_all,filename="Combined_Ins_Cov.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Ins_Cov.png",dpi=300, width=7.5,height=5,units="in")
 
 
 ########################################################################################################################
@@ -156,6 +157,7 @@ for (i in file_list){
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth)
 ggsave(a_all,filename="Combined_Ins_R.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Ins_R.png",dpi=300, width=7.5,height=5,units="in")
 
 ########################################################################################################################
 ########################################################################################################################
@@ -298,3 +300,4 @@ a_all<-plot_grid(first,second,third,fourth,labels=c("A","B","C","D"))
 
 a_all
 ggsave(a_all,filename="Combined_Ins_Scatter.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Ins_Scatter.png",dpi=300, width=7.5,height=5,units="in")

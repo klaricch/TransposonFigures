@@ -20,7 +20,7 @@ file_list=c("/Users/kristen/Documents/transposon_figure_data/simulations/depth_T
             "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round21",
             "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round22",
             "/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round23")
-
+i="/Users/kristen/Documents/transposon_figure_data/simulations/depth_TPFD_files/feb/round20"
 #loop through levels of coverage simulations
 for (i in file_list){
   print(i)
@@ -235,7 +235,7 @@ c <- c + geom_line(color="black")+ xlim(0,51)+
         axis.title.x=element_text(face="bold"),
         plot.title = element_text(size=9),
         legend.position=('none'))+
-  labs(x = "Minimum PopFreq Support Threshold", y="")+
+  labs(x = "Minimum Population Frequency\nSupport Threshold", y="",title=ID)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0),limits=c(0,1))
 c
 
@@ -266,3 +266,7 @@ setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(a_all,filename="Combined_Insertion_DS.tiff",dpi=300, width=7.5,height=5,units="in")
 ggsave(b_all,filename="Combined_Insertion_RS.tiff",dpi=300, width=7.5,height=5,units="in")
 ggsave(c_all,filename="Combined_Insertion_PF.tiff",dpi=300, width=7.5,height=5,units="in")
+
+ggsave(a_all,filename="Combined_Insertion_DS.png",dpi=300, width=7.5,height=5,units="in")
+ggsave(b_all,filename="Combined_Insertion_RS.png",dpi=300, width=7.5,height=5,units="in")
+ggsave(c_all,filename="Combined_Insertion_PF.png",dpi=300, width=7.5,height=5,units="in")

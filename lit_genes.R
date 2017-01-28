@@ -60,9 +60,12 @@ lit=c("WBGene00007444", # TE control genes begin here
       "WBGene00004510",
       "WBGene00004179")
 
+
+
 # pull "outlier" strains
 #outliers<-read.table("outliers_fam_tot.txt",header=TRUE)
 outliers<-read.table("outliers_families_pruned.txt",header=TRUE)
+outliers<-filter(outliers, trait != "coverage")
 
 length(unique(outliers$trait))
 unique(outliers$trait)
@@ -72,15 +75,16 @@ outliers$family <- stringr::str_split_fixed(outliers$trait, "_TRANS_",2)[,2]
 outliers$family<-gsub("_CE$","",outliers$family)
 outliers$family<-gsub("WBTransposon","WBT",outliers$family)
 outliers$method <- stringr::str_split_fixed(outliers$trait, "_TRANS_",2)[,1]
-outliers<-mutate(outliers,trait=paste(family,ifelse(method=="ZERO_new"|method=="ONE_new"|method=="new","(ins)",ifelse(method=="absent","(abs)","(ref)")),sep=""))
+outliers<-mutate(outliers,trait=paste(family,ifelse(method=="ZERO_new"|method=="ONE_new"|method=="new","(ins)",ifelse(method=="absent","(abs)",ifelse(method=="cumulative","(cu)","(ref)"))),sep=""))
 outliers<-arrange(outliers,trait)
 outlier_strains<-outliers$strain
 outliers_summary<-outliers %>% group_by(strain) %>% summarise(trait_outliers=toString(trait))
 
 
+lit
 ?snpeff
 LIT<-snpeff(lit)
-LIT<-distinct(LIT)
+LIT<-distinct(LIT,.keep_all=TRUE)
 #LIT<-filter(LIT,FT=="PASS")
 # calculate the number of total strains that have the REF and AlT alleles
 totals_LIT<-LIT %>% group_by(feature_id,CHROM,POS) %>% summarise(ref_no=sum(GT=="REF"),alt_no=sum(GT=="ALT"),tot_no=sum(GT=="REF"|GT=="ALT"))
@@ -103,7 +107,7 @@ rares<-merge(rares, failed,by=c("feature_id","CHROM","POS"))
 rares<-mutate(rares,fail_check=ifelse(minority=="ALT",alt_no,ref_no))
 #rares<-filter(rares,failed_filters != fail_check)
 rares<-merge(rares,outliers_summary, by="strain")
-rares<-select(rares,-region)
+rares<-dplyr::select(rares,-region)
 #incorporate grantham scores
 gran<-read.table("grantham_scores.txt",sep="\t")
 colnames(gran)<-c("Achange","GS")
@@ -122,24 +126,35 @@ load("rares.Rda")
 
 test<-filter(rares, GS=="STOP")
 
-rares2<-select(rares, CHROM, POS,GS,Achange2,gene_id,gene_name,strain,trait_outliers)
-rares2<-distinct(rares2)
+rares2<-dplyr::select(rares, CHROM, POS,GS,Achange2,gene_id,gene_name,feature_id,strain,trait_outliers)
+rares2<-distinct(rares2,.keep_all=TRUE)
 length(unique(rares2$strain))
 #pull out classes of grantham score severity
 stop_change<-filter(rares2, GS=="STOP") 
 raresC<-rares2
 raresC$GS<-as.numeric(raresC$GS)
-raresC<-filter(raresC,!is.na(GS))
 
-conservative<-filter(raresC, GS<=50)  
-moderately_conservative<-filter(raresC, 50<GS & GS<=100) 
-moderately_radical<-filter(raresC, (GS>100 & GS<=150))
-radical<-filter(raresC, GS>150)
+#skip for now
+#raresC<-filter(raresC,!is.na(GS))
 
-severe_info<-rbind(stop_change,radical)
-severe_info<-arrange(severe_info,CHROM,POS,gene_id,strain)
+conservative<-filter(raresC, GS<=50)  %>% arrange(CHROM,POS,gene_id,strain)
+moderately_conservative<-filter(raresC, 50<GS & GS<=100) %>% arrange(CHROM,POS,gene_id,strain)
+moderately_radical<-filter(raresC, (GS>100 & GS<=150)) %>% arrange(CHROM,POS,gene_id,strain)
+radical<-filter(raresC, GS>150) %>% arrange(CHROM,POS,gene_id,strain)
+
+conservative$Severity="Conservative"
+moderately_conservative$Severity="Moderately Conservative"
+moderately_radical$Severity="Moderately Radical"
+radical$Severity="Radical"
+stop_change$Severity="Stop"
+
+severe_info<-rbind(stop_change,radical,moderately_radical,moderately_conservative,conservative)
+unique(severe_info$strain)
+severe_info<-distinct(severe_info,CHROM,POS,gene_id,strain,.keep_all=TRUE)
+colnames(severe_info)<-c("Chromosome", "Position", "Grantham Score", "Amino Acid Change", "Gene ID", "Gene Name", "Transcript Name", "Strain", "Traits For Which Strain is an Outlier", "Severity of Amino Acid Change")
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 write.table(severe_info, file="Severe_Table.txt",sep="\t",quote=FALSE,row.names=FALSE)
-
-aa<-snpeff("WBGene00003501")
+colnames(outliers_summary)<-c("Strain","Traits")
+write.table(outliers_summary, file="Outlier_family.txt",sep="\t",quote=FALSE,row.names=FALSE)
+#aa<-snpeff("WBGene00003501")
 

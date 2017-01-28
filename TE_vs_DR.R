@@ -4,11 +4,14 @@
 # 2) plot histogram of transposons per strain
 # USE: TE_vs_DR.R
 
+
 library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(stringr)
 library(grid)
+library(MASS)
+select <- dplyr::select
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("T_kin_C_matrix_full.txt",header=TRUE)
 #remove ZERO_new traits
@@ -27,7 +30,7 @@ classdata$family<- paste(stringr::str_split_fixed(classdata$family, "_",4)[,3],s
 classdata$family <- gsub("_$" ,"",classdata$family)
 classdata$family <- gsub("_non-reference(.*)$" ,"",classdata$family)
 classdata<-mutate(classdata, trait=paste(method,"TRANS",family,sep="_"))
-class_subset <- classdata %>% distinct(family,class) %>% select(family,class)
+class_subset <- classdata %>% distinct(family,class,.keep_all=TRUE) %>% select(family,class)
 summarydata$family<- stringr::str_split_fixed(summarydata$trait, "_TRANS_",2)[,2]
 summarydata <-merge(summarydata, class_subset, by="family")
 summarydata<-select(summarydata, -family)
@@ -106,38 +109,37 @@ Dla <- paste("italic(rho) == ", D_rho)
 m <- ggplot(final_merge, aes(x=total_insertions, y=total_absences))+
   facet_wrap(~class,ncol=3,scale="free")
 m <- m + geom_point(size=1.25) +
-  geom_smooth(method="lm",se=FALSE,col="red")+
+  stat_smooth(se=FALSE,colour="red",method=function(formula,data,weights=weight) rlm(formula,
+                                                                                     data,
+                                                                                     weights=weight,
+                                                                                     method="MM"),fullrange=TRUE)+
   geom_abline(slope=1,linetype="dashed",colour="gray52")+
-  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.2*D_max_insertions, y=.9*D_max_insertions,label=Dla,parse=TRUE, colour="red",size=2.5)+
-  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.2*R_max_insertions, y=.9*R_max_insertions,label=Rla,parse=TRUE, colour="red",size=2.5)+
+  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.1*D_max_insertions, y=.9*D_max_insertions,label=Dla,parse=TRUE, colour="red",size=4)+
+  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.1*R_max_insertions, y=.9*R_max_insertions,label=Rla,parse=TRUE, colour="red",size=4)+
   geom_point(data = subset(final_merge, class=="Retrotransposon"), aes(x=R_max_insertions,y=R_max_insertions),alpha=0)+
   geom_point(data = subset(final_merge, class=="DNA Transposon"), aes(x=D_max_insertions,y=D_max_insertions),alpha=0)+
   geom_point(aes(x=0,y=0),alpha=0)+
   
-  theme(strip.text.x = element_text(size = 9, colour = "black"),
+  theme(strip.text.x = element_text(size = 9, colour = "black",face="bold"),
         strip.background = element_blank(),
         legend.position=c(.90,0.75),
         legend.background = element_rect(fill=FALSE),
         legend.text=element_text(size=9),
         panel.background = element_rect(fill = "white"),
-        panel.margin = unit(1, "lines"),
+        panel.spacing= unit(1, "lines"),
         axis.ticks =element_line(colour = "black"),
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
         axis.line.y = element_line(colour = "black"),
         axis.line.x = element_line(colour = "black"),
-        axis.title=element_text(size=9))+
+        axis.title=element_text(size=9,face="bold"))+
   guides(fill=FALSE) +
-  labs(x = "Insertion Sites", y = "Absence Sites")
+  labs(x = "Insertion Sites", y = "Active Reference Sites")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Absence_vs_Insertion_DR.tiff",
-       dpi=300,
-       width=7.5,
-       height=3.5,
-       units="in")
-
+ggsave(filename="Absence_vs_Insertion_DR.tiff", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Absence_vs_Insertion_DR.png", dpi=300, width=7.5, height=3.5, units="in")
 #2 ABSENCE vs REFERENCE
 #spearman correlation
 R_correlation<-cor.test(retro$total_absences, retro$total_references,method="spearman",exact=FALSE)
@@ -154,36 +156,36 @@ Dla <- paste("italic(rho) == ", D_rho)
 m <- ggplot(final_merge, aes(x=total_references, y=total_absences))+
     facet_wrap(~class,ncol=3,scale="free")
 m <- m + geom_point(size=1.25) +
-  geom_smooth(method="lm",se=FALSE,col="red")+
+  stat_smooth(se=FALSE,colour="red",method=function(formula,data,weights=weight) rlm(formula,
+                                                                                     data,
+                                                                                     weights=weight,
+                                                                                     method="MM"),fullrange=TRUE)+
   geom_abline(slope=1,linetype="dashed",colour="gray52")+
-  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.2*D_max_references, y=.9*D_max_references,label=Dla,parse=TRUE, colour="red",size=2.5)+
-  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.2*R_max_references, y=.9*R_max_references,label=Rla,parse=TRUE, colour="red",size=2.5)+
+  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.1*D_max_references, y=.9*D_max_references,label=Dla,parse=TRUE, colour="red",size=4)+
+  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.1*R_max_references, y=.9*R_max_references,label=Rla,parse=TRUE, colour="red",size=4)+
   geom_point(data = subset(final_merge, class=="Retrotransposon"), aes(x=R_max_references,y=R_max_references),alpha=0)+
   geom_point(data = subset(final_merge, class=="DNA Transposon"), aes(x=D_max_references,y=D_max_references),alpha=0)+
   geom_point(aes(x=0,y=0),alpha=0)+
   
-  theme(strip.text.x = element_text(size = 9, colour = "black"),
+  theme(strip.text.x = element_text(size = 9, colour = "black",face="bold"),
         strip.background = element_blank(),
         legend.position=c(.90,0.75),
         legend.background = element_rect(fill=FALSE),
         legend.text=element_text(size=9),
         panel.background = element_rect(fill = "white"),
-        panel.margin = unit(1, "lines"),
+        panel.spacing = unit(1, "lines"),
         axis.ticks =element_line(colour = "black"),
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
         axis.line.y = element_line(colour = "black"),
         axis.line.x = element_line(colour = "black"),
-        axis.title=element_text(size=9))+
+        axis.title=element_text(size=9,face="bold"))+
   guides(fill=FALSE) +
-  labs(x = "Reference Sites", y = "Absence Sites")
+  labs(x = "Reference Sites", y = "Active Reference Sites")
 m
-ggsave(filename="Absence_vs_Reference_DR.tiff",
-       dpi=300,
-       width=7.5,
-       height=3.5,
-       units="in")
+ggsave(filename="Absence_vs_Reference_DR.tiff", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Absence_vs_Reference_DR.png", dpi=300, width=7.5, height=3.5, units="in")
 
 #3 INSERTION vs REFERENCE
 #spearman correlation
@@ -197,37 +199,37 @@ Dla <- paste("italic(rho) == ", D_rho)
 m <- ggplot(final_merge, aes(x=total_insertions, y=total_references))+
   facet_wrap(~class,ncol=3,scale="free")
 m <- m + geom_point(size=1.25) +
-  geom_smooth(method="lm",se=FALSE,col="red")+
+  stat_smooth(se=FALSE,colour="red",method=function(formula,data,weights=weight) rlm(formula,
+                                                                                     data,
+                                                                                     weights=weight,
+                                                                                     method="MM"),fullrange=TRUE)+
   geom_abline(slope=1,linetype="dashed",colour="gray52")+
-  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.2*D_max_insertions, y=.9*D_max_insertions,label=Dla,parse=TRUE, colour="red",size=2.5)+
-  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.2*R_max_insertions, y=.9*R_max_references,label=Rla,parse=TRUE, colour="red",size=2.5)+
+  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.1*D_max_insertions, y=.9*D_max_insertions,label=Dla,parse=TRUE, colour="red",size=4)+
+  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.1*R_max_insertions, y=.9*R_max_references,label=Rla,parse=TRUE, colour="red",size=4)+
   geom_point(data = subset(final_merge, class=="Retrotransposon"), aes(x=R_max_references,y=R_max_references),alpha=0)+
   geom_point(data = subset(final_merge, class=="DNA Transposon"), aes(x=D_max_insertions,y=D_max_insertions),alpha=0)+
   geom_point(aes(x=0,y=0),alpha=0)+
   
-  theme(strip.text.x = element_text(size = 9, colour = "black"),
+  theme(strip.text.x = element_text(size = 9, colour = "black",face="bold"),
         strip.background = element_blank(),
         legend.position=c(.90,0.75),
         legend.background = element_rect(fill=FALSE),
         legend.text=element_text(size=9),
         panel.background = element_rect(fill = "white"),
-        panel.margin = unit(1, "lines"),
+        panel.spacing = unit(1, "lines"),
         axis.ticks =element_line(colour = "black"),
         axis.text.y = element_text(colour = "black",size=9),
         axis.text.x = element_text(colour = "black",size=9),
         axis.line=element_line(linetype="solid"),
         axis.line.y = element_line(colour = "black"),
         axis.line.x = element_line(colour = "black"),
-        axis.title=element_text(size=9))+
+        axis.title=element_text(size=9,face="bold"))+
   guides(fill=FALSE) +
   labs(x = "Insertion Sites", y = "Reference Sites")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Insertion_vs_Reference_DR.tiff",
-       dpi=300,
-       width=7.5,
-       height=3.5,
-       units="in")
+ggsave(filename="Insertion_vs_Reference_DR.tiff", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Insertion_vs_Reference_DR.png", dpi=300, width=7.5, height=3.5, units="in")
 
 
 #CHEXK T HIS  OVER
@@ -272,22 +274,30 @@ save(outliers,file="outlier_slopes.Rda")
 
 
 #Histogram Versions
+
+
+
+test<-hist_data
+hist_data<-spread(hist_data,method,XX)
+hist_data<-mutate(hist_data, all=reference+new)
+hist_data<-select(hist_data,new,absent,all)
+hist_data<-gather(hist_data, "method","value",new,absent,all)
 hist_data$method <- factor(hist_data$method,
-                       levels = c("new", "reference", "absent"),
-                       labels = c("Insertion", "Reference", "Absence"))
+                       levels = c("new", "absent", "all"),
+                       labels = c("Insertion Sites", "Active Reference Sites", "All Transposon Sites"))
 
 
 #dim(hist_data)
 #sub_hist<-hist_data %>% group_by(method) %>% summarize(MM=max(XX))
 #hist_data<-merge(hist_data,sub_hist,by="method")
 
-m <- ggplot(hist_data, aes(x=XX,fill=class))
+m <- ggplot(hist_data, aes(x=value,fill=class))
 m <-m + geom_histogram(binwidth=5)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
   facet_wrap(~method,scale="free")+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 9, colour = "black",face="bold"),
-        panel.margin = unit(.25, "lines"),
+        panel.spacing = unit(.25, "lines"),
         panel.border = element_rect(fill=NA,colour = "black"),
         panel.background = element_blank(),
         axis.title=element_text(size=9,face="bold"),
@@ -313,17 +323,14 @@ panel3<-filter(ggplot_build(m)$data[[1]],PANEL==3)
 max3<-max(panel3$y)
 max3
 
-m <- m + geom_point(data = subset(hist_data, method=="Insertion"),aes(y=1.05*max1),alpha=0)+
-  geom_point(data = subset(hist_data, method=="Reference"),aes(y=1.05*max2),alpha=0) +
-  geom_point(data = subset(hist_data, method=="Absence"),aes(y=1.05*max3),alpha=0)
+m <- m + geom_point(data = subset(hist_data, method=="Insertion Sites"),aes(y=1.05*max1),alpha=0)+
+geom_point(data = subset(hist_data, method=="Active Reference Sites"),aes(y=1.05*max2),alpha=0)+
+  geom_point(data = subset(hist_data, method=="All Transposon Sites"),aes(y=1.05*max3),alpha=0)
 m
 
 
 
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Histogram_TE_per_Strain.tiff",
-       dpi=300,
-       width=7.5,
-       height=3.5,
-       units="in")
+ggsave(filename="Histogram_TE_per_Strain.tiff", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Histogram_TE_per_Strain.png", dpi=300, width=7.5, height=3.5, units="in")
 

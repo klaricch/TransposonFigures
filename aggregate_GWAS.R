@@ -7,7 +7,7 @@ library(stringr)
 library(dplyr)
 library(grid)
 
-setwd("/Users/kristen/Documents/transposon_figure_data/data")
+setwd("/Users/kristen/Documents/transposon_figure_data/data/")
 load("Processed_Transposon_Mappings_2.Rda")
 load("count_QTL.Rda")
 #load("reciprocal_removals.Rda")
@@ -29,7 +29,8 @@ processed_mapping_df$family <- transposon
 caller <- stringr::str_split_fixed(processed_mapping_df$trait, "_TRANS_",2)[,1]
 processed_mapping_df$method <- caller
 
-
+NC<-filter(processed_mapping_df,method=="cumulative")
+length(unique(NC$trait))
 #remove fraction and movement traits
 base_traits<-subset(processed_mapping_df, grepl('_C$', processed_mapping_df$trait))
 base_traits<-subset(base_traits,!grepl('^no_', base_traits$trait))
@@ -40,7 +41,7 @@ processed_mapping_df<-base_traits
 peaks<-filter(processed_mapping_df,!is.na(peak_id))
 
 #pull unique combinations of trait and peak id
-sites_clean <- distinct(peaks, peak_id, trait)
+sites_clean <- distinct(peaks, peak_id, trait,.keep_all=TRUE)
 all_sites_clean<-sites_clean # this df will be used to retain the total counts
 
 # do we only want the distinct ones here?
@@ -58,7 +59,7 @@ classdata$id<- stringr::str_split_fixed(classdata$TE, regex("_(non-)?reference")
 classdata$id <- gsub("\\w+_\\d+_" ,"",classdata$id)
 
 classdata<-mutate(classdata, family=paste(id,"C",sep="_"))
-class_subset <- classdata %>% distinct(family,class) %>% select(family,class)
+class_subset <- classdata %>% distinct(family,class,.keep_all=TRUE) %>% dplyr::select(family,class)
 
 #
 sites_clean$traitTset<-gsub("_C$","",sites_clean$traitT)
@@ -72,10 +73,10 @@ sites_clean <-merge(sites_clean, class_subset, by="family")
 #all sites clean
 #sites clean
 count_QTL<-mutate(count_QTL, trait2=gsub("_\\d+$","",trait)) 
-sites_clean<-filter(sites_clean,(traitT %in% count_QTL$trait2))
+#sites_clean<-filter(sites_clean,(traitT %in% count_QTL$trait2)) #R
 
 all_sites_clean$trait<-gsub("_C$","",all_sites_clean$trait)
-all_sites_clean<-filter(all_sites_clean,(trait %in% count_QTL$trait2)|grepl("total",trait))
+#all_sites_clean<-filter(all_sites_clean,(trait %in% count_QTL$trait2)|grepl("total",trait))
 
 #length(unique(count_QTL$trait2))
 #length(unique(sites_clean$trait))
@@ -91,11 +92,17 @@ sites_clean$class <- factor(sites_clean$class,
 sites_clean$method<- gsub("^ONE_new" ,"new",sites_clean$method)
 sites_clean$method<- gsub("^ZERO_new" ,"new",sites_clean$method)
 
+
+
 #revalue methods
 sites_clean$method <- factor(sites_clean$method,
-                             levels = c("new","reference","absent"),
-                             labels = c("Insertion", "Reference","Absence"))
+                             levels = c("new","reference","absent","cumulative"),
+                             labels = c("Insertion\nSites", "Reference","Active Reference\nSites","All Transposon\nSites"))
 unique(sites_clean$trait)
+
+sites_clean <-filter(sites_clean,method!="Reference")
+
+unique(sites_clean$method)
 
 a <- ggplot(data = sites_clean, aes(x = POS/1e6, y=value)) #,colour=method
 a <- a + geom_segment(aes(x = POS/1e6, y = 1, xend = POS/1e6, yend = 25),colour="lightskyblue3")+
@@ -110,7 +117,7 @@ a <- a + geom_segment(aes(x = POS/1e6, y = 1, xend = POS/1e6, yend = 25),colour=
   labs(x="Chromosome Position (Mb)", y="")+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 9, colour = "black",face="bold"),
-        panel.margin = unit(.50, "lines"),
+        panel.spacing = unit(.50, "lines"),
         panel.border = element_rect(fill=NA,colour = "black", size=1, linetype="solid"),
         panel.background = element_rect(fill = "white"),
         axis.title=element_text(size=9,face="bold"),
@@ -134,6 +141,18 @@ ggsave(filename="Aggregate_GWAS.tiff",
        width=7.5,
        height=4,
        units="in")
+ggsave(filename="Aggregate_GWAS.png",
+       dpi=300,
+       width=7.5,
+       height=4,
+       units="in")
+
+all_fam_QTL<-distinct(sites_clean,traitT,.keep_all=TRUE)
+ins_QTL<-filter(all_fam_QTL,method=="Insertions")
+abs_QTL<-filter(all_fam_QTL,method=="Active References")
+nrow(all_fam_QTL)
+nrow(ins_QTL)
+nrow(abs_QTL)
 
 #piRNA
 #check for QTL with peak poisiton of L/R CI within piRNA on chr IV

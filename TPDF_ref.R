@@ -81,6 +81,7 @@ for (i in file_list){
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth)
 ggsave(a_all,filename="Combined_Ref_Cov.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Ref_Cov.png",dpi=300, width=7.5,height=5,units="in")
 
 
 ########################################################################################################################
@@ -155,6 +156,7 @@ for (i in file_list){
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth)
 ggsave(a_all,filename="Combined_Ref_R.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Ref_R.png",dpi=300, width=7.5,height=5,units="in")
 
 ########################################################################################################################
 ########################################################################################################################
@@ -267,3 +269,4 @@ for (i in file_list){
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 a_all<-plot_grid(first,second,third,fourth,labels=c("A","B","C","D"))
 ggsave(a_all,filename="Combined_Ref_Scatter.tiff",dpi=300, width=7.5,height=5,units="in")
+ggsave(a_all,filename="Combined_Ref_Scatter.png",dpi=300, width=7.5,height=5,units="in")

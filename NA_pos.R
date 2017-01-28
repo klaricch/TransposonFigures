@@ -30,6 +30,8 @@ m<- m + scale_y_continuous(expand = c(0,0),limits=c(0,max_y*1.075))
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="NAs_Per_Pos.tiff",dpi=300, width=7.5,height=3.5,units="in")
+ggsave(filename="NAs_Per_Pos.png",dpi=300, width=7.5,height=3.5,units="in")
+
 test<-filter(nas, fraction>.1)
 
 

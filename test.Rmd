@@ -31,12 +31,12 @@ load("Processed_Transposon_Mappings_SUBSET2.Rda")
 for (i in unique(processed_mapping_df$trait)){
   test<-filter(processed_mapping_df,trait==i)
   sns <- dplyr::filter(test, aboveBF == 1, !is.na(peak_id) )
-  ans<-
+  #ans<-
   
   if (nrow(sns)>1){
-  crs <- plot_peak_ld(test)
+  crs <- plot_peak_ld(sns)
   #ld<-ggplotGrob(crs)
-  grid.draw(crs)
+  plot(crs)
 
   } else {
   crs<-NULL #single peak, no need to check for LD

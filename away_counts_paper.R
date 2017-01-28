@@ -98,7 +98,7 @@ counts<-dplyr::select(counts, -method2,-method3,-traitT)
 # get rid of reciprocal traits according to class
 #counts<-filter(counts,ifelse(class=="retrotransposon", method=="absent"| method=="ONE_new",ifelse(class=="dnatransposon",method=="absent"| method=="ONE_new",method=="absent"| method=="ONE_new")))
 counts<-filter(counts, method=="absent"| method=="ONE_new"|method=="cumulative")
-
+unique(counts$trait)
 # counts<- filter(counts,ifelse(class=="retrotransposon", method=="absent"| method=="ONE_new",ifelse(class=="dnatransposon",method=="absent"| method=="ONE_new",method=="absent"| method=="ONE_new")))
 #counts<- filter(counts,ifelse(class=="retrotransposon",method=="ZERO_new"| method=="reference"| method=="ONE_new",ifelse(class=="dnatransposon",method=="ZERO_new"|method=="absent"| method=="ONE_new",method=="ZERO_new"|method=="absent"|method=="reference"|| method=="ONE_new")))
 #test1<- filter(counts,class=="retrotransposon",method=="ZERO_new"| method=="reference")
@@ -219,12 +219,13 @@ for (phenotype in unique(distinct_sites$trait)){
   transposon <- gsub("_C$" ,"",transposon)
   print(phenotype)
   print(transposon)
-
+  #unique(positions$family)
   locations<-filter(positions, family==transposon)
-  #locations<-filter(positions, family=="Vingi-1E")
+  # locations<-filter(positions, family=="CElE14B")
+  # print(locations$family)
   locations<-distinct(locations,CHROM,start,end,family,.keep_all=TRUE)
-
-
+  
+  
   for(i in 1:nrow(locations)) { #add all positions of a TE to a chromosome list
     row <- locations[i,]
     TE_CHROM=row$CHROM
@@ -259,17 +260,28 @@ for (phenotype in unique(distinct_sites$trait)){
   
   pheno_subset=distinct_sites[distinct_sites$trait==phenotype,] #pull out mappings realted to that phenotype
   #for each row in subset 
+ # pheno_subset=filter(distinct_sites,trait=="ONE_new_TRANS_CELE14B") #pull out mappings realted to that phenotype
+#  lb
+#  ub
+#  CHROM
+#  pheno_subset
+#  i=2
+#  row
+#  i=1
   for(i in 1:nrow(pheno_subset)) {
     trig=FALSE #start trig at FALSE, if the TE is within 100 SNPs of the QTL, change trig to TRUE
     row <- pheno_subset[i,]
     CHROM<-row$CHROM
     bp<-row$POS # the top SNP for the QTL peak
-    
+    lb<-row$startPOS #left CI
+    ub<-row$endPOS #right CI
     #check which chromosome it's in
     if (CHROM=="I"){
-      index <-which(one==bp)
-      lower_range=index-100
-      upper_range=index+100
+      #index <-which(one==bp)
+      lb_index <-which(one==lb)
+      ub_index <-which(one==ub)
+      lower_range=lb_index-100
+      upper_range=ub_index+100
       
       #dont go past first or last index index
       if (lower_range<1){lower_range<-1}
@@ -290,9 +302,10 @@ for (phenotype in unique(distinct_sites$trait)){
     
     #TWO
     if (CHROM=="II"){
-      index <-which(two==bp)
-      lower_range=index-100
-      upper_range=index+100
+      lb_index <-which(two==lb)
+      ub_index <-which(two==ub)
+      lower_range=lb_index-100
+      upper_range=ub_index+100
       
       #dont go past first index
       if (lower_range<1){lower_range<-1}
@@ -312,10 +325,12 @@ for (phenotype in unique(distinct_sites$trait)){
     
     #THREE
     if (CHROM=="III"){
-      index <-which(three==bp)
+      #index <-which(three==bp)
       
-      lower_range=index-100
-      upper_range=index+100
+      lb_index <-which(three==lb)
+      ub_index <-which(three==ub)
+      lower_range=lb_index-100
+      upper_range=ub_index+100
       
       #dont go past first index
       if (lower_range<1){lower_range<-1}
@@ -335,10 +350,12 @@ for (phenotype in unique(distinct_sites$trait)){
     
     ##FOUR
     if (CHROM=="IV"){
-      index <-which(four==bp)
+      # index <-which(four==bp)
       
-      lower_range=index-100
-      upper_range=index+100
+      lb_index <-which(four==lb)
+      ub_index <-which(four==ub)
+      lower_range=lb_index-100
+      upper_range=ub_index+100
       
       #dont go past first index
       if (lower_range<1){lower_range<-1}
@@ -358,10 +375,12 @@ for (phenotype in unique(distinct_sites$trait)){
     
     #FIVE
     if (CHROM=="V"){
-      index <-which(five==bp)
+      # index <-which(five==bp)
       
-      lower_range=index-100
-      upper_range=index+100
+      lb_index <-which(five==lb)
+      ub_index <-which(five==ub)
+      lower_range<-lb_index-100
+      upper_range<-ub_index+100
       
       #dont go past first index
       if (lower_range<1){lower_range<-1}
@@ -378,13 +397,17 @@ for (phenotype in unique(distinct_sites$trait)){
         #if not----> rbind
       }
     } 
-    
+    # lb
+    #ub
+    #ind
     #SIX
     if (CHROM=="X"){
-      index <-which(six==bp)
+      #index <-which(six==bp)
       
-      lower_range=index-100
-      upper_range=index+100
+      lb_index <-which(six==lb)
+      ub_index <-which(six==ub)
+      lower_range=lb_index-100
+      upper_range=ub_index+100
       
       #dont go past first index
       if (lower_range<1){lower_range<-1}
@@ -406,6 +429,12 @@ for (phenotype in unique(distinct_sites$trait)){
     }
   }
 }
+table_info<-mutate(not_away,test=paste(family,ifelse(method=="ZERO_new"|method=="ONE_new"|method=="new","(ins)",ifelse(method=="absent","(AR)",ifelse(method=="cumulative","(cu)","(ref)"))),sep=""))
+setwd("/Users/kristen/Documents/transposon_figure_data/tables")
+table_info<-mutate(table_info,close="near")
+table_info<-dplyr::select(table_info,test,peak_id,close)
+write.table(table_info, file="close_table.txt",sep="\t",quote=FALSE,row.names=FALSE)
+
 away_counts<-away
 save(away_counts, file="away_counts_phenos.Rda")
 away_counts<-mutate(away_counts,ID=paste(trait,peak_id,sep="_"))
@@ -445,9 +474,24 @@ median_df<-ungroup(median_df)
 median_df<-spread(median_df, allele,med)
 colnames(median_df)<-c("trait","ref","alt")
 #pull out only those phenos in which the median value of the strains with the ref allele doesn't match the medidan of those with the alt allele
-median_df<-dplyr::filter(median_df,ref!=alt)
 
+#CHOICE HERE
+#median_df<-dplyr::filter(median_df,ref!=alt)
+median_match<-dplyr::filter(median_df,ref==alt)
 #median_df$trait <- gsub("_[0-9]+$" ,"",median_df$trait)
+median_match<-filter(median_match, trait %in% counts$ID)
+median_match$family <- stringr::str_split_fixed(median_match$trait, "_TRANS_",2)[,2]
+median_match$method <- stringr::str_split_fixed(median_match$trait, "_TRANS_",2)[,1]
+median_match$peak_id <- stringr::str_split_fixed(median_match$trait, ".*_",2)[,-1]
+median_match$name <- stringr::str_split_fixed(median_match$family, "_\\d+$",2)[,1]
+#select traits above BF.....this step not needed, double checking everything is above BF
+table_info<-mutate(median_match,test=paste(name,ifelse(method=="ZERO_new"|method=="ONE_new"|method=="new","(ins)",ifelse(method=="absent","(AR)","(ref)")),sep=""))
+table_info<-mutate(table_info,median="same")
+table_info<-dplyr::select(table_info,test,peak_id,median)
+write.table(table_info, file="median_table.txt",sep="\t",quote=FALSE,row.names=FALSE)
+
+
+
 
 #length(unique(away$trait))
 #length(unique(median_df$trait))
@@ -457,7 +501,6 @@ unique(count_QTL$trait)
 #median_df_counts<-median_df
 #save(median_df_counts, file="median_phenos_counts.Rda")
 #all_counts$trait <- gsub("_C$" ,"",all_counts$trait)
-#test<-filter(positions,family=="CELE14B")
 ##########################################################################################
 #                               FEW CHRO
 ##########################################################################################
@@ -470,6 +513,7 @@ unique(count_QTL$trait)
 # few_chr<-filter(chr_df,no_chr<=2)
 # high_chr<-filter(chr_df,no_chr>2)
 
+test<-filter(positions,family=="CELE14B")
 
 ##########################################################################################
 #                               MEDIAN Differences ALLL 

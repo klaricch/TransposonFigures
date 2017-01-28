@@ -3,14 +3,14 @@
 # USE: generate_figures.sh  (in R_scripts dir)
 
 # replace numbers with trait names
-XRscript process_new_BF.R #replaces rename.R
+Rscript process_new_BF.R #replaces rename.R
 # pull out main fig  traits
-XRscript subset.R
+Rscript subset.R
 
 ############## TE Information ##############
 echo "Generating TE Plots..."
 # plot contradictory calls and histograms of their differences in read support
-XRscript contradictory_calls.R
+Rscript contradictory_calls.R
 # plot TE counts vs coverage and plot depth of coverage per strain
 Rscript coverage.R
 # plot total absences, insertions, and references per transposon family 
@@ -31,25 +31,25 @@ Rscript TE_vs_DR.R
 ############## GWAS Mappings ##############
 echo "Generating GWAS Plots..."
 # plot histogram of percentage of NAs per TE position
-XRscript NA_pos.R
+Rscript NA_pos.R
 # for count traits, output new dataframe for QTL that have   phenotypes with non-equal medians
-XRscript away_counts.R
+Rscript away_counts.R
 # plot genomic locations of QTL:
-XRscript aggregate_GWAS.R
+Rscript aggregate_GWAS.R
 # plot table of QTL peaks
-XRscript peak_TABLE.R
+Rscript peak_TABLE.R
 # generates main figure of select GWAS mappings
-XRscript main_GWAS_plots.R
+Rscript main_GWAS_plots.R
 # generate fine mapping results
-XRscript fine_mappings.R
+Rscript fine_mappings.R
 # snpeff on homologs and genes of lethal RNA phenotype insertions
-XRscript homologs.R
+#REMOVE Rscript homologs.R
 # snpeff on lit genes and outlier strains
-XRscript lit_genes.R
+Rscript lit_genes.R
 # snpeff on piRNA genes and outlier strains
 XRscript piRNA_genes.R
 # check traits of interest for LD between peaks
-XRscript LD_check.R
+# REMOVE Rscript LD_check.R
 
 
 ############## Simulation Figures ##############
@@ -67,9 +67,9 @@ Rscript TPFD_ins.R
 
 ############## Rmd ##############
 echo "Run the markdown scripts!"
-#GWAS2.Rmd
-#GWAS2_totals.Rmd
-#IRA_VS.Rmd
-#NAs_per_strain.Rmd
+X# GWAS2.Rmd / TEMP.Rmd
+# GWAS2_totals.Rmd
+X# IRA_VS.Rmd
+X# NAs_per_strain.Rmd
 
 echo "Done"
