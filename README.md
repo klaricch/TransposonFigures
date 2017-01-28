@@ -1,6 +1,4 @@
-# Transposon Figures and Tables
-
-# Generate Figures
+# Generate Transposon Figures and Tables
 
 #### Set Up Directory Structure
 ```
