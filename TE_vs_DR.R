@@ -3,7 +3,7 @@
 # 1) plots total transposons vs strain per insertions, references, and absences per class
 # 2) plot histogram of transposons per strain
 # USE: TE_vs_DR.R
-
+# NOTE: y max values are hard coded
 
 library(ggplot2)
 library(dplyr)
@@ -11,6 +11,7 @@ library(tidyr)
 library(stringr)
 library(grid)
 library(MASS)
+library(cowplot)
 select <- dplyr::select
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("T_kin_C_matrix_full.txt",header=TRUE)
@@ -291,10 +292,11 @@ hist_data$method <- factor(hist_data$method,
 #sub_hist<-hist_data %>% group_by(method) %>% summarize(MM=max(XX))
 #hist_data<-merge(hist_data,sub_hist,by="method")
 
-m <- ggplot(hist_data, aes(x=value,fill=class))
+unique(hist_data$method)
+ins_data<-filter(hist_data, method=="Insertion Sites")
+m <- ggplot(ins_data, aes(x=value,fill=class))
 m <-m + geom_histogram(binwidth=5)+
-  scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
-  facet_wrap(~method,scale="free")+
+  scale_y_continuous(expand = c(0,0),limits=c(0,180)) + scale_x_continuous(expand = c(0,0))+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 9, colour = "black",face="bold"),
         panel.spacing = unit(.25, "lines"),
@@ -309,28 +311,123 @@ m <-m + geom_histogram(binwidth=5)+
         legend.title=element_blank(),
         legend.position="none")+
   scale_fill_manual(values = c('dnatransposon' = "navy", "retrotransposon"="brown3","unknown"="goldenrod"))+
-  labs(x="Transposons Per Strain", y="Count")
+  labs(x="Insertion Sites Per Strain", y="Count")
+m
+  
+
+ar_data<-filter(hist_data, method=="Active Reference Sites")
+m2 <- ggplot(ar_data, aes(x=value,fill=class))
+m2 <-m2 + geom_histogram(binwidth=5)+
+  scale_y_continuous(expand = c(0,0),limits=c(0,180)) + scale_x_continuous(expand = c(0,0))+
+  theme(strip.background = element_blank(),
+        strip.text = element_text(size = 9, colour = "black",face="bold"),
+        panel.spacing = unit(.25, "lines"),
+        panel.border = element_rect(fill=NA,colour = "black"),
+        panel.background = element_blank(),
+        axis.title=element_text(size=9,face="bold"),
+        axis.text.y = element_text(colour = "black",size=9),
+        axis.text.x = element_text(colour = "black",size=9),
+        axis.ticks =element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
+        legend.title=element_blank(),
+        legend.position="none")+
+  scale_fill_manual(values = c('dnatransposon' = "navy", "retrotransposon"="brown3","unknown"="goldenrod"))+
+  labs(x="Active Reference Sites Per Strain", y="Count")
+m2
+#m2<- m2 + geom_point(data = subset(ar_data, method=="Active Reference Sites"),aes(y=160),alpha=0)+
+##pull out y max of panels
+#panel1<-filter(ggplot_build(m)$data[[1]],PANEL==1)
+#max1<-max(panel1$y)
+#max1
+#panel2<-filter(ggplot_build(m)$data[[1]],PANEL==2)
+#max2<-max(panel2$y)
+#max2
+#panel3<-filter(ggplot_build(m)$data[[1]],PANEL==3)
+#max3<-max(panel3$y)
+#max3
+
+#geom_point(data = subset(hist_data, method=="Active Reference Sites"),aes(y=1.05*max2),alpha=0)
+ # geom_point(data = subset(hist_data, method=="All Transposon Sites"),aes(y=1.05*max3),alpha=0)
 m
 
-#pull out y max of panels
-panel1<-filter(ggplot_build(m)$data[[1]],PANEL==1)
-max1<-max(panel1$y)
-max1
-panel2<-filter(ggplot_build(m)$data[[1]],PANEL==2)
-max2<-max(panel2$y)
-max2
-panel3<-filter(ggplot_build(m)$data[[1]],PANEL==3)
-max3<-max(panel3$y)
-max3
-
-m <- m + geom_point(data = subset(hist_data, method=="Insertion Sites"),aes(y=1.05*max1),alpha=0)+
-geom_point(data = subset(hist_data, method=="Active Reference Sites"),aes(y=1.05*max2),alpha=0)+
-  geom_point(data = subset(hist_data, method=="All Transposon Sites"),aes(y=1.05*max3),alpha=0)
-m
 
 
 
+#allele freq
+
+summarydata <- read.table("kin_matrix_full.txt",header=TRUE)
+#count number of "1" scores
+no_cols=ncol(summarydata)
+summarydata<-mutate(summarydata, freq=rowSums(summarydata[2:no_cols],na.rm = TRUE))
+#count number of non-NA value
+summarydata<-mutate(summarydata,total=rowSums(!is.na(summarydata[2:no_cols])))
+#calcualte allele frequency
+#summarydata<-mutate(summarydata,AF_pre=round((freq/total),digits=3))
+summarydata<-mutate(summarydata,AF_pre=(freq/total))
+
+summarydata<-mutate(summarydata,call=ifelse(grepl('NR',trait),"Novel Site", "Reference Site"))
+summarydata<-mutate(summarydata,AF=ifelse(AF_pre>=.50, abs(AF_pre-1), AF_pre))
+
+
+sort(unique(summarydata$AF))
+sort(unique(summarydata$AF))
+summarydata$AF
+summarydata<-filter(summarydata, AF!=0.000) #double check
+summarydata<-select(summarydata, AF)
+
+a <- ggplot(summarydata, aes(x=AF))
+a <- a + geom_histogram(binwidth=.05) +
+  # facet_grid(call ~ .,scale="free_y")+
+  theme(panel.background = element_rect(fill = "white"),
+        strip.background = element_rect(fill="white"),
+        axis.ticks = element_line(colour = "black"),
+        axis.text.y = element_text(colour = "black",size=9),
+        axis.text.x = element_text(colour = "black",size=9),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
+        axis.line=element_line(linetype="solid"),
+        axis.title=element_text(size=9,face="bold"))+
+  guides(fill=FALSE) +
+  labs(x="Allele Frequency", y="Count")+
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0))
+a
+
+
+a_all<-plot_grid(m,m2,a,ncol=3,labels=c("A","B","C"))
+a_all
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Histogram_TE_per_Strain.tiff", dpi=300, width=7.5, height=3.5, units="in")
-ggsave(filename="Histogram_TE_per_Strain.png", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Histogram_TE_per_Strain_AF.tiff", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Histogram_TE_per_Strain_AF.png", dpi=300, width=7.5, height=3.5, units="in")
+
+#ggsave(filename="Histogram_TE_per_Strain.tiff", dpi=300, width=7.5, height=3.5, units="in")
+#ggsave(filename="Histogram_TE_per_Strain.png", dpi=300, width=7.5, height=3.5, units="in")
+
+#alternative
+alt_fig<-filter(hist_data, method=="All Transposon Sites")
+m <- ggplot(alt_fig, aes(x=value,fill=class))
+m <-m + geom_histogram(binwidth=5)+
+  scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
+  #facet_wrap(~method,scale="free")+
+  theme(strip.background = element_blank(),
+        strip.text = element_text(size = 9, colour = "black",face="bold"),
+        panel.spacing = unit(.25, "lines"),
+        panel.border = element_rect(fill=NA,colour = "black"),
+        panel.background = element_blank(),
+        axis.title=element_text(size=9,face="bold"),
+        axis.text.y = element_text(colour = "black",size=9),
+        axis.text.x = element_text(colour = "black",size=9),
+        axis.ticks =element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"),
+        axis.line.x = element_line(colour = "black"),
+        legend.title=element_blank(),
+        legend.position="none")+
+  scale_fill_manual(values = c('dnatransposon' = "navy", "retrotransposon"="brown3","unknown"="goldenrod"))+
+  labs(x="All Transposon Sites Per Strain", y="Count")
+m
+
+ggsave(filename="Histogram_TE_per_Strain_All.png", dpi=300, width=7.5, height=3.5, units="in")
+
+
 

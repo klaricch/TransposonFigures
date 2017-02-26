@@ -298,7 +298,7 @@ chi_feats<-rbind(chi_cds,chi_promoter,chi_intergenic,chi_intron,chi_utr)
 feats_df<-data.frame(chi_feats)
 class(feats_df)
 feats_df$total<-feats_df$ARM+feats_df$CENTER
-feats_df<-select(feats_df,total)
+feats_df<-dplyr::select(feats_df,total)
 feats_df <- rownames_to_column(feats_df, "type")
 #feats_df$non<-tes-feats_df$total
 
@@ -434,6 +434,18 @@ colnames(all)<-c("Factor","Number on Arms","Number on Centers","Chi-Squared Stat
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 
 all
+all2
+
+m<-ggplot(all2, aes(Expected,Observed, label=rownames(all2)))  +
+  geom_point()+
+  geom_text(aes(x=Expected,y=Observed,label=Region), size=3,vjust=-.75)+
+  scale_x_continuous(limits=c(-20,1350))+scale_y_continuous(limits=c(0,1800))+
+  xlab("Expected Number of Transposons") +
+  ylab("Observed Number of Transposons") 
+m
+ggsave(m,filename="Obs_v_Ex_TEs.png",dpi=300, width=7.5,height=3.5,units="in")
+
+
 write.table(all, file="Chi_Table.txt",sep="\t",quote=FALSE,row.names=FALSE)
 write.table(all2, file="Chi_IncDec.txt",sep="\t",quote=FALSE,row.names=FALSE)
 

@@ -1,9 +1,10 @@
 #!/bin/bash
 # this script copies and renames supplemental figures
+# NOTE: run in supp_figs dir
 
 cp ../drawing3.png Supplemental_Figure_S1.png
 cp ../Absence_vs_Insertion.png Supplemental_Figure_S2.png
-cp ../Histogram_TE_per_Strain.png Supplemental_Figure_S3.png
+cp ../Histogram_TE_per_Strain_All.png Supplemental_Figure_S3.png
 cp ../All_per_Strain.png Supplemental_Figure_S4.png
 cp ../TETREE.png Supplemental_Figure_S5.png
 cp ../Family_Frequency.png Supplemental_Figure_S6.png
