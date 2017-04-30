@@ -2,6 +2,7 @@
 # this script copies and renames supplemental figures
 # NOTE: run in supp_figs dir
 
+#supplemental figure plots
 cp ../drawing3.png Supplemental_Figure_S1.png
 cp ../Absence_vs_Insertion.png Supplemental_Figure_S2.png
 cp ../Histogram_TE_per_Strain_All.png Supplemental_Figure_S3.png
@@ -24,3 +25,11 @@ cp ../Contradictory_Calls.png Supplemental_Figure_S19.png
 cp ../CER1_Contradictory_Calls.png Supplemental_Figure_S20.png
 cp ../Absence_vs_Reference.png Supplemental_Figure_S21.png
 cp ../Absence_vs_Reference_DR.png Supplemental_Figure_S22.png
+
+
+#main figure plots
+cp ../Chromosome_Distribution.tiff Fig_1.tiff
+cp ../Histogram_TE_per_Strain_AF.tiff Fig_2.tiff
+cp ../Absence_vs_Insertion_DR.tiff Fig_3.tiff
+cp ../five_trait_QTL.tiff Fig_4.tiff
+cp ../Obs_v_Ex_TEsb.tiff Obs_v_Ex_TEsb.tiff

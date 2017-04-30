@@ -184,9 +184,9 @@ for (i in unique(selection$trait)){
           axis.text.x = element_blank(),
           axis.text.y = element_text(colour = "black"),
           axis.title.y = element_text(colour=ifelse(class_TE=="dnatransposon","navy",ifelse(class_TE=="retrotransposon","brown3","darkgoldenrod2"))),
-          axis.title=element_text(size=9),
+          axis.title=element_text(size=11),
           plot.margin=unit(c(.05,.30,-.5,.30), "cm"),
-          legend.title = element_text(size = 10, colour = ifelse(class_TE=="dnatransposon","navy",ifelse(class_TE=="retrotransposon","brown3","darkgoldenrod2")), angle = 270),
+          legend.title = element_text(size = 11, colour = ifelse(class_TE=="dnatransposon","navy",ifelse(class_TE=="retrotransposon","brown3","darkgoldenrod2")), angle = 270),
           legend.text = element_blank(),
           legend.key.size=unit(0,"cm"),
           legend.key = element_rect(colour = "pink"),
@@ -198,7 +198,7 @@ for (i in unique(selection$trait)){
   A
   
   if (count==0){B<-A+theme(strip.background = element_rect(fill = "white"),
-    strip.text.x = element_text(size = 9, colour = "black",face="bold"));
+    strip.text.x = element_text(size = 11, colour = "black",face="bold"));
                   first<-B}
   if (count==1){second<-A}
   if (count==2){third<-A}
@@ -213,7 +213,7 @@ a_all<-plot_grid(first,fourth,second,third,fifth,ncol=1) #ZER)_new_TRANS_NeSL-1_
 label<-expression(bold(-log["10"](p)))
 
 a_all<- a_all + draw_label(label, x = .04, y = 0.5, hjust = .5, vjust = .5,
-                           fontfamily = "", fontface = "bold", colour = "black", size = 12,
+                           fontfamily = "", fontface = "bold", colour = "black", size = 11,
                            angle = 90, lineheight = 0.9, alpha = 1)
 
 df <- data.frame(1,2)
@@ -222,18 +222,18 @@ a_all<-plot_grid(a_all,blank_plot,ncol=1,rel_heights = c(1, .03))
 
 
 a_all<- a_all + draw_label("Chromosome Position (Mb)", x = .5, y = 0.020, hjust = .5, vjust = .5,
-                           fontfamily = "", fontface = "bold", colour = "black", size = 12,
+                           fontfamily = "", fontface = "bold", colour = "black", size = 11,
                            angle = 0, lineheight = 0.9, alpha = 1)
 a_all
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 ggsave(filename="five_trait_QTL.tiff",
-       dpi=300,
-       width=7.5,
-       height=6,
+       dpi=350,
+       width=6.75,
+       height=9,
        units="in")
 
 ggsave(filename="five_trait_QTL.png",
-       dpi=300,
+       dpi=350,
        width=7.5,
        height=6,
        units="in")

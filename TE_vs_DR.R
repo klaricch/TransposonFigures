@@ -115,32 +115,32 @@ m <- m + geom_point(size=1.25) +
                                                                                      weights=weight,
                                                                                      method="MM"),fullrange=TRUE)+
   geom_abline(slope=1,linetype="dashed",colour="gray52")+
-  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.1*D_max_insertions, y=.9*D_max_insertions,label=Dla,parse=TRUE, colour="red",size=4)+
-  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.1*R_max_insertions, y=.9*R_max_insertions,label=Rla,parse=TRUE, colour="red",size=4)+
+  geom_text(data = subset(final_merge, class=="DNA Transposon"), x=.15*D_max_insertions, y=.9*D_max_insertions,label=Dla,parse=TRUE, colour="red",size=4)+
+  geom_text(data = subset(final_merge, class=="Retrotransposon"), x=.15*R_max_insertions, y=.9*R_max_insertions,label=Rla,parse=TRUE, colour="red",size=4)+
   geom_point(data = subset(final_merge, class=="Retrotransposon"), aes(x=R_max_insertions,y=R_max_insertions),alpha=0)+
   geom_point(data = subset(final_merge, class=="DNA Transposon"), aes(x=D_max_insertions,y=D_max_insertions),alpha=0)+
   geom_point(aes(x=0,y=0),alpha=0)+
   
-  theme(strip.text.x = element_text(size = 9, colour = "black",face="bold"),
+  theme(strip.text.x = element_text(size = 11, colour = "black",face="bold"),
         strip.background = element_blank(),
         legend.position=c(.90,0.75),
         legend.background = element_rect(fill=FALSE),
-        legend.text=element_text(size=9),
+        legend.text=element_text(size=11),
         panel.background = element_rect(fill = "white"),
         panel.spacing= unit(1, "lines"),
         axis.ticks =element_line(colour = "black"),
-        axis.text.y = element_text(colour = "black",size=9),
-        axis.text.x = element_text(colour = "black",size=9),
+        axis.text.y = element_text(colour = "black",size=11),
+        axis.text.x = element_text(colour = "black",size=11),
         axis.line=element_line(linetype="solid"),
         axis.line.y = element_line(colour = "black"),
         axis.line.x = element_line(colour = "black"),
-        axis.title=element_text(size=9,face="bold"))+
+        axis.title=element_text(size=11,face="bold"))+
   guides(fill=FALSE) +
   labs(x = "Insertion Sites", y = "Active Reference Sites")
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Absence_vs_Insertion_DR.tiff", dpi=300, width=7.5, height=3.5, units="in")
-ggsave(filename="Absence_vs_Insertion_DR.png", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Absence_vs_Insertion_DR.tiff", dpi=350, width=6, height=4, units="in")
+ggsave(filename="Absence_vs_Insertion_DR.png", dpi=350, width=7.5, height=3.5, units="in")
 #2 ABSENCE vs REFERENCE
 #spearman correlation
 R_correlation<-cor.test(retro$total_absences, retro$total_references,method="spearman",exact=FALSE)
@@ -298,13 +298,13 @@ m <- ggplot(ins_data, aes(x=value,fill=class))
 m <-m + geom_histogram(binwidth=5)+
   scale_y_continuous(expand = c(0,0),limits=c(0,180)) + scale_x_continuous(expand = c(0,0))+
   theme(strip.background = element_blank(),
-        strip.text = element_text(size = 9, colour = "black",face="bold"),
+        strip.text = element_text(size = 11, colour = "black",face="bold"),
         panel.spacing = unit(.25, "lines"),
         panel.border = element_rect(fill=NA,colour = "black"),
         panel.background = element_blank(),
-        axis.title=element_text(size=9,face="bold"),
-        axis.text.y = element_text(colour = "black",size=9),
-        axis.text.x = element_text(colour = "black",size=9),
+        axis.title=element_text(size=11,face="bold"),
+        axis.text.y = element_text(colour = "black",size=11),
+        axis.text.x = element_text(colour = "black",size=11),
         axis.ticks =element_line(colour = "black"),
         axis.line.y = element_line(colour = "black"),
         axis.line.x = element_line(colour = "black"),
@@ -320,13 +320,13 @@ m2 <- ggplot(ar_data, aes(x=value,fill=class))
 m2 <-m2 + geom_histogram(binwidth=5)+
   scale_y_continuous(expand = c(0,0),limits=c(0,180)) + scale_x_continuous(expand = c(0,0))+
   theme(strip.background = element_blank(),
-        strip.text = element_text(size = 9, colour = "black",face="bold"),
+        strip.text = element_text(size = 11, colour = "black",face="bold"),
         panel.spacing = unit(.25, "lines"),
         panel.border = element_rect(fill=NA,colour = "black"),
         panel.background = element_blank(),
-        axis.title=element_text(size=9,face="bold"),
-        axis.text.y = element_text(colour = "black",size=9),
-        axis.text.x = element_text(colour = "black",size=9),
+        axis.title=element_text(size=11,face="bold"),
+        axis.text.y = element_text(colour = "black",size=11),
+        axis.text.x = element_text(colour = "black",size=11),
         axis.ticks =element_line(colour = "black"),
         axis.line.y = element_line(colour = "black"),
         axis.line.x = element_line(colour = "black"),
@@ -382,12 +382,12 @@ a <- a + geom_histogram(binwidth=.05) +
   theme(panel.background = element_rect(fill = "white"),
         strip.background = element_rect(fill="white"),
         axis.ticks = element_line(colour = "black"),
-        axis.text.y = element_text(colour = "black",size=9),
-        axis.text.x = element_text(colour = "black",size=9),
+        axis.text.y = element_text(colour = "black",size=11),
+        axis.text.x = element_text(colour = "black",size=11),
         axis.line.y = element_line(colour = "black"),
         axis.line.x = element_line(colour = "black"),
         axis.line=element_line(linetype="solid"),
-        axis.title=element_text(size=9,face="bold"))+
+        axis.title=element_text(size=11,face="bold"))+
   guides(fill=FALSE) +
   labs(x="Allele Frequency", y="Count")+
   scale_y_continuous(expand = c(0,0)) +
@@ -398,7 +398,7 @@ a
 a_all<-plot_grid(m,m2,a,ncol=3,labels=c("A","B","C"))
 a_all
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Histogram_TE_per_Strain_AF.tiff", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Histogram_TE_per_Strain_AF.tiff", dpi=350, width=6.75, height=3.375, units="in")
 ggsave(filename="Histogram_TE_per_Strain_AF.png", dpi=300, width=7.5, height=3.5, units="in")
 
 #ggsave(filename="Histogram_TE_per_Strain.tiff", dpi=300, width=7.5, height=3.5, units="in")
@@ -406,8 +406,8 @@ ggsave(filename="Histogram_TE_per_Strain_AF.png", dpi=300, width=7.5, height=3.5
 
 #alternative
 alt_fig<-filter(hist_data, method=="All Transposon Sites")
-m <- ggplot(alt_fig, aes(x=value,fill=class))
-m <-m + geom_histogram(binwidth=5)+
+m3 <- ggplot(alt_fig, aes(x=value,fill=class))
+m3 <-m3 + geom_histogram(binwidth=5)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
   #facet_wrap(~method,scale="free")+
   theme(strip.background = element_blank(),
@@ -425,9 +425,16 @@ m <-m + geom_histogram(binwidth=5)+
         legend.position="none")+
   scale_fill_manual(values = c('dnatransposon' = "navy", "retrotransposon"="brown3","unknown"="goldenrod"))+
   labs(x="All Transposon Sites Per Strain", y="Count")
-m
+m3
 
 ggsave(filename="Histogram_TE_per_Strain_All.png", dpi=300, width=7.5, height=3.5, units="in")
 
 
+b_all<-plot_grid(m3,a,ncol=2,labels=c("A","B"))
+b_all
+ggsave(b_all,filename="Histogram_TE_per_Strain_All_b.png", dpi=300, width=7.5, height=3.5, units="in")
 
+
+b_supp<-plot_grid(m,m2,ncol=2,labels=c("A","B"))
+b_supp
+ggsave(b_supp,filename="Histogram_TE_per_Strain_All_supp3b.png", dpi=300, width=7.5, height=3.5, units="in")

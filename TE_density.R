@@ -5,13 +5,18 @@
 library(ggplot2)
 library(grid)
 library(dplyr)
+library(tidyr)
 
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 summarydata <- read.table("CtCp_all_nonredundant.txt")
+singletons <- read.table("singletons.txt")
+
+
 names(summarydata)
+names(singletons)<-"te"
 names(summarydata)<-c("chr","start","end","TE","orientation","method","strain","class")
 
-
+summarydata<-mutate(summarydata,frequency=ifelse(TE %in% singletons$te, "singleton","non-singleton"))
 #3X-BIN .25MB
 summarydata <- distinct(summarydata, chr,start,method, orientation,class,.keep_all=TRUE)
 test<-filter(summarydata,method=="reference")
@@ -43,25 +48,25 @@ m <-m + geom_histogram(binwidth=.25)+
   facet_grid(. ~ chr,scale="free",space = "free_x")+
   labs(x="Chromosome Position (Mb)", y="Number of Sites")+
   theme(strip.background = element_blank(),
-        strip.text = element_text(size = 9, colour = "black",face="bold"),
+        strip.text = element_text(size = 11, colour = "black",face="bold"),
         panel.border = element_rect(fill=NA, colour="black",size=1, linetype="solid"),
         panel.background = element_blank(),
         plot.margin=unit(c(.1,.1,0,.1), "cm"),
         panel.spacing = unit(.5, "cm"),
-        axis.title=element_text(size=9,face="bold"),
+        axis.title=element_text(size=11,face="bold"),
         axis.ticks =element_line(colour = "black"),
-        axis.text.x=element_text(colour="black"),
-        axis.text.y=element_text(colour="black"),
+        axis.text.x=element_text(colour="black",size=11),
+        axis.text.y=element_text(colour="black",size=11),
         legend.title=element_blank(),
         legend.position="none",
         legend.key.size=unit(1,"cm"),
-        legend.text=element_text(size=9))+
+        legend.text=element_text(size=11))+
   scale_fill_manual(values = c("DNA Transposon" = "navy", "Retrotransposon"="brown3","Unknown"="darkgoldenrod2"))
 
 m
 setwd("/Users/kristen/Documents/transposon_figure_data/figures")
-ggsave(filename="Chromosome_Distribution.tiff", dpi=300, width=7.5, height=3.5, units="in")
-ggsave(filename="Chromosome_Distribution.png", dpi=300, width=7.5, height=3.5, units="in")
+ggsave(filename="Chromosome_Distribution.tiff", dpi=350, width=6.75, height=3.375, units="in")
+ggsave(filename="Chromosome_Distribution.png", dpi=350, width=6.75, height=3.375, units="in")
 
 
 #ARMS  AND  CENTERS (in bp)
@@ -206,7 +211,7 @@ chi_method <- table(AC$method,AC$region)
 chi_class
 chi_method
 
-
+table(summarydata$frequency)
 #autosome and X
 autosome<-filter(AC,chr!="X")
 x_chrom<-filter(AC,chr=="X")
@@ -229,6 +234,15 @@ all <- data.frame(Factor=character(),
                     Chi2=numeric(),
                     PValue=integer(),
                     stringsAsFactors=FALSE)
+
+all4 <- data.frame(Factor=character(),
+                  Observed_Arms=integer(),
+                  Observed_Centers=integer(),
+                  Chi2=numeric(),
+                  PValue=integer(),
+                  Expected_Centers=integer(),
+                  Expected_Arms=integer(),
+                  stringsAsFactors=FALSE)
 
 all2 <- data.frame(Factor=character(),
                   Observed=integer(),
@@ -374,6 +388,8 @@ all2[8,]<-c("X Chromosome Arms",chi_x_total[1],x_prob_arms*num_X,ctest$statistic
 ctest<-chisq.test(chi_x_total,p=c(x_prob_arms,x_prob_center))
 all2[9,]<-c("X Chromosome Centers",chi_x_total[2],x_prob_center*num_X,ctest$statistic,ctest$p.value)
 
+
+chi_x_total
 .libPaths()
 
 all2$Expected<-as.numeric(all2$Expected)
@@ -396,20 +412,34 @@ chi_genic<-chi_feature2[1,]
 chi_genic
 colnames(data)
 # chi square test with the hypothesized probabilities
+#chi_cds
+#chi_x_total[2]
+#num_X
+#num_cds
+#cds_prob_arms
 ctest<-chisq.test(chi_cds,p=c(prob_cds_arms,prob_cds_centers))
 all[5,]<-c("CDS",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value)
+all4[1,]<-c("CDS",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value,prob_cds_centers*num_cds,prob_cds_arms*num_cds)
+
+#all2[9,]<-c("X Chromosome Centers",chi_x_total[2],x_prob_center*num_X,ctest$statistic,ctest$p.value)
+
 ctest<-chisq.test(chi_promoter,p=c(prob_promoter_arms,prob_promoter_centers))
 all[6,]<-c("Promoter",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value)
+all4[2,]<-c("Promoter",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value,prob_promoter_centers*num_promoter,prob_promoter_arms*num_promoter)
+
 ctest<-chisq.test(chi_intergenic,p=c(prob_intergenic_arms,prob_intergenic_centers))
 all[7,]<-c("Intergenic",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value)
+all4[3,]<-c("Intergenic",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value,prob_intergenic_centers*num_intergenic,prob_intergenic_arms*num_intergenic)
+
 ctest<-chisq.test(chi_intron ,p=c(prob_intron_arms,prob_intron_centers))
 all[8,]<-c("Intron",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value)
-
+all4[4,]<-c("Intron",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value,prob_intron_centers*num_intron,prob_intron_arms*num_intron)
 
 
 
 ctest<-chisq.test(chi_utr ,p=c(prob_utr_arms,prob_utr_centers))
 all[9,]<-c("UTR",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value)
+all4[5,]<-c("UTR",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value,prob_utr_centers*num_utr,prob_utr_arms*num_utr)
 
 #ctest<-chisq.test(chi_genic,p=c(prob_genic_arms,prob_genic_center))
 #all[10,]<-c("Genic",chi_genic[1],chi_genic[2],ctest$statistic,ctest$p.value)
@@ -436,6 +466,19 @@ setwd("/Users/kristen/Documents/transposon_figure_data/figures")
 all
 all2
 
+
+all4$Expected_Arms<-as.numeric(all4$Expected_Arms)
+all4$Expected_Centers<-as.numeric(all4$Expected_Centers)
+all4$Observed_Arms<-as.numeric(all4$Observed_Arms)
+all4$Observed_Centers<-as.numeric(all4$Observed_Centers)
+#all4<-mutate(all4, Change=ifelse(Observed>Expected,"Increased","Decreased"))
+all4$Chi2<-as.numeric(all4$Chi2)
+all4$PValue<-as.numeric(all4$PValue)
+#all4$Expected<-signif(all4$Expected,4)
+all4$Chi2<-signif(all4$Chi2,4)
+all4$PValue<-signif(all4$PValue,4)
+
+
 m<-ggplot(all2, aes(Expected,Observed, label=rownames(all2)))  +
   geom_point()+
   geom_text(aes(x=Expected,y=Observed,label=Region), size=3,vjust=-.75)+
@@ -443,8 +486,65 @@ m<-ggplot(all2, aes(Expected,Observed, label=rownames(all2)))  +
   xlab("Expected Number of Transposons") +
   ylab("Observed Number of Transposons") 
 m
-ggsave(m,filename="Obs_v_Ex_TEs.png",dpi=300, width=7.5,height=3.5,units="in")
 
+all3<-gather(all2,cat,value,Expected,Observed)
+
+
+all3$Region <- factor(all3$Region,
+                          levels = c("Autosome Arms", "Autosome Centers","CDS","Intergenic","Intron","Promoter","UTR", "X Chromosome Arms","X Chromosome Centers"),
+                          labels = c("Autosome\nArms", "Autosome\nCenters", "CDS","Intergenic","Intron","Promoter","UTR", "X Chromosome\nArms","X Chromosome\nCenters"))
+b<-ggplot(all3, aes(x=Region,y=value,fill=cat))  +
+  theme(axis.text.x=element_text(angle=35,hjust=1,size=11),
+        axis.text.y=element_text(size=11),
+        axis.title=element_text(size=11,face="bold"))+
+  #scale_fill_manual 
+  geom_bar(stat="identity",position="dodge")+
+  scale_y_continuous(expand = c(0,0),limits=c(0,1700))+
+  scale_fill_manual(values = c('Expected'="gray60",'Observed' = "gray17")) +	
+  guides(fill=FALSE) +
+  ylab("Number of Transposons")+xlab("")
+b
+ggsave(b,filename="Obs_v_Ex_TEsb.tiff",dpi=350, width=6.75,height=3.375,units="in")
+
+
+all4$Factor <- factor(all4$Factor,
+                      levels = c("Intergenic", "Promoter","CDS","Intron","UTR"),
+                      labels = c("Intergenic", "Promoter", "CDS","Intron","UTR"))
+
+
+all4_centers<-select(all4,-Observed_Arms,-Expected_Arms)
+all4_centers<-gather(all4_centers,cat,value,Expected_Centers,Observed_Centers)
+all4_arms<-select(all4,-Observed_Centers,-Expected_Centers)
+all4_arms<-gather(all4_arms,cat,value,Expected_Arms,Observed_Arms)
+
+
+#labels = c("Autosome\nArms", "Autosome\nCenters", "CDS","Intergenic","Intron","Promoter","UTR", "X Chromosome\nArms","X Chromosome\nCenters"))
+c<-ggplot(all4_centers, aes(x=Factor,y=value,fill=cat))  +
+  theme(axis.text.x=element_text(angle=35,hjust=1,size=11),
+        axis.text.y=element_text(size=11),
+        axis.title=element_text(size=11,face="bold"))+
+  #scale_fill_manual 
+  geom_bar(stat="identity",position="dodge") +
+  scale_y_continuous(expand = c(0,0),limits=c(0,500))+
+  scale_fill_manual(values = c('Expected_Centers'="gray60",'Observed_Centers' = "gray17")) +	
+  guides(fill=FALSE) +
+  ylab("Number of Transposons\non Centers")+xlab("")+
+  geom_text(aes(x=Factor,y=475,label=ifelse(Factor!="UTR","*","")))
+c
+
+
+d<-ggplot(all4_arms, aes(x=Factor,y=value,fill=cat))  +
+  theme(axis.text.x=element_text(angle=35,hjust=1,size=11),
+        axis.text.y=element_text(size=11),
+        axis.title=element_text(size=11,face="bold"))+
+  #scale_fill_manual 
+  geom_bar(stat="identity",position="dodge") +
+ scale_y_continuous(expand = c(0,0),limits=c(0,925))+
+  scale_fill_manual(values = c('Expected_Arms'="gray60",'Observed_Arms' = "gray17")) +	
+  guides(fill=FALSE) +
+  ylab("Number of Transposons\non Armss")+xlab("")+
+  geom_text(aes(x=Factor,y=875,label=ifelse(Factor!="UTR","*","")))
+d
 
 write.table(all, file="Chi_Table.txt",sep="\t",quote=FALSE,row.names=FALSE)
 write.table(all2, file="Chi_IncDec.txt",sep="\t",quote=FALSE,row.names=FALSE)
