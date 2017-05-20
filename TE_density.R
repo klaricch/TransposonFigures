@@ -41,7 +41,7 @@ summarydata$method <- factor(summarydata$method,
                             labels = c("Insertion", "Reference","Absence"))
 summarydata<-filter(summarydata,method!="Absence")
 
-#summarydata<-filter(summarydata,metho)
+#summarydata<-filter(summarydata,method=="Insertion")
 m <- ggplot(summarydata, aes(x=start/1e6,fill=class))
 m <-m + geom_histogram(binwidth=.25)+
   scale_y_continuous(expand = c(0,0)) + scale_x_continuous(expand = c(0,0))+
@@ -177,6 +177,9 @@ test1<-filter(summarydata, method=="Insertion")
 test2<-filter(summarydata, method=="Reference")
 str(summarydata)
 
+
+summarydata<-filter(summarydata, method=="Insertion")
+
 one<-filter(summarydata, chr=="I")
 two<-filter(summarydata, chr=="II")
 three<-filter(summarydata, chr=="III")
@@ -215,9 +218,22 @@ table(summarydata$frequency)
 #autosome and X
 autosome<-filter(AC,chr!="X")
 x_chrom<-filter(AC,chr=="X")
+
+#single and non-single
+autosome_single<-filter(AC,chr!="X",frequency=="singleton")
+autosome_non_single<-filter(AC,chr!="X",frequency=="non-singleton")
+x_chrom_single<-filter(AC,chr=="X",frequency=="singleton")
+x_chrom_non_single<-filter(AC,chr=="X",frequency=="non-singleton")
+
+
 chi_auto_total <- table(autosome$region)
 chi_x_total <- table(x_chrom$region)
 
+chi_auto_total_single <- table(autosome_single$region)
+chi_auto_total_non_single <- table(autosome_non_single$region)
+chi_x_total_single <- table(x_chrom_single$region)
+chi_x_total_non_single <- table(x_chrom_non_single$region)
+table(summarydata$method)
 chi_auto_total
 chi_x_total
 
@@ -242,6 +258,7 @@ all4 <- data.frame(Factor=character(),
                   PValue=integer(),
                   Expected_Centers=integer(),
                   Expected_Arms=integer(),
+                  Stat=character(),
                   stringsAsFactors=FALSE)
 
 all2 <- data.frame(Factor=character(),
@@ -250,6 +267,16 @@ all2 <- data.frame(Factor=character(),
                   Chi2=numeric(),
                   PValue=integer(),
                   stringsAsFactors=FALSE)
+
+all5 <- data.frame(Factor=character(),
+                   Observed_Arms=integer(),
+                   Observed_Centers=integer(),
+                   Chi2=numeric(),
+                   PValue=integer(),
+                   Expected_Centers=integer(),
+                   Expected_Arms=integer(),
+                   Stat=character(),
+                   stringsAsFactors=FALSE)
 # chi square test with the hypothesized probabilities
 ctest<-chisq.test(chi_total,p=c(prob_arms,prob_center))
 all[1,]<-c("All Transposons",chi_total[1],chi_total[2],ctest$statistic,ctest$p.value)
@@ -268,8 +295,14 @@ chisq.test(chi_reference,p=c(prob_arms,prob_center))
 #Chi-Square tests per genomic feature
 setwd("/Users/kristen/Documents/transposon_figure_data/data")
 data <- read.table("essentiality_nonredundant_GO.txt",sep="\t",header=TRUE)
-data<-filter(data, Method=="new"|Method=="reference")
+singleton_pos <- read.table("singleton_positions.txt",sep="\t",header=TRUE)
+colnames(singleton_pos)<-"te"
+
+#data<-mutate(data,position=paste(Chromosome,TE_start,sep="_"))
+data<-filter(data, Method=="new")
 data <- mutate(data, ID=paste(Chromosome, TE_start,sep="_"))
+data<-mutate(data,frequency=ifelse(ID %in% singleton_pos$te, "singleton","non-singleton"))
+data<-filter(data,frequency=="singleton")
 #data<-filter(data,Chromosome!="X")
 AC <- mutate(AC, ID=paste(chr,start,sep="_"))
 ACS <- dplyr::select(AC, ID, region) #take subset of columns in AC
@@ -278,8 +311,7 @@ data<-left_join(data, ACS, by = "ID")
 nrow(data)
 nrow(summarydata)
 
-
-
+test<-distinct(data,Chromosome,TE_start)
 ##############################
 # INCREASED vs DECREASED
 ##############################
@@ -364,11 +396,26 @@ num_utr=nrow(data_utr)
 ctest<-chisq.test(chi2_utr,p=c(prob_utr,1-prob_utr))
 all2[5,]<-c("UTR",num_utr,prob_utr*num_tes,ctest$statistic,ctest$p.value)
 
+
+
 data_auto=distinct(autosome,chr,start)
 num_auto<-nrow(data_auto)
 data_X=distinct(x_chrom,chr,start)
 num_X<-nrow(data_X)
 
+
+distinct_autosome_single<-distinct(autosome_single,chr,start)
+num_auto_single<-nrow(distinct_autosome_single)
+
+distinct_autosome_non_single<-distinct(autosome_non_single,chr,start)
+num_auto_non_single<-nrow(distinct_autosome_non_single)
+
+
+distinct_x_chrom_single<-distinct(x_chrom_single,chr,start)
+num_x_chrom_single<-nrow(distinct_x_chrom_single)
+
+distinct_x_chrom_non_single<-distinct(x_chrom_non_single,chr,start)
+num_x_chrom_non_single<-nrow(distinct_x_chrom_non_single)
 
 num_auto
 auto_prob_arms
@@ -376,6 +423,7 @@ auto_prob_center
 #autosome and X
 ctest<-chisq.test(chi_auto_total,p=c(auto_prob_arms,auto_prob_center))
 all2[6,]<-c("Autosome Arms",chi_auto_total[1],auto_prob_arms*num_auto,ctest$statistic,ctest$p.value)
+
 
 ctest<-chisq.test(chi_auto_total,p=c(auto_prob_arms,auto_prob_center))
 all2[7,]<-c("Autosome Centers",chi_auto_total[2],auto_prob_center*num_auto,ctest$statistic,ctest$p.value)
@@ -386,7 +434,33 @@ all2[8,]<-c("X Chromosome Arms",chi_x_total[1],x_prob_arms*num_X,ctest$statistic
 
 
 ctest<-chisq.test(chi_x_total,p=c(x_prob_arms,x_prob_center))
-all2[9,]<-c("X Chromosome Centers",chi_x_total[2],x_prob_center*num_X,ctest$statistic,ctest$p.value)
+all2[9,]<-c("X Chromosome Center",chi_x_total[2],x_prob_center*num_X,ctest$statistic,ctest$p.value)
+
+
+
+
+#SPLIT MORE HERE:
+
+all4[1,]<-c("CDS",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value,prob_cds_centers*num_cds,prob_cds_arms*num_cds)
+
+chi_auto_total_single
+ctest<-chisq.test(chi_auto_total_single,p=c(auto_prob_arms,auto_prob_center))
+all5[1,]<-c("Sin.",chi_auto_total_single[1],chi_auto_total_single[2],ctest$statistic,ctest$p.value,auto_prob_center*num_auto_single,auto_prob_arms*num_auto_single,"Autosomes")
+
+ctest<-chisq.test(chi_auto_total_non_single,p=c(auto_prob_arms,auto_prob_center))
+all5[2,]<-c("Non-Sin.",chi_auto_total_non_single[1],chi_auto_total_non_single[2],ctest$statistic,ctest$p.value,auto_prob_center*num_auto_non_single,auto_prob_arms*num_auto_non_single,"Autosomes")
+
+ctest<-chisq.test(chi_x_total_single,p=c(x_prob_arms,x_prob_center))
+all5[3,]<-c("Sin.",chi_x_total_single[1],chi_x_total_single[2],ctest$statistic,ctest$p.value, x_prob_center*num_x_chrom_single,x_prob_arms*num_x_chrom_single,"X Chromosome")
+
+ctest<-chisq.test(chi_x_total_non_single,p=c(x_prob_arms,x_prob_center))
+all5[4,]<-c("Non-Sin.",chi_x_total_non_single[1],chi_x_total_non_single[2],ctest$statistic,ctest$p.value, x_prob_center*num_x_chrom_non_single,x_prob_arms*num_x_chrom_non_single, "X Chromosome")
+
+
+
+
+
+
 
 
 chi_x_total
@@ -418,28 +492,241 @@ colnames(data)
 #num_cds
 #cds_prob_arms
 ctest<-chisq.test(chi_cds,p=c(prob_cds_arms,prob_cds_centers))
-all[5,]<-c("CDS",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value)
-all4[1,]<-c("CDS",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value,prob_cds_centers*num_cds,prob_cds_arms*num_cds)
+all[5,]<-c("CDS Sin.",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value)
+all4[1,]<-c("Sin.",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value,prob_cds_centers*num_cds,prob_cds_arms*num_cds,"CDS")
+
+
+#ctest<-chisq.test(chi_cds_total_single,p=c(chi_prob_arms,chi_prob_center))
+#all4[1,]<-c("CDS Singleton",chi_cds_total_single[1],chi_cds_total_single[2],ctest$statistic,ctest$p.value, cds_prob_center*num_cds_single,cds_prob_arms*num_single)
 
 #all2[9,]<-c("X Chromosome Centers",chi_x_total[2],x_prob_center*num_X,ctest$statistic,ctest$p.value)
 
 ctest<-chisq.test(chi_promoter,p=c(prob_promoter_arms,prob_promoter_centers))
-all[6,]<-c("Promoter",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value)
-all4[2,]<-c("Promoter",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value,prob_promoter_centers*num_promoter,prob_promoter_arms*num_promoter)
+all[6,]<-c("Promoter Sin.",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value)
+all4[2,]<-c("Sin.",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value,prob_promoter_centers*num_promoter,prob_promoter_arms*num_promoter,"Promoter")
 
 ctest<-chisq.test(chi_intergenic,p=c(prob_intergenic_arms,prob_intergenic_centers))
-all[7,]<-c("Intergenic",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value)
-all4[3,]<-c("Intergenic",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value,prob_intergenic_centers*num_intergenic,prob_intergenic_arms*num_intergenic)
+all[7,]<-c("Intergenic Sin.",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value)
+all4[3,]<-c("Sin.",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value,prob_intergenic_centers*num_intergenic,prob_intergenic_arms*num_intergenic,"Intergenic")
 
 ctest<-chisq.test(chi_intron ,p=c(prob_intron_arms,prob_intron_centers))
-all[8,]<-c("Intron",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value)
-all4[4,]<-c("Intron",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value,prob_intron_centers*num_intron,prob_intron_arms*num_intron)
-
-
+all[8,]<-c("Intron Sin.",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value)
+all4[4,]<-c("Sin.",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value,prob_intron_centers*num_intron,prob_intron_arms*num_intron,"Intron")
 
 ctest<-chisq.test(chi_utr ,p=c(prob_utr_arms,prob_utr_centers))
-all[9,]<-c("UTR",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value)
-all4[5,]<-c("UTR",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value,prob_utr_centers*num_utr,prob_utr_arms*num_utr)
+all[9,]<-c("UTR Sin.",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value)
+all4[5,]<-c("Sin.",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value,prob_utr_centers*num_utr,prob_utr_arms*num_utr,"UTR")
+
+
+
+
+
+
+########## REDO ABOVE WITH NON-SINGELTONS (lazy shortcut) #####################
+########## REDO ABOVE WITH NON-SINGELTONS (lazy shortcut) #####################
+########## REDO ABOVE WITH NON-SINGELTONS (lazy shortcut) #####################
+
+
+#Chi-Square tests per genomic feature
+setwd("/Users/kristen/Documents/transposon_figure_data/data")
+data <- read.table("essentiality_nonredundant_GO.txt",sep="\t",header=TRUE)
+singleton_pos <- read.table("singleton_positions.txt",sep="\t",header=TRUE)
+colnames(singleton_pos)<-"te"
+
+#data<-mutate(data,position=paste(Chromosome,TE_start,sep="_"))
+data<-filter(data, Method=="new")
+data <- mutate(data, ID=paste(Chromosome, TE_start,sep="_"))
+data<-mutate(data,frequency=ifelse(ID %in% singleton_pos$te, "singleton","non-singleton"))
+data<-filter(data,frequency=="non-singleton")
+#data<-filter(data,Chromosome!="X")
+AC <- mutate(AC, ID=paste(chr,start,sep="_"))
+ACS <- dplyr::select(AC, ID, region) #take subset of columns in AC
+ACS<- distinct(ACS,.keep_all=TRUE)
+data<-left_join(data, ACS, by = "ID")
+nrow(data)
+nrow(summarydata)
+
+test<-distinct(data,Chromosome,TE_start)
+##############################
+# INCREASED vs DECREASED
+##############################
+#TEs on arms/# base pairs CDS on arms
+#TEs on centers/ #base pairs CDS on centers
+data$Region
+levels(data$Region)[levels(data$Region)=="three_prime_UTR"] <- "UTR"
+levels(data$Region)[levels(data$Region)=="five_prime_UTR"] <- "UTR"
+
+data<-mutate(data,Region2=ifelse(Region=="intergenic","inter","genic"))
+#generate chi square contingency tables
+chi_feature <- table(data$Region,data$region)
+chi_feature
+chi_cds <- chi_feature[1,]
+chi_utr <- chi_feature[3,]
+chi_intergenic <- chi_feature[5,]
+chi_intron <- chi_feature[6,]
+chi_promoter <- chi_feature[7,]
+chi_cds
+chi_utr
+chi_intron
+chi_feature
+chi_promoter
+library(tibble)
+
+data2<-distinct(data,Chromosome,TE_start)
+num_tes<-nrow(data2)
+
+chi_feats<-rbind(chi_cds,chi_promoter,chi_intergenic,chi_intron,chi_utr)
+feats_df<-data.frame(chi_feats)
+class(feats_df)
+feats_df$total<-feats_df$ARM+feats_df$CENTER
+feats_df<-dplyr::select(feats_df,total)
+feats_df <- rownames_to_column(feats_df, "type")
+#feats_df$non<-tes-feats_df$total
+
+feats_df<-mutate(feats_df,non=num_tes-total)
+feats_df$total<-as.numeric(feats_df$total)
+feats_df$non<-as.numeric(feats_df$non)
+
+varnames<-c("total","non")
+Fcds<-feats_df[1,c(2,3)]
+Fpromoter<-feats_df[2,c(2,3)]
+Fintergenic<-feats_df[3,c(2,3)]
+Fintron<-feats_df[4,c(2,3)]
+Futr<-feats_df[5,c(2,3)]
+
+ctable<-data.frame(rbind(Fcds,Fpromoter,Fintergenic,Fintron,Futr))
+colnames(ctable)<-varnames
+tes<-as.table(as.matrix(ctable))
+tes
+
+
+tes
+chi2_cds <- tes[1,]
+data_cds<-filter(data,Region=="CDS")
+num_cds=nrow(data_cds)
+ctest<-chisq.test(chi2_cds,p=c(prob_cds,1-prob_cds))
+#all2[1,]<-c("CDS",num_cds,prob_cds*num_tes,ctest$statistic,ctest$p.value)
+
+chi2_promoter <- tes[2,]
+data_promoter<-filter(data,Region=="promoter")
+num_promoter=nrow(data_promoter)
+ctest<-chisq.test(chi2_promoter,p=c(prob_promoter,1-prob_promoter))
+#all2[2,]<-c("Promoter",num_promoter,prob_promoter*num_tes,ctest$statistic,ctest$p.value)
+
+chi2_intergenic <- tes[3,]
+data_intergenic<-filter(data,Region=="intergenic")
+num_intergenic=nrow(data_intergenic)
+ctest<-chisq.test(chi2_intergenic,p=c(prob_intergenic,1-prob_intergenic))
+#all2[3,]<-c("Intergenic",num_intergenic,prob_intergenic*num_tes,ctest$statistic,ctest$p.value)
+
+chi2_intron <- tes[4,]
+data_intron<-filter(data,Region=="intron")
+num_intron=nrow(data_intron)
+ctest<-chisq.test(chi2_intron,p=c(prob_intron,1-prob_intron))
+#all2[4,]<-c("Intron",num_intron,prob_intron*num_tes,ctest$statistic,ctest$p.value)
+
+chi2_utr <- tes[5,]
+data_utr<-filter(data,Region=="UTR")
+num_utr=nrow(data_utr)
+ctest<-chisq.test(chi2_utr,p=c(prob_utr,1-prob_utr))
+#all2[5,]<-c("UTR",num_utr,prob_utr*num_tes,ctest$statistic,ctest$p.value)
+
+
+
+data_auto=distinct(autosome,chr,start)
+num_auto<-nrow(data_auto)
+data_X=distinct(x_chrom,chr,start)
+num_X<-nrow(data_X)
+
+num_auto
+auto_prob_arms
+auto_prob_center
+#autosome and X
+ctest<-chisq.test(chi_auto_total,p=c(auto_prob_arms,auto_prob_center))
+#all2[6,]<-c("Autosome Arms",chi_auto_total[1],auto_prob_arms*num_auto,ctest$statistic,ctest$p.value)
+
+
+ctest<-chisq.test(chi_auto_total,p=c(auto_prob_arms,auto_prob_center))
+#all2[7,]<-c("Autosome Centers",chi_auto_total[2],auto_prob_center*num_auto,ctest$statistic,ctest$p.value)
+chi_auto_total
+
+ctest<-chisq.test(chi_x_total,p=c(x_prob_arms,x_prob_center))
+#all2[8,]<-c("X Chromosome Arms",chi_x_total[1],x_prob_arms*num_X,ctest$statistic,ctest$p.value)
+
+
+ctest<-chisq.test(chi_x_total,p=c(x_prob_arms,x_prob_center))
+#all2[9,]<-c("X Chromosome Centers",chi_x_total[2],x_prob_center*num_X,ctest$statistic,ctest$p.value)
+
+
+
+
+#SPLIT MORE HERE:
+
+
+
+
+
+
+all2$Expected<-as.numeric(all2$Expected)
+all2$Observed<-as.numeric(all2$Observed)
+all2<-mutate(all2, Change=ifelse(Observed>Expected,"Increased","Decreased"))
+all2$Chi2<-as.numeric(all2$Chi2)
+all2$PValue<-as.numeric(all2$PValue)
+all2$Expected<-signif(all2$Expected,4)
+all2$Chi2<-signif(all2$Chi2,4)
+all2$PValue<-signif(all2$PValue,4)
+
+
+colnames(all2)[1] <- "Region"
+##############################
+# CHI FEATURE
+##############################
+
+chi_feature2 <- table(data$Region2,data$region)
+chi_genic<-chi_feature2[1,]
+chi_genic
+colnames(data)
+# chi square test with the hypothesized probabilities
+#chi_cds
+#chi_x_total[2]
+#num_X
+#num_cds
+#cds_prob_arms
+ctest<-chisq.test(chi_cds,p=c(prob_cds_arms,prob_cds_centers))
+#all[5,]<-c("CDS Singletons",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value)
+all4[6,]<-c("Non-Sin.",chi_cds[1],chi_cds[2],ctest$statistic,ctest$p.value,prob_cds_centers*num_cds,prob_cds_arms*num_cds,"CDS")
+
+
+#ctest<-chisq.test(chi_cds_total_single,p=c(chi_prob_arms,chi_prob_center))
+#all4[1,]<-c("CDS Singleton",chi_cds_total_single[1],chi_cds_total_single[2],ctest$statistic,ctest$p.value, cds_prob_center*num_cds_single,cds_prob_arms*num_single)
+
+#all2[9,]<-c("X Chromosome Centers",chi_x_total[2],x_prob_center*num_X,ctest$statistic,ctest$p.value)
+
+ctest<-chisq.test(chi_promoter,p=c(prob_promoter_arms,prob_promoter_centers))
+#all[6,]<-c("Promoter Singletons",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value)
+all4[7,]<-c("Non-Sin.",chi_promoter[1],chi_promoter[2],ctest$statistic,ctest$p.value,prob_promoter_centers*num_promoter,prob_promoter_arms*num_promoter,"Promoter")
+
+ctest<-chisq.test(chi_intergenic,p=c(prob_intergenic_arms,prob_intergenic_centers))
+#all[7,]<-c("Intergenic Singletons",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value)
+all4[8,]<-c("Non-Sin.",chi_intergenic[1],chi_intergenic[2],ctest$statistic,ctest$p.value,prob_intergenic_centers*num_intergenic,prob_intergenic_arms*num_intergenic,"Intergenic")
+
+ctest<-chisq.test(chi_intron ,p=c(prob_intron_arms,prob_intron_centers))
+#all[8,]<-c("Intron Singletons",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value)
+all4[9,]<-c("Non-Sin.",chi_intron[1],chi_intron[2],ctest$statistic,ctest$p.value,prob_intron_centers*num_intron,prob_intron_arms*num_intron,"Intron")
+
+ctest<-chisq.test(chi_utr ,p=c(prob_utr_arms,prob_utr_centers))
+#all[9,]<-c("UTR Singletons",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value)
+all4[10,]<-c("Non-Sin.",chi_utr[1],chi_utr[2],ctest$statistic,ctest$p.value,prob_utr_centers*num_utr,prob_utr_arms*num_utr,"UTR")
+
+
+
+
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+
 
 #ctest<-chisq.test(chi_genic,p=c(prob_genic_arms,prob_genic_center))
 #all[10,]<-c("Genic",chi_genic[1],chi_genic[2],ctest$statistic,ctest$p.value)
@@ -506,48 +793,159 @@ b<-ggplot(all3, aes(x=Region,y=value,fill=cat))  +
 b
 ggsave(b,filename="Obs_v_Ex_TEsb.tiff",dpi=350, width=6.75,height=3.375,units="in")
 
+all3
+#all4$Factor <- factor(all4$Factor,
+                     # levels = c("Intergenic Singletons", "Intergenic Non-Singletons",
+                                # "Promoter Singletons","Promoter Non-Singletons",
+                                 #"CDS Singletons", "CDS Non-Singletons",
+                                 #"Intron Singletons", "Intron Non-Singletons",
+                                 #"UTR Singletons","UTR Non-Singletons"),
+                     # labels = c("Intergenic Singletons", "Intergenic Non-Singletons",
+                                 #"Promoter Singletons","Promoter Non-Singletons",
+                                 #"CDS Singletons", "CDS Non-Singletons",
+                                 #"Intron Singletons", "Intron Non-Singletons",
+                                 #"UTR Singletons","UTR Non-Singletons"))
 
 all4$Factor <- factor(all4$Factor,
-                      levels = c("Intergenic", "Promoter","CDS","Intron","UTR"),
-                      labels = c("Intergenic", "Promoter", "CDS","Intron","UTR"))
+                      levels = c("Sin.", "Non-Sin."),
+                      labels = c("Sin.", "Non-Sin."))
 
+all5$Factor <- factor(all5$Factor,
+                      levels = c("Sin.", "Non-Sin."),
+                      labels = c("Sin.", "Non-Sin."))
 
+all4<-mutate(all4,Significance=ifelse(PValue<0.05,"sig","non_sig"))
+all5<-mutate(all5,Significance=ifelse(PValue<0.05,"sig","non_sig"))
 all4_centers<-select(all4,-Observed_Arms,-Expected_Arms)
-all4_centers<-gather(all4_centers,cat,value,Expected_Centers,Observed_Centers)
 all4_arms<-select(all4,-Observed_Centers,-Expected_Centers)
-all4_arms<-gather(all4_arms,cat,value,Expected_Arms,Observed_Arms)
 
+all4_centers<-mutate(all4_centers,text_pos=Expected_Centers+.10*Expected_Centers)
+all4_arms<-mutate(all4_arms,text_pos=Observed_Arms+.10*Observed_Arms)
+
+
+all4_centers<-gather(all4_centers,cat,value,Expected_Centers,Observed_Centers)
+all4_arms<-gather(all4_arms,cat,value,Expected_Arms,Observed_Arms)
 
 #labels = c("Autosome\nArms", "Autosome\nCenters", "CDS","Intergenic","Intron","Promoter","UTR", "X Chromosome\nArms","X Chromosome\nCenters"))
 c<-ggplot(all4_centers, aes(x=Factor,y=value,fill=cat))  +
+  facet_grid(.~Stat) +
   theme(axis.text.x=element_text(angle=35,hjust=1,size=11),
         axis.text.y=element_text(size=11),
-        axis.title=element_text(size=11,face="bold"))+
+        axis.title=element_text(size=11,face="bold"),
+        strip.background = element_blank(),
+        strip.text = element_text(angle=55, size = 9, colour = "black",face="bold"))+
   #scale_fill_manual 
   geom_bar(stat="identity",position="dodge") +
-  scale_y_continuous(expand = c(0,0),limits=c(0,500))+
+  scale_y_continuous(expand = c(0,0),limits=c(0,325))+
   scale_fill_manual(values = c('Expected_Centers'="gray60",'Observed_Centers' = "gray17")) +	
   guides(fill=FALSE) +
   ylab("Number of Transposons\non Centers")+xlab("")+
-  geom_text(aes(x=Factor,y=475,label=ifelse(Factor!="UTR","*","")))
+  geom_text(aes(x=Factor,y=text_pos,label=ifelse(Significance=="sig","*","")))
 c
 
 
 d<-ggplot(all4_arms, aes(x=Factor,y=value,fill=cat))  +
+  facet_grid(.~Stat) +
   theme(axis.text.x=element_text(angle=35,hjust=1,size=11),
         axis.text.y=element_text(size=11),
-        axis.title=element_text(size=11,face="bold"))+
+        axis.title=element_text(size=11,face="bold"),
+        strip.background = element_blank(),
+        strip.text = element_text(angle=55, size = 9, colour = "black",face="bold"))+
   #scale_fill_manual 
   geom_bar(stat="identity",position="dodge") +
- scale_y_continuous(expand = c(0,0),limits=c(0,925))+
+ scale_y_continuous(expand = c(0,0),limits=c(0,550))+
   scale_fill_manual(values = c('Expected_Arms'="gray60",'Observed_Arms' = "gray17")) +	
   guides(fill=FALSE) +
-  ylab("Number of Transposons\non Armss")+xlab("")+
-  geom_text(aes(x=Factor,y=875,label=ifelse(Factor!="UTR","*","")))
+  ylab("Number of Transposons\non Arms")+xlab("")+
+  geom_text(aes(x=Factor,y=text_pos,label=ifelse(Significance=="sig","*","")))
 d
 
+
+
+all5$Expected_Arms<-as.numeric(all5$Expected_Arms)
+all5$Expected_Centers<-as.numeric(all5$Expected_Centers)
+all5$Observed_Arms<-as.numeric(all5$Observed_Arms)
+all5$Observed_Centers<-as.numeric(all5$Observed_Centers)
+#all4<-mutate(all4, Change=ifelse(Observed>Expected,"Increased","Decreased"))
+all5$Chi2<-as.numeric(all5$Chi2)
+all5$PValue<-as.numeric(all5$PValue)
+#all4$Expected<-signif(all4$Expected,4)
+#all5$Chi2<-signif(all5$Chi2,4)
+#all5$PValue<-signif(all5$PValue,4)
+
+
+all5_centers<-select(all5,-Observed_Arms,-Expected_Arms)
+all5_arms<-select(all5,-Observed_Centers,-Expected_Centers)
+
+all5_centers<-mutate(all5_centers,text_pos=Expected_Centers+.10*Expected_Centers)
+all5_arms<-mutate(all5_arms,text_pos=Observed_Arms+.10*Observed_Arms)
+
+all5_centers<-gather(all5_centers,cat,value,Expected_Centers,Observed_Centers)
+all5_arms<-gather(all5_arms,cat,value,Expected_Arms,Observed_Arms)
+#all5<-gather(all5,cat,value,Expected_Arms,Observed_Arms,Expected_Centers,Observed_Centers)
+
+
+e<-ggplot(all5_centers, aes(x=Factor,y=value,fill=cat))  +
+  facet_grid(.~Stat) +
+  theme(axis.text.x=element_text(angle=35,hjust=1,size=11),
+        axis.text.y=element_text(size=11),
+        axis.title=element_text(size=11,face="bold"),
+        strip.background = element_blank(),
+        strip.text = element_text(angle=55, size = 9, colour = "black",face="bold"))+
+  #scale_fill_manual 
+  geom_bar(stat="identity",position="dodge") +
+  scale_y_continuous(expand = c(0,0),limits=c(0,850))+
+  scale_fill_manual(values = c('Expected_Centers'="gray60",'Observed_Centers' = "gray17")) +	
+  guides(fill=FALSE) +
+  ylab("Number of Transposons\non Centers")+xlab("")+
+  geom_text(aes(x=Factor,y=text_pos,label=ifelse(Significance=="sig","*","")))
+
+e
+
+
+f<-ggplot(all5_arms, aes(x=Factor,y=value,fill=cat))  +
+  facet_grid(.~Stat) +
+  theme(axis.text.x=element_text(angle=35,hjust=1,size=11),
+        axis.text.y=element_text(size=11),
+        axis.title=element_text(size=11,face="bold"),
+        strip.background = element_blank(),
+        strip.text = element_text(angle=55, size = 9, colour = "black",face="bold"))+
+  #scale_fill_manual 
+  geom_bar(stat="identity",position="dodge") +
+  scale_y_continuous(expand = c(0,0),limits=c(0,1050))+
+  scale_fill_manual(values = c('Expected_Arms'="gray60",'Observed_Arms' = "gray17")) +	
+  guides(fill=FALSE) +
+  ylab("Number of Transposons\non Arms")+xlab("")+
+  geom_text(aes(x=Factor,y=text_pos,label=ifelse(Significance=="sig","*","")))
+
+f
+library(cowplot)
+ef<-plot_grid(e,f,c,d,ncol=2,nrow=2,labels=c('A', 'B','C','D'))
+ef
+ggsave(filename="ARM_CENTER_SINGLETON.tiff", dpi=350, width=6.75, height=7.5, units="in")
+ggsave(filename="ARM_CENTER_SINGLETON.png", dpi=350, width=6.75, height=7.5, units="in")
+
+all6<-rbind(all4,all5)
+
+names(all6)[names(all6) == 'Factor'] <- 'Frequency'
+names(all6)[names(all6) == 'Stat'] <- 'Region'
+names(all6)[names(all6) == 'PValue'] <- 'P-Value'
+names(all6)[names(all6) == 'Chi2'] <- 'Chi-Squared Statistic'
+
+all6$Significance <- factor(all6$Significance,
+                      levels = c("sig", "non_sig"),
+                      labels = c("Sig.", "Not Sig."))
+
+
+all6<-all6[,c(8,1,6,3,7,2,4,5,9)]
+all6$Expected_Centers<-signif(all6$Expected_Centers,4)
+all6$Expected_Arms<-signif(all6$Expected_Arms,4)
+
+
+all<-filter(all, Factor %in% c("All Transposons", "DNA Transposons", "Retrotransposons","Unknown Transposons"))
 write.table(all, file="Chi_Table.txt",sep="\t",quote=FALSE,row.names=FALSE)
 write.table(all2, file="Chi_IncDec.txt",sep="\t",quote=FALSE,row.names=FALSE)
+write.table(all6, file="Chi_AC_Sin.txt",sep="\t",quote=FALSE,row.names=FALSE)
 
 ###autosome arm c
 ###X chromosome arm c
